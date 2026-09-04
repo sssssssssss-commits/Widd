@@ -252,7 +252,7 @@ function renderRsvp(cfg, guest) {
     return;
   }
 
-  box.innerHTML = `<p class="rsvp-hint">请直接回复邀约人</p>`;
+  box.hidden = true;
 }
 
 async function submitRsvp(e, endpoint, guest) {

@@ -542,14 +542,6 @@ body::before {
 
 .rsvp-box button:disabled { opacity: .45; }
 
-.rsvp-hint {
-  margin: .8rem 0 0;
-  text-align: center;
-  font-size: .78rem;
-  letter-spacing: .12em;
-  color: var(--ink-soft);
-}
-
 .stamp {
   position: absolute;
   right: 10%;
