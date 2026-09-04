@@ -48,12 +48,12 @@ export function clipText(v, n) {
   return String(v ?? "").trim().slice(0, n);
 }
 
-export function dataImageOk(s, max = 100000) {
+export function dataImageOk(s, max = 120000) {
   return (
     typeof s === "string" &&
     s.length >= 80 &&
     s.length <= max &&
-    /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s)
+    /^data:image\/(jpeg|jpg|png);base64,/i.test(s)
   );
 }
 

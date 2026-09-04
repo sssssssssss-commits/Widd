@@ -40,7 +40,7 @@ assert.equal(
   dataImageOk(`data:image/jpeg;base64,${"A".repeat(80)}=`),
   true,
 );
-assert.equal(dataImageOk("data:image/png;base64," + "A".repeat(80), 100000), false);
+assert.equal(dataImageOk("data:image/png;base64," + "A".repeat(80), 100000), true);
 assert.equal(wallRot("abc"), wallRot("abc"));
 assert.ok(Math.abs(wallRot("sig-1")) <= 6);
 

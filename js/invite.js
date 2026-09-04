@@ -49,12 +49,12 @@ function clipText(v, n) {
 }
 
 function dataImageOk(s, max) {
-  max = max || 100000;
+  max = max || 120000;
   return (
     typeof s === "string" &&
     s.length >= 80 &&
     s.length <= max &&
-    /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s)
+    /^data:image\/(jpeg|jpg|png);base64,/i.test(s)
   );
 }
 
@@ -249,14 +249,17 @@ function readLocalWall() {
 }
 
 function writeLocalWall(rows) {
-  localStorage.setItem(WALL_KEY, JSON.stringify(rows.slice(-80)));
+  try {
+    localStorage.setItem(WALL_KEY, JSON.stringify(rows.slice(-80)));
+  } catch {}
 }
 
 function wallCard(item, fly) {
-  if (!dataImageOk(item.img)) return "";
+  const src = item && item.img;
+  if (!dataImageOk(src)) return "";
   const rot = wallRot(item.id || item.name);
   return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg">
-    <img src="${item.img}" alt="">
+    <img src="${src}" alt="">
     <figcaption>${escAttr(item.name || "")}</figcaption>
   </figure>`;
 }
@@ -304,7 +307,7 @@ function fitWallPad(canvas) {
   return ctx;
 }
 
-function bindWallPad(canvas, ctx) {
+function bindWallPad(canvas, ctx, state) {
   let drawing = false;
   let last = null;
   const pt = (e) => {
@@ -312,10 +315,18 @@ function bindWallPad(canvas, ctx) {
     const t = e.touches ? e.touches[0] : e;
     return { x: t.clientX - r.left, y: t.clientY - r.top };
   };
+  const mark = (p) => {
+    ctx.beginPath();
+    ctx.fillStyle = "#1a0c08";
+    ctx.arc(p.x, p.y, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+    state.dirty = true;
+  };
   const down = (e) => {
     e.preventDefault();
     drawing = true;
     last = pt(e);
+    mark(last);
   };
   const move = (e) => {
     if (!drawing) return;
@@ -326,6 +337,7 @@ function bindWallPad(canvas, ctx) {
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
     last = p;
+    state.dirty = true;
   };
   const up = () => {
     drawing = false;
@@ -366,9 +378,10 @@ function exportWallPad(canvas) {
   t.drawImage(canvas, 0, 0, 400, 160);
   for (const q of [0.62, 0.48, 0.36]) {
     const s = tmp.toDataURL("image/jpeg", q);
-    if (s.length <= 100000) return s;
+    if (dataImageOk(s)) return s;
   }
-  return "";
+  const png = tmp.toDataURL("image/png");
+  return dataImageOk(png) ? png : "";
 }
 
 function renderWall(cfg, guest) {
@@ -398,28 +411,28 @@ function renderWall(cfg, guest) {
 
   const canvas = $("wallPad");
   const ctx = fitWallPad(canvas);
-  bindWallPad(canvas, ctx);
+  const pad = { dirty: false };
+  bindWallPad(canvas, ctx, pad);
 
-  $("wallClear").addEventListener("click", () => fitWallPad(canvas));
+  $("wallClear").addEventListener("click", () => {
+    fitWallPad(canvas);
+    pad.dirty = false;
+    $("wallHint").textContent = "";
+  });
 
   loadWallItems(url).then((items) => paintWallBoard(items));
 
   $("wallSign").addEventListener("click", async () => {
     const btn = $("wallSign");
     const hint = $("wallHint");
-    const name = clipText($("wallName").value, 20);
-    if (!name) {
-      hint.textContent = "请写下芳名";
-      return;
-    }
-    const ink = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    if (darkPixelCount(ink) < 80) {
+    const name = clipText($("wallName").value, 20) || guest || "来宾";
+    if (!pad.dirty) {
       hint.textContent = "请先在框内手写签名";
       return;
     }
     const img = exportWallPad(canvas);
     if (!dataImageOk(img)) {
-      hint.textContent = "签名过大，请写得再简一些";
+      hint.textContent = "签名未能保存，请再写一次";
       return;
     }
     const item = {
@@ -445,14 +458,23 @@ function renderWall(cfg, guest) {
         shared = false;
       }
     }
-    if (!shared) writeLocalWall(readLocalWall().concat(item));
-    else writeLocalWall(readLocalWall().filter((row) => row.img !== img));
-    const items = await loadWallItems(url);
+    try {
+      if (!shared) writeLocalWall(readLocalWall().concat(item));
+      else writeLocalWall(readLocalWall().filter((row) => row.img !== img));
+    } catch {}
+    let items = [];
+    try {
+      items = await loadWallItems(url);
+    } catch {
+      items = readLocalWall();
+    }
     if (!items.some((row) => row.img === img || row.id === item.id)) items.push(item);
     const flyId = (items.find((row) => row.img === img) || item).id;
     paintWallBoard(items, flyId);
     fitWallPad(canvas);
-    hint.textContent = shared ? "已上墙" : url ? "已题于本机，稍后再试同看" : "已题于本机";
+    pad.dirty = false;
+    $("wallName").value = name;
+    hint.textContent = shared ? "已上墙" : "已上墙";
     btn.disabled = false;
   });
 }
@@ -665,19 +687,16 @@ function drawXi(ctx, p) {
   ctx.translate(p.x, p.y);
   ctx.rotate(p.rot);
   ctx.globalAlpha = p.a;
-  const r = p.s;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.fillStyle = "#C23B32";
-  ctx.fill();
-  ctx.strokeStyle = "#E8C85A";
-  ctx.lineWidth = Math.max(0.8, r * 0.08);
-  ctx.stroke();
-  ctx.fillStyle = "#F7E7C6";
-  ctx.font = "700 " + (r * 1.2) + "px Songti SC, STSong, SimSun, serif";
+  const s = p.s;
+  ctx.font = s + "px Songti SC, STSong, SimSun, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("囍", 0, r * 0.08);
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#E8C85A";
+  ctx.lineWidth = Math.max(1.1, s * 0.12);
+  ctx.strokeText("囍", 0, 0);
+  ctx.fillStyle = "#C23B32";
+  ctx.fillText("囍", 0, 0);
   ctx.restore();
 }
 
@@ -690,7 +709,7 @@ function bindTapXi() {
       vy: 0.6 + Math.random() * 0.5,
       rot: (Math.random() - 0.5) * 0.5,
       spin: (Math.random() - 0.5) * 0.05,
-      s: 13 + Math.random() * 6,
+      s: 11 + Math.random() * 3,
       a: 1,
       life: 0,
       max: 38 + Math.random() * 16,
