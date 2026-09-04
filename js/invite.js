@@ -92,13 +92,17 @@ function wallGridSlot(i, n) {
   };
 }
 
-function strokeWidthFromTouch(force, speed, minW, maxW) {
+function strokeWidthFromTouch(input, minW, maxW) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;
-  const f = Number(force) || 0;
-  if (f > 0.02) return lo + Math.min(1, f) * (hi - lo);
-  const t = Math.max(0, Math.min(1, 1 - (Number(speed) || 0) / 2.4));
-  return lo + (hi - lo) * (0.28 + t * 0.5);
+  const force = Number(input && input.force) || 0;
+  const radius = Number(input && input.radius) || 0;
+  const speed = Number(input && input.speed) || 0;
+  let t = 0.45;
+  if (radius > 1.2) t = Math.max(0, Math.min(1, (radius - 6) / 22));
+  else if (force > 0.05 && force < 0.97) t = Math.min(1, force);
+  else t = Math.max(0, Math.min(1, 1 - (speed - 0.03) / 0.55));
+  return lo + (hi - lo) * t;
 }
 
 function isWallHost(search, key) {
@@ -131,14 +135,13 @@ const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
 const GOLD_INK = "#D4A017";
-const PINK_PAD = "#F6D5DC";
 // ponytail: public counter, 6-month TTL on GET; Worker KV epoch if rsvp.endpoint is live
 const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-io/widd-wall";
 
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=10", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=11", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -384,8 +387,7 @@ function fitWallPad(canvas) {
   canvas.height = Math.floor(h * dpr);
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = PINK_PAD;
-  ctx.fillRect(0, 0, w, h);
+  ctx.clearRect(0, 0, w, h);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.strokeStyle = GOLD_INK;
@@ -394,7 +396,7 @@ function fitWallPad(canvas) {
 }
 
 function padPoint(canvas, e) {
-  const t = e.touches ? e.touches[0] : e;
+  const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
   const r = canvas.getBoundingClientRect();
   if (r.width < 2 || r.height < 2) return { x: 0, y: 0 };
   if (innerHeight > innerWidth + 8) {
@@ -409,11 +411,18 @@ function padPoint(canvas, e) {
   };
 }
 
-function touchForce(e) {
-  const t = e.touches && e.touches[0];
-  if (!t) return 0;
-  const f = t.force || t.webkitForce || 0;
-  return f > 0.01 && f <= 1 ? f : 0;
+function touchSample(e) {
+  const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
+  const force = t ? Number(t.force || t.webkitForce || 0) : Number(e.pressure || 0);
+  const radius = t
+    ? Math.max(
+        Number(t.radiusX) || 0,
+        Number(t.radiusY) || 0,
+        Number(t.webkitRadiusX) || 0,
+        Number(t.webkitRadiusY) || 0,
+      )
+    : Number(e.width || 0);
+  return { force, radius };
 }
 
 function bindWallPad(canvas, ctx, state) {
@@ -421,14 +430,20 @@ function bindWallPad(canvas, ctx, state) {
   let last = null;
   const widthOf = (e, p) => {
     const h = canvas.clientHeight || 280;
-    const minW = Math.max(2.1, h / 90);
-    const maxW = Math.max(minW + 2, h / 16);
-    let speed = 0;
+    const minW = Math.max(2.4, h / 52);
+    const maxW = Math.max(minW + 4, h / 10);
+    const sample = touchSample(e);
+    let speed = 0.12;
     if (last) {
-      const dt = Math.max(8, Date.now() - last.t);
-      speed = (Math.hypot(p.x - last.x, p.y - last.y) / dt) * 16;
+      const dt = Math.max(4, (e.timeStamp || Date.now()) - last.t);
+      speed = Math.hypot(p.x - last.x, p.y - last.y) / dt;
     }
-    return strokeWidthFromTouch(touchForce(e), speed, minW, maxW);
+    const raw = strokeWidthFromTouch(
+      { force: sample.force, radius: sample.radius, speed },
+      minW,
+      maxW,
+    );
+    return last ? last.w * 0.32 + raw * 0.68 : raw;
   };
   const stamp = (x, y, w) => {
     ctx.beginPath();
@@ -439,7 +454,7 @@ function bindWallPad(canvas, ctx, state) {
   };
   const ribbon = (a, b, w0, w1) => {
     const dist = Math.hypot(b.x - a.x, b.y - a.y);
-    const steps = Math.max(1, Math.ceil(dist / 1.4));
+    const steps = Math.max(1, Math.ceil(dist / 1.2));
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
       stamp(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, w0 + (w1 - w0) * t);
@@ -450,7 +465,7 @@ function bindWallPad(canvas, ctx, state) {
     drawing = true;
     const p = padPoint(canvas, e);
     const w = widthOf(e, p);
-    last = { x: p.x, y: p.y, w, t: Date.now() };
+    last = { x: p.x, y: p.y, w, t: e.timeStamp || Date.now() };
     stamp(p.x, p.y, w);
   };
   const move = (e) => {
@@ -459,7 +474,7 @@ function bindWallPad(canvas, ctx, state) {
     const p = padPoint(canvas, e);
     const w = widthOf(e, p);
     ribbon(last, p, last.w, w);
-    last = { x: p.x, y: p.y, w, t: Date.now() };
+    last = { x: p.x, y: p.y, w, t: e.timeStamp || Date.now() };
   };
   const up = () => {
     drawing = false;
@@ -492,19 +507,17 @@ function bindWallPad(canvas, ctx, state) {
 }
 
 function exportWallPad(canvas) {
-  const tmp = document.createElement("canvas");
-  tmp.width = 400;
-  tmp.height = 160;
-  const t = tmp.getContext("2d");
-  t.fillStyle = PINK_PAD;
-  t.fillRect(0, 0, 400, 160);
-  t.drawImage(canvas, 0, 0, 400, 160);
-  for (const q of [0.62, 0.48, 0.36]) {
-    const s = tmp.toDataURL("image/jpeg", q);
-    if (dataImageOk(s)) return s;
-  }
-  const png = tmp.toDataURL("image/png");
-  return dataImageOk(png) ? png : "";
+  const tryPng = (w, h) => {
+    const tmp = document.createElement("canvas");
+    tmp.width = w;
+    tmp.height = h;
+    const t = tmp.getContext("2d");
+    t.clearRect(0, 0, w, h);
+    t.drawImage(canvas, 0, 0, w, h);
+    const png = tmp.toDataURL("image/png");
+    return dataImageOk(png) ? png : "";
+  };
+  return tryPng(400, 160) || tryPng(280, 112) || tryPng(200, 80);
 }
 
 async function postWall(url, body) {

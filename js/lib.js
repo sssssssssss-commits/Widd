@@ -125,12 +125,15 @@ export function wallBoxesOverlap(a, b, pad = 0.5) {
   );
 }
 
-export function strokeWidthFromTouch(force, speed, minW = 2.2, maxW = 11) {
+export function strokeWidthFromTouch(input, minW = 2.2, maxW = 11) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;
-  const f = Number(force) || 0;
-  if (f > 0.02) return lo + Math.min(1, f) * (hi - lo);
-  // ponytail: Touch.force is 0 on most Android; slow stroke reads heavier until a real pressure API exists
-  const t = Math.max(0, Math.min(1, 1 - (Number(speed) || 0) / 2.4));
-  return lo + (hi - lo) * (0.28 + t * 0.5);
+  const force = Number(input && input.force) || 0;
+  const radius = Number(input && input.radius) || 0;
+  const speed = Number(input && input.speed) || 0;
+  let t = 0.45;
+  if (radius > 1.2) t = Math.max(0, Math.min(1, (radius - 6) / 22));
+  else if (force > 0.05 && force < 0.97) t = Math.min(1, force);
+  else t = Math.max(0, Math.min(1, 1 - (speed - 0.03) / 0.55));
+  return lo + (hi - lo) * t;
 }

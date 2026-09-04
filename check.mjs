@@ -70,8 +70,9 @@ assert.deepEqual(
 );
 assert.equal(wallWithoutMine([{ by: "a" }, {}], "a", false).length, 1);
 
-assert.ok(strokeWidthFromTouch(1, 0) > strokeWidthFromTouch(0.2, 0));
-assert.ok(strokeWidthFromTouch(0, 0) > strokeWidthFromTouch(0, 3));
+assert.ok(strokeWidthFromTouch({ force: 0.9, radius: 0, speed: 0 }) > strokeWidthFromTouch({ force: 0.2, radius: 0, speed: 0 }));
+assert.ok(strokeWidthFromTouch({ force: 0, radius: 24, speed: 0 }) > strokeWidthFromTouch({ force: 0, radius: 8, speed: 0 }));
+assert.ok(strokeWidthFromTouch({ force: 0, radius: 0, speed: 0.05 }) > strokeWidthFromTouch({ force: 0, radius: 0, speed: 0.8 }));
 
 for (const n of [1, 4, 9, 16, 30]) {
   const slots = Array.from({ length: n }, (_, i) => wallGridSlot(i, n));
