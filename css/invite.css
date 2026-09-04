@@ -590,6 +590,7 @@ body::before {
   margin: 0 0 .6rem;
   overflow: hidden;
   background: url("../assets/xuan.jpg") center / cover no-repeat #F6F1E6;
+  container-type: size;
 }
 
 .wall-xi {
@@ -598,11 +599,12 @@ body::before {
   display: grid;
   place-items: center;
   font-family: "KaiTi", "KaiTi_GB2312", "STKaiti", "Kaiti SC", "华文楷体", "Noto Serif SC", serif;
-  font-size: min(42vw, 7.2rem);
+  font-size: 68vw;
+  font-size: 94cqh;
   font-weight: 700;
   font-style: normal;
   color: #8B241C;
-  opacity: .16;
+  opacity: .7;
   pointer-events: none;
   z-index: 0;
   line-height: 1;

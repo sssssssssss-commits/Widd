@@ -524,8 +524,8 @@ async function snapshotWall(items) {
     ctx.drawImage(paper, dx, dy, dw, dh);
   }
   ctx.save();
-  ctx.fillStyle = "rgba(139,36,28,0.16)";
-  ctx.font = `700 ${Math.round(H * 0.38)}px "KaiTi","KaiTi_GB2312","STKaiti","Kaiti SC","华文楷体",serif`;
+  ctx.fillStyle = "rgba(139,36,28,0.7)";
+  ctx.font = `700 ${Math.round(H * 0.94)}px "KaiTi","KaiTi_GB2312","STKaiti","Kaiti SC","华文楷体",serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("囍", W / 2, H / 2);
