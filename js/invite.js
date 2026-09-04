@@ -1,6 +1,49 @@
-import { coupleLine, escAttr, guestFromSearch, mapLinks, pad2, remaining } from "./lib.js";
+function guestFromSearch(search) {
+  const raw = String(search || "");
+  const q = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
+  return (q.get("to") || "").trim().slice(0, 20);
+}
 
-const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function remaining(now, then) {
+  const ms = then - now;
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, past: true };
+  }
+  const s = Math.floor(ms / 1000);
+  return {
+    days: Math.floor(s / 86400),
+    hours: Math.floor((s % 86400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+    seconds: s % 60,
+    past: false,
+  };
+}
+
+function coupleLine(groom, bride) {
+  const a = `${groom?.family || ""}${groom?.name || ""}`.trim();
+  const b = `${bride?.family || ""}${bride?.name || ""}`.trim();
+  return [a, b].filter(Boolean).join(" 与 ");
+}
+
+function mapLinks({ name, address, lat, lng }) {
+  const n = encodeURIComponent(name || "婚礼");
+  const a = encodeURIComponent(address || "");
+  return {
+    amap: `https://uri.amap.com/marker?position=${lng},${lat}&name=${n}&src=widd&coordinate=gaode&callnative=1`,
+    tencent: `https://apis.map.qq.com/uri/v1/marker?marker=coord:${lat},${lng};title:${n};addr:${a}&referer=widd`,
+  };
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+function escAttr(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]),
+  );
+}
+
 const RSVP_KEY = "widd-rsvp";
 
 const $ = (id) => document.getElementById(id);
@@ -150,7 +193,8 @@ function stampDone() {
   const form = $("rsvpForm");
   if (!form) return;
   form.querySelector("button").disabled = true;
-  $("stamp")?.classList.add("is-on");
+  const stamp = $("stamp");
+  if (stamp) stamp.classList.add("is-on");
 }
 
 function startClepsydra(iso) {
@@ -174,12 +218,6 @@ function openLetter() {
   const seal = $("seal");
   const letter = $("letter");
 
-  if (REDUCE) {
-    gate.classList.add("is-gone");
-    letter.hidden = false;
-    return;
-  }
-
   seal.classList.add("is-bloom");
   env.classList.add("is-open");
   setTimeout(() => {
@@ -190,16 +228,42 @@ function openLetter() {
 
 let foilStarted = false;
 
-function startFoil(canvas, staticOnly) {
-  if (foilStarted || !canvas) return;
-  foilStarted = true;
+function startFoil(canvas) {
+  if (!canvas) return;
+  const boot = () => {
+    if (foilStarted) return;
+    if ((innerWidth || 0) < 20) {
+      setTimeout(boot, 80);
+      return;
+    }
+    foilStarted = true;
+    runFoil(canvas);
+  };
+  boot();
+  document.addEventListener("WeixinJSBridgeReady", boot, false);
+  document.addEventListener(
+    "touchstart",
+    function onTouch() {
+      document.removeEventListener("touchstart", onTouch, false);
+      boot();
+    },
+    false,
+  );
+}
+
+function runFoil(canvas) {
   const ctx = canvas.getContext("2d");
   const PETAL = ["#C23B32", "#D4564A", "#B8322C", "#E07A6A"];
   const GOLD = ["#E8C85A", "#F4DC8A", "#D4A93A"];
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
   const fit = () => {
-    canvas.width = innerWidth * devicePixelRatio;
-    canvas.height = innerHeight * devicePixelRatio;
-    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    const w = innerWidth || 320;
+    const h = innerHeight || 568;
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
   fit();
   addEventListener("resize", fit, { passive: true });
@@ -313,10 +377,10 @@ function startFoil(canvas, staticOnly) {
       petalPath(ctx, p);
     }
     ctx.globalAlpha = 1;
-    if (move) requestAnimationFrame(() => draw(true));
   };
 
-  draw(!staticOnly);
+  setInterval(() => draw(true), 33);
+  draw(true);
 }
 
 function bindGate() {
@@ -344,7 +408,7 @@ async function main() {
   $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
   startClepsydra(cfg.datetime);
   bindGate();
-  startFoil($("foil"), false);
+  startFoil($("foil"));
 }
 
 main().catch(() => {
