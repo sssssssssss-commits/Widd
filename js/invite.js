@@ -15,7 +15,11 @@ function applyShare(cfg) {
   const title = cfg.share?.title || cfg.title || "婚礼请柬";
   const desc = cfg.share?.description || "一封信，等你拆";
   const origin = (cfg.share?.origin || "").replace(/\/$/, "");
-  const abs = (p) => (origin && p ? `${origin}/${p.replace(/^\//, "")}` : p);
+  const abs = (p) => {
+    if (!p) return p;
+    if (/^https?:\/\//.test(p)) return p;
+    return origin ? `${origin}/${p.replace(/^\//, "")}` : p;
+  };
   document.title = title;
   const set = (sel, attr, val) => {
     const el = document.querySelector(sel);
@@ -169,12 +173,10 @@ function openLetter() {
   const env = $("envelope");
   const seal = $("seal");
   const letter = $("letter");
-  const foil = $("foil");
 
   if (REDUCE) {
     gate.classList.add("is-gone");
     letter.hidden = false;
-    startFoil(foil, true);
     return;
   }
 
@@ -183,13 +185,17 @@ function openLetter() {
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;
-    startFoil(foil, false);
   }, 900);
 }
 
+let foilStarted = false;
+
 function startFoil(canvas, staticOnly) {
+  if (foilStarted || !canvas) return;
+  foilStarted = true;
   const ctx = canvas.getContext("2d");
-  const GOLD = ["#C9A24A", "#E4C36A", "#C23B32", "#DE6B5C"];
+  const PETAL = ["#C23B32", "#D4564A", "#B8322C", "#E07A6A"];
+  const GOLD = ["#E4C36A", "#C9A24A", "#F0D78A"];
   const fit = () => {
     canvas.width = innerWidth * devicePixelRatio;
     canvas.height = innerHeight * devicePixelRatio;
@@ -198,57 +204,109 @@ function startFoil(canvas, staticOnly) {
   fit();
   addEventListener("resize", fit, { passive: true });
 
-  const n = staticOnly ? 22 : 50;
-  const bits = Array.from({ length: n }, (_, i) => ({
+  const petals = Array.from({ length: staticOnly ? 8 : 16 }, (_, i) => ({
     x: Math.random() * innerWidth,
     y: Math.random() * innerHeight,
-    s: 0.6 + Math.random() * 1.8,
-    vy: 0.12 + Math.random() * 0.28,
-    vx: (Math.random() - 0.5) * 0.25,
-    a: 0.25 + Math.random() * 0.5,
-    c: GOLD[i % GOLD.length],
-    plum: i % 11 === 0,
-    rot: Math.random() * Math.PI,
+    s: 7 + Math.random() * 9,
+    vy: 0.22 + Math.random() * 0.35,
+    amp: 0.35 + Math.random() * 0.55,
+    sway: 48 + Math.random() * 40,
+    spin: (Math.random() - 0.5) * 0.018,
+    a: 0.45 + Math.random() * 0.4,
+    c: PETAL[i % PETAL.length],
+    rot: Math.random() * Math.PI * 2,
+    ph: Math.random() * 1000,
   }));
 
-  const plum = (b) => {
+  const motes = Array.from({ length: staticOnly ? 18 : 34 }, (_, i) => ({
+    x: Math.random() * innerWidth,
+    y: Math.random() * innerHeight,
+    s: 0.6 + Math.random() * 1.4,
+    vy: 0.08 + Math.random() * 0.16,
+    a: 0.35 + Math.random() * 0.5,
+    c: GOLD[i % GOLD.length],
+    ph: Math.random() * 1000,
+    twk: 18 + Math.random() * 28,
+    spark: i % 7 === 0,
+  }));
+
+  const petalPath = (ctx, p) => {
     ctx.save();
-    ctx.translate(b.x, b.y);
-    ctx.rotate(b.rot);
-    ctx.fillStyle = `rgba(194,59,50,${b.a})`;
-    for (let i = 0; i < 5; i++) {
-      ctx.rotate((Math.PI * 2) / 5);
-      ctx.beginPath();
-      ctx.ellipse(0, -b.s * 2.2, b.s * 1.1, b.s * 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.fillStyle = `rgba(228,195,106,${b.a})`;
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    const flip = 0.72 + 0.28 * Math.sin(p.ph);
+    ctx.scale(flip, 1);
+    const w = p.s;
+    const h = p.s * 1.55;
     ctx.beginPath();
-    ctx.arc(0, 0, b.s * 0.7, 0, Math.PI * 2);
+    ctx.moveTo(0, h * 0.48);
+    ctx.bezierCurveTo(-w, h * 0.18, -w * 0.35, -h * 0.42, 0, -h * 0.52);
+    ctx.bezierCurveTo(w * 0.35, -h * 0.42, w, h * 0.18, 0, h * 0.48);
+    ctx.fillStyle = p.c;
+    ctx.globalAlpha = p.a;
     ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.32);
+    ctx.quadraticCurveTo(w * 0.06, 0, 0, -h * 0.38);
+    ctx.strokeStyle = "rgba(228,195,106,0.55)";
+    ctx.lineWidth = Math.max(0.5, p.s * 0.07);
+    ctx.globalAlpha = p.a * 0.9;
+    ctx.stroke();
     ctx.restore();
   };
 
+  const mote = (ctx, g, t) => {
+    const tw = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t / g.twk + g.ph));
+    ctx.save();
+    ctx.translate(g.x, g.y);
+    ctx.globalAlpha = g.a * tw;
+    ctx.fillStyle = g.c;
+    ctx.beginPath();
+    ctx.arc(0, 0, g.s, 0, Math.PI * 2);
+    ctx.fill();
+    if (g.spark) {
+      ctx.rotate(t * 0.002 + g.ph);
+      ctx.strokeStyle = g.c;
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-g.s * 3.2, 0);
+      ctx.lineTo(g.s * 3.2, 0);
+      ctx.moveTo(0, -g.s * 3.2);
+      ctx.lineTo(0, g.s * 3.2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  };
+
+  let t = 0;
   const draw = (move) => {
+    t += 1;
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    for (const b of bits) {
+    for (const g of motes) {
       if (move) {
-        b.y += b.vy;
-        b.x += b.vx + Math.sin(b.y / 40) * 0.08;
-        b.rot += 0.002;
-        if (b.y > innerHeight + 8) {
-          b.y = -8;
-          b.x = Math.random() * innerWidth;
+        g.y += g.vy;
+        g.x += Math.sin(t / 55 + g.ph) * 0.12;
+        if (g.y > innerHeight + 6) {
+          g.y = -6;
+          g.x = Math.random() * innerWidth;
         }
       }
-      if (b.plum) plum(b);
-      else {
-        ctx.fillStyle = b.c;
-        ctx.globalAlpha = b.a;
-        ctx.fillRect(b.x, b.y, b.s, b.s * 0.6);
-        ctx.globalAlpha = 1;
-      }
+      mote(ctx, g, t);
     }
+    for (const p of petals) {
+      if (move) {
+        p.y += p.vy;
+        p.x += Math.sin((t + p.ph) / p.sway) * p.amp;
+        p.rot += p.spin;
+        p.ph += 0.04;
+        if (p.y > innerHeight + 20) {
+          p.y = -20;
+          p.x = Math.random() * innerWidth;
+        }
+      }
+      petalPath(ctx, p);
+    }
+    ctx.globalAlpha = 1;
     if (move) requestAnimationFrame(() => draw(true));
   };
 
@@ -280,6 +338,7 @@ async function main() {
   $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
   startClepsydra(cfg.datetime);
   bindGate();
+  startFoil($("foil"), REDUCE);
 }
 
 main().catch(() => {
