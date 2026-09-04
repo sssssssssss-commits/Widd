@@ -165,7 +165,7 @@ function startClepsydra(iso) {
     $("clepsydra").hidden = t.past;
   };
   paint();
-  if (!REDUCE) setInterval(paint, 1000);
+  setInterval(paint, 1000);
 }
 
 function openLetter() {
@@ -195,7 +195,7 @@ function startFoil(canvas, staticOnly) {
   foilStarted = true;
   const ctx = canvas.getContext("2d");
   const PETAL = ["#C23B32", "#D4564A", "#B8322C", "#E07A6A"];
-  const GOLD = ["#E4C36A", "#C9A24A", "#F0D78A"];
+  const GOLD = ["#E8C85A", "#F4DC8A", "#D4A93A"];
   const fit = () => {
     canvas.width = innerWidth * devicePixelRatio;
     canvas.height = innerHeight * devicePixelRatio;
@@ -204,30 +204,33 @@ function startFoil(canvas, staticOnly) {
   fit();
   addEventListener("resize", fit, { passive: true });
 
-  const petals = Array.from({ length: staticOnly ? 8 : 16 }, (_, i) => ({
+  const petals = Array.from({ length: 22 }, (_, i) => ({
     x: Math.random() * innerWidth,
     y: Math.random() * innerHeight,
-    s: 7 + Math.random() * 9,
-    vy: 0.22 + Math.random() * 0.35,
-    amp: 0.35 + Math.random() * 0.55,
-    sway: 48 + Math.random() * 40,
-    spin: (Math.random() - 0.5) * 0.018,
-    a: 0.45 + Math.random() * 0.4,
+    s: 10 + Math.random() * 12,
+    vy: 0.45 + Math.random() * 0.55,
+    amp: 0.55 + Math.random() * 0.75,
+    sway: 36 + Math.random() * 28,
+    spin: (Math.random() - 0.5) * 0.04,
+    a: 0.72 + Math.random() * 0.22,
     c: PETAL[i % PETAL.length],
     rot: Math.random() * Math.PI * 2,
     ph: Math.random() * 1000,
   }));
 
-  const motes = Array.from({ length: staticOnly ? 18 : 34 }, (_, i) => ({
+  const motes = Array.from({ length: 55 }, (_, i) => ({
     x: Math.random() * innerWidth,
     y: Math.random() * innerHeight,
-    s: 0.6 + Math.random() * 1.4,
-    vy: 0.08 + Math.random() * 0.16,
-    a: 0.35 + Math.random() * 0.5,
+    s: 1.8 + Math.random() * 2.8,
+    w: 2.5 + Math.random() * 4.5,
+    h: 1.1 + Math.random() * 1.6,
+    vy: 0.18 + Math.random() * 0.32,
+    a: 0.7 + Math.random() * 0.3,
     c: GOLD[i % GOLD.length],
     ph: Math.random() * 1000,
-    twk: 18 + Math.random() * 28,
-    spark: i % 7 === 0,
+    twk: 14 + Math.random() * 18,
+    spark: i % 4 === 0,
+    rot: Math.random() * Math.PI,
   }));
 
   const petalPath = (ctx, p) => {
@@ -248,7 +251,7 @@ function startFoil(canvas, staticOnly) {
     ctx.beginPath();
     ctx.moveTo(0, h * 0.32);
     ctx.quadraticCurveTo(w * 0.06, 0, 0, -h * 0.38);
-    ctx.strokeStyle = "rgba(228,195,106,0.55)";
+    ctx.strokeStyle = "rgba(232,200,90,0.75)";
     ctx.lineWidth = Math.max(0.5, p.s * 0.07);
     ctx.globalAlpha = p.a * 0.9;
     ctx.stroke();
@@ -256,23 +259,25 @@ function startFoil(canvas, staticOnly) {
   };
 
   const mote = (ctx, g, t) => {
-    const tw = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(t / g.twk + g.ph));
+    const tw = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(t / g.twk + g.ph));
     ctx.save();
     ctx.translate(g.x, g.y);
+    ctx.rotate(g.rot);
     ctx.globalAlpha = g.a * tw;
     ctx.fillStyle = g.c;
-    ctx.beginPath();
-    ctx.arc(0, 0, g.s, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(-g.w, -g.h, g.w * 2, g.h * 2);
+    ctx.fillStyle = "#fff6d0";
+    ctx.globalAlpha = g.a * tw * 0.5;
+    ctx.fillRect(-g.w, -g.h, g.w * 0.9, g.h * 0.7);
     if (g.spark) {
-      ctx.rotate(t * 0.002 + g.ph);
+      ctx.globalAlpha = g.a * tw;
       ctx.strokeStyle = g.c;
-      ctx.lineWidth = 0.6;
+      ctx.lineWidth = 0.9;
       ctx.beginPath();
-      ctx.moveTo(-g.s * 3.2, 0);
-      ctx.lineTo(g.s * 3.2, 0);
-      ctx.moveTo(0, -g.s * 3.2);
-      ctx.lineTo(0, g.s * 3.2);
+      ctx.moveTo(-g.w * 2.4, 0);
+      ctx.lineTo(g.w * 2.4, 0);
+      ctx.moveTo(0, -g.w * 2.4);
+      ctx.lineTo(0, g.w * 2.4);
       ctx.stroke();
     }
     ctx.restore();
@@ -285,9 +290,10 @@ function startFoil(canvas, staticOnly) {
     for (const g of motes) {
       if (move) {
         g.y += g.vy;
-        g.x += Math.sin(t / 55 + g.ph) * 0.12;
-        if (g.y > innerHeight + 6) {
-          g.y = -6;
+        g.x += Math.sin(t / 55 + g.ph) * 0.18;
+        g.rot += 0.01;
+        if (g.y > innerHeight + 8) {
+          g.y = -8;
           g.x = Math.random() * innerWidth;
         }
       }
@@ -338,7 +344,7 @@ async function main() {
   $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
   startClepsydra(cfg.datetime);
   bindGate();
-  startFoil($("foil"), REDUCE);
+  startFoil($("foil"), false);
 }
 
 main().catch(() => {
