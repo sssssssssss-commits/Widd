@@ -15,12 +15,12 @@ function clip(v, n) {
   return String(v ?? "").trim().slice(0, n);
 }
 
-function jpegOk(s) {
+function imageOk(s) {
   return (
     typeof s === "string" &&
     s.length >= 80 &&
-    s.length <= 100000 &&
-    /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s)
+    s.length <= 120000 &&
+    /^data:image\/(jpeg|jpg|png);base64,/i.test(s)
   );
 }
 
@@ -30,17 +30,43 @@ async function listWall(env) {
     await Promise.all(listed.keys.map((k) => env.RSVP.get(k.name, "json")))
   ).filter(Boolean);
   rows.sort((a, b) => String(a.at).localeCompare(String(b.at)));
-  return rows.slice(-80).map(({ id, name, img, at }) => ({ id, name, img, at }));
+  return rows.slice(-80).map(({ id, name, img, at, by, epoch }) => ({ id, name, img, at, by, epoch }));
 }
 
 async function saveWall(env, body) {
-  const name = clip(body.name, 20);
+  const name = clip(body.name, 20) || "来宾";
+  const by = clip(body.by, 80);
   const img = String(body.img || "");
-  if (!name || !jpegOk(img)) return json({ ok: false }, 400);
+  if (!imageOk(img)) return json({ ok: false }, 400);
   const id = `${Date.now()}-${crypto.randomUUID()}`;
-  const row = { id, name, img, at: new Date().toISOString() };
+  const row = {
+    id,
+    name,
+    img,
+    at: new Date().toISOString(),
+    by,
+    epoch: Number(body.epoch) || 0,
+  };
   await env.RSVP.put(`sig:${id}`, JSON.stringify(row));
   return json({ ok: true, id, name, at: row.at });
+}
+
+async function clearMine(env, body) {
+  const by = clip(body.by, 80);
+  if (!by) return json({ ok: false }, 400);
+  const listed = await env.RSVP.list({ prefix: "sig:" });
+  for (const k of listed.keys) {
+    const row = await env.RSVP.get(k.name, "json");
+    if (row && String(row.by || "") === by) await env.RSVP.delete(k.name);
+  }
+  return json({ ok: true });
+}
+
+async function wipeWall(env, body, host) {
+  if (!host || clip(body.host, 40) !== host) return json({ ok: false }, 403);
+  const listed = await env.RSVP.list({ prefix: "sig:" });
+  await Promise.all(listed.keys.map((k) => env.RSVP.delete(k.name)));
+  return json({ ok: true });
 }
 
 export default {
@@ -57,6 +83,8 @@ export default {
     }
 
     if (body.kind === "wall") return saveWall(env, body);
+    if (body.kind === "wall-mine") return clearMine(env, body);
+    if (body.kind === "wall-wipe") return wipeWall(env, body, env.WALL_HOST);
 
     const row = {
       name: clip(body.name, 20),

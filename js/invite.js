@@ -87,13 +87,42 @@ function wallSlot(i) {
   };
 }
 
+function isWallHost(search, key) {
+  const k = String(key || "");
+  if (!k) return false;
+  const raw = String(search || "");
+  const q = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
+  return q.get("host") === k;
+}
+
+function wallHitUrl(getUrl) {
+  return String(getUrl || "").replace("/get/", "/hit/");
+}
+
+function wallAfterWipe(items, epoch) {
+  const n = Number(epoch) || 0;
+  return (Array.isArray(items) ? items : []).filter((row) => (Number(row?.epoch) || 0) >= n);
+}
+
+function wallWithoutMine(items, by, dropUntagged) {
+  const id = String(by || "");
+  return (Array.isArray(items) ? items : []).filter((row) => {
+    const owner = String(row?.by || "");
+    if (owner) return owner !== id;
+    return !dropUntagged;
+  });
+}
+
 const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
+const BY_KEY = "widd-by";
+// ponytail: public counter, 6-month TTL on GET; Worker KV epoch if rsvp.endpoint is live
+const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-io/widd-wall";
 
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=9", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=10", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -260,6 +289,38 @@ function writeLocalWall(rows) {
   } catch {}
 }
 
+function wallBy() {
+  try {
+    let id = localStorage.getItem(BY_KEY);
+    if (!id) {
+      id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(BY_KEY, id);
+    }
+    return id;
+  } catch {
+    return `tmp-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
+async function fetchWallEpoch(getUrl) {
+  try {
+    const res = await fetch(getUrl || WALL_EPOCH_GET, { cache: "no-store" });
+    if (res.status === 404) return 0;
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    return Number(data.value) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function bumpWallEpoch(getUrl) {
+  const res = await fetch(wallHitUrl(getUrl || WALL_EPOCH_GET), { cache: "no-store" });
+  if (!res.ok) throw new Error();
+  const data = await res.json();
+  return Number(data.value) || 0;
+}
+
 function wallCard(item, i, fly) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
@@ -388,6 +449,20 @@ function exportWallPad(canvas) {
   return dataImageOk(png) ? png : "";
 }
 
+async function postWall(url, body) {
+  if (!url) return false;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 function renderWall(cfg, guest) {
   const soon = $("wallSoon");
   const wall = $("wall");
@@ -398,10 +473,10 @@ function renderWall(cfg, guest) {
   }
   soon.hidden = true;
   wall.hidden = false;
-  if (new URLSearchParams(location.search).has("clearwall")) {
-    try { localStorage.removeItem(WALL_KEY); } catch {}
-  }
   const url = wallEndpoint(cfg);
+  const host = isWallHost(location.search, cfg.wallHost);
+  const by = wallBy();
+  const epochUrl = cfg.wallEpoch || WALL_EPOCH_GET;
   wall.innerHTML = `<div class="wall-box">
       <h2>签名墙</h2>
       <div class="wall-yard">
@@ -413,6 +488,10 @@ function renderWall(cfg, guest) {
         <button type="button" id="wallClear">重写</button>
         <button type="button" id="wallSign">题上</button>
       </div>
+      <div class="wall-actions">
+        <button type="button" id="wallMine">撤下我的</button>
+        ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
+      </div>
       <p class="wall-hint" id="wallHint"></p>
     </div>`;
 
@@ -421,13 +500,49 @@ function renderWall(cfg, guest) {
   const pad = { dirty: false };
   bindWallPad(canvas, ctx, pad);
 
+  const refresh = async (flyId) => {
+    const epoch = await fetchWallEpoch(epochUrl);
+    let items = wallAfterWipe(await loadWallItems(url), epoch);
+    writeLocalWall(items);
+    paintWallBoard(items, flyId);
+    return items;
+  };
+
   $("wallClear").addEventListener("click", () => {
     fitWallPad(canvas);
     pad.dirty = false;
     $("wallHint").textContent = "";
   });
 
-  loadWallItems(url).then((items) => paintWallBoard(items));
+  refresh();
+  setInterval(refresh, 20000);
+
+  $("wallMine").addEventListener("click", async () => {
+    if (!window.confirm("确定撤下你留下的签名？")) return;
+    const hint = $("wallHint");
+    writeLocalWall(wallWithoutMine(readLocalWall(), by, !url));
+    await postWall(url, { kind: "wall-mine", by });
+    await refresh();
+    hint.textContent = "已撤下你的签名";
+  });
+
+  const wipeBtn = $("wallWipe");
+  if (wipeBtn) {
+    wipeBtn.addEventListener("click", async () => {
+      if (!window.confirm("确定清空所有人的签名？别人手机上的也会一起清掉。")) return;
+      const hint = $("wallHint");
+      writeLocalWall([]);
+      paintWallBoard([]);
+      let shared = false;
+      try {
+        await bumpWallEpoch(epochUrl);
+        shared = true;
+      } catch {}
+      shared = (await postWall(url, { kind: "wall-wipe", host: cfg.wallHost })) || shared;
+      await refresh();
+      hint.textContent = shared ? "墙上已清空" : "本机已清，别人手机需能联网才会一起清";
+    });
+  }
 
   $("wallSign").addEventListener("click", async () => {
     const btn = $("wallSign");
@@ -442,11 +557,14 @@ function renderWall(cfg, guest) {
       hint.textContent = "签名未能保存，请再写一次";
       return;
     }
+    const epoch = await fetchWallEpoch(epochUrl);
     const item = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       name,
       img,
       at: new Date().toISOString(),
+      by,
+      epoch,
     };
     btn.disabled = true;
     let shared = false;
@@ -455,7 +573,7 @@ function renderWall(cfg, guest) {
         const res = await fetch(url, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ kind: "wall", name, img }),
+          body: JSON.stringify({ kind: "wall", name, img, by, epoch }),
         });
         if (!res.ok) throw new Error();
         const data = await res.json().catch(() => ({}));
@@ -471,7 +589,7 @@ function renderWall(cfg, guest) {
     } catch {}
     let items = [];
     try {
-      items = await loadWallItems(url);
+      items = wallAfterWipe(await loadWallItems(url), epoch);
     } catch {
       items = readLocalWall();
     }

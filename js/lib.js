@@ -72,3 +72,29 @@ export function wallRot(id) {
   for (const c of String(id || "")) n = (n + c.charCodeAt(0)) % 13;
   return n - 6;
 }
+
+export function isWallHost(search, key) {
+  const k = String(key || "");
+  if (!k) return false;
+  const raw = String(search || "");
+  const q = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
+  return q.get("host") === k;
+}
+
+export function wallHitUrl(getUrl) {
+  return String(getUrl || "").replace("/get/", "/hit/");
+}
+
+export function wallAfterWipe(items, epoch) {
+  const n = Number(epoch) || 0;
+  return (Array.isArray(items) ? items : []).filter((row) => (Number(row?.epoch) || 0) >= n);
+}
+
+export function wallWithoutMine(items, by, dropUntagged) {
+  const id = String(by || "");
+  return (Array.isArray(items) ? items : []).filter((row) => {
+    const owner = String(row?.by || "");
+    if (owner) return owner !== id;
+    return !dropUntagged;
+  });
+}

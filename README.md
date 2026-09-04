@@ -2,7 +2,7 @@
 
 手机竖信，微信里打开。点朱印拆开，金箔慢落。改 [data/wedding.json](data/wedding.json) 即可换姓名、日期、地点和照片。
 
-签名墙：`signatureWall` 为 `true` 时，信末可手写落款。同一只 `rsvp.endpoint` Worker 负责收回执和签名；没配地址时签名只留在这台手机上。
+签名墙：`signatureWall` 为 `true` 时，信末可手写落款。来宾点「撤下我的」只去掉自己写下的；新人用 `?host=` 加上 `wallHost` 打开，才出现「清空全部」。不要把带 `host` 的链接发给宾客。同一只 `rsvp.endpoint` Worker 负责收回执和签名；没配地址时签名只留在这台手机上，清空全部会通知其他手机丢掉旧签名。
 
 ## 本地预览
 
@@ -31,6 +31,7 @@ npx --yes serve .
 | `rsvp.endpoint` | Cloudflare Worker 地址，有则显示回执表，签名墙也走这里 |
 | `rsvp.surveyUrl` | 没 Worker 时，按钮跳转腾讯问卷（同窗口，不嵌 iframe） |
 | `signatureWall` | `true` 开启签名墙；`false` 只显示「即将开启」 |
+| `wallHost` | 新人口令，对应链接里的 `?host=`，不要写进宾客链接 |
 | `share` | 网页标题，微信会抓 |
 
 照片放到 `assets/photos/`，占位 SVG 可直接换掉。
@@ -75,7 +76,7 @@ npx wrangler deploy
 - 立轴能横滑
 - 「高德出发 / 腾讯地图」能跳出
 - 回执能提交或能跳到问卷
-- 签名墙能手写、点「题上」，卡片会飞上墙
+- 签名墙能手写、点「题上」，卡片会飞上墙；「撤下我的」只清自己的；带 `host` 打开才有「清空全部」
 - 转发给自己，看标题和缩略图
 
 系统开了「减少动态效果」时，拆信会直接入信，金箔停在原地。

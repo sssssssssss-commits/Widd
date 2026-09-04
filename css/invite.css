@@ -658,6 +658,7 @@ body::before {
 
 .wall-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: .7rem;
   margin-top: 1.1rem;
 }
@@ -671,7 +672,7 @@ body::before {
   border: 1px solid var(--gold);
   padding: .7rem;
   font: inherit;
-  letter-spacing: .4em;
+  letter-spacing: .22em;
 }
 
 .wall-hint {

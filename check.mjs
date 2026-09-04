@@ -6,10 +6,14 @@ import {
   dataImageOk,
   escAttr,
   guestFromSearch,
+  isWallHost,
   mapLinks,
   pad2,
   remaining,
+  wallAfterWipe,
+  wallHitUrl,
   wallRot,
+  wallWithoutMine,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -43,6 +47,25 @@ assert.equal(
 assert.equal(dataImageOk("data:image/png;base64," + "A".repeat(80), 100000), true);
 assert.equal(wallRot("abc"), wallRot("abc"));
 assert.ok(Math.abs(wallRot("sig-1")) <= 6);
+
+assert.equal(isWallHost("?host=xi8k2m", "xi8k2m"), true);
+assert.equal(isWallHost("?open=1&host=xi8k2m", "xi8k2m"), true);
+assert.equal(isWallHost("?host=no", "xi8k2m"), false);
+assert.equal(isWallHost("", "xi8k2m"), false);
+assert.equal(isWallHost("?host=xi8k2m", ""), false);
+assert.equal(
+  wallHitUrl("https://abacus.jasoncameron.dev/get/ns/key"),
+  "https://abacus.jasoncameron.dev/hit/ns/key",
+);
+assert.deepEqual(
+  wallAfterWipe([{ epoch: 0 }, { epoch: 2 }, { epoch: 3 }], 2).map((r) => r.epoch),
+  [2, 3],
+);
+assert.deepEqual(
+  wallWithoutMine([{ by: "a" }, { by: "b" }, {}], "a", true).map((r) => r.by),
+  ["b"],
+);
+assert.equal(wallWithoutMine([{ by: "a" }, {}], "a", false).length, 1);
 
 const ink = new Uint8ClampedArray([10, 10, 10, 255, 250, 248, 239, 255]);
 assert.equal(darkPixelCount(ink), 1);
