@@ -75,13 +75,19 @@ function wallRot(id) {
   return n - 6;
 }
 
+function wallSlot(i) {
+  const col = i % 2;
+  const row = Math.floor(i / 2) % 6;
+  return { left: col === 0 ? 3 : 71, top: 5 + row * 14.2 };
+}
+
 const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json", { cache: "no-cache" });
+  const res = await fetch("data/wedding.json?v=9", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -483,6 +489,7 @@ function openLetter() {
 }
 
 let foilStarted = false;
+const tapXi = [];
 
 function startFoil(canvas) {
   if (!canvas) return;
@@ -632,11 +639,86 @@ function runFoil(canvas) {
       }
       petalPath(ctx, p);
     }
+    for (let i = tapXi.length - 1; i >= 0; i--) {
+      const x = tapXi[i];
+      if (move) {
+        x.life += 1;
+        x.vy += 0.09;
+        x.y += x.vy;
+        x.x += x.vx + Math.sin(x.life / 7) * 0.2;
+        x.rot += x.spin;
+        const fade = x.life / x.max;
+        x.a = fade < 0.55 ? 1 : Math.max(0, 1 - (fade - 0.55) / 0.45);
+        if (x.life >= x.max || x.a <= 0) tapXi.splice(i, 1);
+      }
+      drawXi(ctx, x);
+    }
     ctx.globalAlpha = 1;
   };
 
   setInterval(() => draw(true), 33);
   draw(true);
+}
+
+function drawXi(ctx, p) {
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(p.rot);
+  ctx.globalAlpha = p.a;
+  const r = p.s;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#C23B32";
+  ctx.fill();
+  ctx.strokeStyle = "#E8C85A";
+  ctx.lineWidth = Math.max(0.8, r * 0.08);
+  ctx.stroke();
+  ctx.fillStyle = "#F7E7C6";
+  ctx.font = "700 " + (r * 1.2) + "px Songti SC, STSong, SimSun, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("囍", 0, r * 0.08);
+  ctx.restore();
+}
+
+function bindTapXi() {
+  const spawn = (x, y) => {
+    tapXi.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 1.1,
+      vy: 0.6 + Math.random() * 0.5,
+      rot: (Math.random() - 0.5) * 0.5,
+      spin: (Math.random() - 0.5) * 0.05,
+      s: 13 + Math.random() * 6,
+      a: 1,
+      life: 0,
+      max: 38 + Math.random() * 16,
+    });
+    if (tapXi.length > 28) tapXi.splice(0, tapXi.length - 28);
+  };
+  const fromEvent = (e) => {
+    const t = e.touches ? e.touches[0] : e;
+    if (!t) return;
+    spawn(t.clientX, t.clientY);
+  };
+  let touchAt = 0;
+  document.addEventListener(
+    "touchstart",
+    (e) => {
+      touchAt = Date.now();
+      fromEvent(e);
+    },
+    { passive: true, capture: true },
+  );
+  document.addEventListener(
+    "mousedown",
+    (e) => {
+      if (Date.now() - touchAt < 800) return;
+      fromEvent(e);
+    },
+    true,
+  );
 }
 
 function bindGate() {
@@ -664,6 +746,7 @@ async function main() {
   $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
   startClepsydra(cfg.datetime);
   bindGate();
+  bindTapXi();
   startFoil($("foil"));
 }
 
