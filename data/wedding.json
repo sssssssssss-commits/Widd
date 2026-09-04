@@ -26,6 +26,9 @@
   "signatureWall": false,
   "share": {
     "title": "李某 与 王某 婚礼请柬",
-    "description": "一封信，等你拆"
+    "description": "一封信，等你拆",
+    "origin": "https://sssssssssss-commits.github.io/Widd",
+    "image": "assets/share.jpg",
+    "ogImage": "assets/og.jpg"
   }
 }

@@ -14,14 +14,23 @@ async function loadConfig() {
 function applyShare(cfg) {
   const title = cfg.share?.title || cfg.title || "婚礼请柬";
   const desc = cfg.share?.description || "一封信，等你拆";
+  const origin = (cfg.share?.origin || "").replace(/\/$/, "");
+  const abs = (p) => (origin && p ? `${origin}/${p.replace(/^\//, "")}` : p);
   document.title = title;
   const set = (sel, attr, val) => {
     const el = document.querySelector(sel);
-    if (el) el.setAttribute(attr, val);
+    if (el && val) el.setAttribute(attr, val);
   };
   set('meta[name="description"]', "content", desc);
   set('meta[property="og:title"]', "content", title);
   set('meta[property="og:description"]', "content", desc);
+  set('meta[property="og:image"]', "content", abs(cfg.share?.ogImage || cfg.share?.image));
+  set('meta[name="twitter:image"]', "content", abs(cfg.share?.ogImage || cfg.share?.image));
+  const thumb = document.querySelector(".share-thumb");
+  if (thumb && cfg.share?.image) {
+    thumb.src = cfg.share.image;
+    thumb.alt = title;
+  }
 }
 
 function renderNames(cfg) {
