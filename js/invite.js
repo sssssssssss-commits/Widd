@@ -81,9 +81,21 @@ function wallSlot(i) {
   const k = i % per;
   const angle = (k / per) * Math.PI * 2 - Math.PI / 2 + ring * 0.2;
   const r = 40 + ring * 12;
+  const left = 50 + r * Math.cos(angle) - 13;
+  const top = 50 + r * Math.sin(angle) - 8;
+  const hx = left + 13;
+  const hy = top;
+  const dx = hx - 50;
+  const dy = hy - 50;
+  const dist = Math.hypot(dx, dy) || 1;
+  const attach = 20;
   return {
-    left: 50 + r * Math.cos(angle) - 13,
-    top: 50 + r * Math.sin(angle) - 8,
+    left,
+    top,
+    hx,
+    hy,
+    ax: 50 + (dx / dist) * attach,
+    ay: 50 + (dy / dist) * attach,
   };
 }
 
@@ -321,12 +333,13 @@ async function bumpWallEpoch(getUrl) {
   return Number(data.value) || 0;
 }
 
-function wallCard(item, i, fly) {
+function wallCard(item, i, fly, slot) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
   const rot = wallRot(item.id || String(i));
-  const slot = wallSlot(i);
-  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;left:${slot.left}%;top:${slot.top}%">
+  const pos = slot || wallSlot(i);
+  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;left:${pos.left}%;top:${pos.top}%">
+    <span class="wall-knot" aria-hidden="true"></span>
     <img src="${src}" alt="">
   </figure>`;
 }
@@ -334,7 +347,16 @@ function wallCard(item, i, fly) {
 function paintWallBoard(items, flyId) {
   const board = $("wallBoard");
   if (!board) return;
-  board.innerHTML = items.map((row, i) => wallCard(row, i, row.id === flyId)).join("");
+  const lines = [];
+  const cards = items.map((row, i) => {
+    if (!dataImageOk(row && row.img)) return "";
+    const slot = wallSlot(i);
+    lines.push(
+      `<line x1="${slot.ax.toFixed(1)}" y1="${slot.ay.toFixed(1)}" x2="${slot.hx.toFixed(1)}" y2="${slot.hy.toFixed(1)}"/>`,
+    );
+    return wallCard(row, i, row.id === flyId, slot);
+  });
+  board.innerHTML = `<svg class="wall-cords" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines.join("")}</svg>${cards.join("")}`;
 }
 
 async function loadWallItems(url) {
