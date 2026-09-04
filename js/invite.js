@@ -436,63 +436,9 @@ function drawKeepContained(ctx, im, dx, dy, dw, dh) {
   ctx.drawImage(im, x, y, w, h);
 }
 
-function drawKeepFrame(ctx, w, h) {
-  const m = Math.round(w * 0.024);
-  const gold = "#c9a24a";
-  const pale = "#e8c56a";
-  ctx.save();
-  ctx.strokeStyle = "#7a1f1a";
-  ctx.lineWidth = Math.max(2, w * 0.0035);
-  ctx.strokeRect(m * 0.35, m * 0.35, w - m * 0.7, h - m * 0.7);
-  ctx.strokeStyle = pale;
-  ctx.lineWidth = Math.max(3, w * 0.008);
-  ctx.strokeRect(m * 0.62, m * 0.62, w - m * 1.24, h - m * 1.24);
-  ctx.strokeStyle = gold;
-  ctx.lineWidth = Math.max(4, w * 0.01);
-  ctx.strokeRect(m, m, w - 2 * m, h - 2 * m);
-  ctx.strokeStyle = pale;
-  ctx.lineWidth = Math.max(2, w * 0.004);
-  const inner = m + w * 0.012;
-  ctx.strokeRect(inner, inner, w - 2 * inner, h - 2 * inner);
-  ctx.strokeStyle = "#8e6a24";
-  ctx.lineWidth = Math.max(1.5, w * 0.003);
-  const inner2 = inner + w * 0.008;
-  ctx.strokeRect(inner2, inner2, w - 2 * inner2, h - 2 * inner2);
-  const s = Math.max(22, w * 0.055);
-  const nails = [
-    [m, m, 0],
-    [w - m, m, Math.PI / 2],
-    [w - m, h - m, Math.PI],
-    [m, h - m, -Math.PI / 2],
-  ];
-  for (let i = 0; i < nails.length; i++) {
-    const x = nails[i][0];
-    const y = nails[i][1];
-    const rot = nails[i][2];
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rot);
-    ctx.strokeStyle = gold;
-    ctx.lineWidth = Math.max(3, w * 0.007);
-    ctx.beginPath();
-    ctx.moveTo(s, 0);
-    ctx.lineTo(0, 0);
-    ctx.lineTo(0, s);
-    ctx.stroke();
-    ctx.strokeStyle = "#8B241C";
-    ctx.lineWidth = Math.max(1.5, w * 0.003);
-    ctx.strokeRect(s * 0.22, s * 0.22, s * 0.38, s * 0.38);
-    ctx.fillStyle = "#E8C85A";
-    ctx.beginPath();
-    ctx.arc(s * 0.42, s * 0.42, Math.max(3, s * 0.1), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#8E6A24";
-    ctx.beginPath();
-    ctx.arc(s * 0.42, s * 0.42, Math.max(1.2, s * 0.035), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-  ctx.restore();
+async function drawKeepFrame(ctx, w, h) {
+  const cloud = await loadKeepImg("assets/wall-cloud.svg");
+  if (cloud) ctx.drawImage(cloud, 0, 0, w, h);
 }
 
 async function snapshotWall(items) {
@@ -530,14 +476,10 @@ async function snapshotWall(items) {
   ctx.textBaseline = "middle";
   ctx.fillText("囍", W / 2, H / 2);
   ctx.restore();
-  const fx = W * 0.024;
-  const fy = H * 0.024;
-  const fw = W - 2 * fx;
-  const fh = H - 2 * fy;
-  const bx = fx + fw * 0.085;
-  const by = fy + fh * 0.085;
-  const bw = fw * 0.83;
-  const bh = fh * 0.83;
+  const bx = W * 0.075;
+  const by = H * 0.075;
+  const bw = W * 0.85;
+  const bh = H * 0.85;
   const rows = wallPaintRows(items);
   const n = rows.length;
   for (let i = 0; i < n; i++) {
@@ -554,7 +496,7 @@ async function snapshotWall(items) {
     drawKeepContained(ctx, im, -cw / 2, -ch / 2, cw, ch);
     ctx.restore();
   }
-  drawKeepFrame(ctx, W, H);
+  await drawKeepFrame(ctx, W, H);
   const png = canvas.toDataURL("image/png");
   if (!png || png.length < 80) throw new Error("empty");
   return png;
@@ -788,16 +730,7 @@ function renderWall(cfg, guest) {
       <h2>签名墙</h2>
       <div class="wall-yard">
         <div class="wall-xi" aria-hidden="true">囍</div>
-        <div class="wall-veil" aria-hidden="true"></div>
         <div class="wall-frame">
-          <span class="wall-leiwen wall-leiwen-t" aria-hidden="true"></span>
-          <span class="wall-leiwen wall-leiwen-b" aria-hidden="true"></span>
-          <span class="wall-leiwen wall-leiwen-l" aria-hidden="true"></span>
-          <span class="wall-leiwen wall-leiwen-r" aria-hidden="true"></span>
-          <span class="wall-corner wall-corner-tl" aria-hidden="true"></span>
-          <span class="wall-corner wall-corner-tr" aria-hidden="true"></span>
-          <span class="wall-corner wall-corner-bl" aria-hidden="true"></span>
-          <span class="wall-corner wall-corner-br" aria-hidden="true"></span>
           <div class="wall-board" id="wallBoard"></div>
         </div>
       </div>

@@ -611,87 +611,19 @@ body::before {
   letter-spacing: 0;
 }
 
-.wall-veil {
-  display: none;
-}
-
 .wall-frame {
   position: absolute;
-  inset: 2.4%;
+  inset: 0;
   z-index: 2;
-  background: transparent;
-  border: 3px solid #c9a24a;
-  box-shadow:
-    0 0 0 1px #7a1f1a,
-    0 0 0 4px #e8c56a,
-    0 0 0 5px #7a1f1a,
-    inset 0 0 0 2px #e8c56a,
-    inset 0 0 0 6px #8e6a24;
-}
-
-.wall-leiwen {
-  position: absolute;
-  z-index: 4;
+  background: url("../assets/wall-cloud.svg") center / 100% 100% no-repeat;
   pointer-events: none;
-  opacity: .9;
 }
-
-.wall-leiwen-t,
-.wall-leiwen-b {
-  left: 2.35rem;
-  right: 2.35rem;
-  height: .38rem;
-  background: repeating-linear-gradient(
-    90deg,
-    #8e6a24 0 .16rem,
-    transparent .16rem .26rem,
-    #8e6a24 .26rem .4rem,
-    transparent .4rem .52rem,
-    #8e6a24 .52rem .64rem,
-    transparent .64rem 1.05rem
-  );
-}
-
-.wall-leiwen-t { top: .42rem; }
-.wall-leiwen-b { bottom: .42rem; }
-
-.wall-leiwen-l,
-.wall-leiwen-r {
-  top: 2.35rem;
-  bottom: 2.35rem;
-  width: .38rem;
-  background: repeating-linear-gradient(
-    180deg,
-    #8e6a24 0 .16rem,
-    transparent .16rem .26rem,
-    #8e6a24 .26rem .4rem,
-    transparent .4rem .52rem,
-    #8e6a24 .52rem .64rem,
-    transparent .64rem 1.05rem
-  );
-}
-
-.wall-leiwen-l { left: .42rem; }
-.wall-leiwen-r { right: .42rem; }
-
-.wall-corner {
-  position: absolute;
-  z-index: 5;
-  width: 2.35rem;
-  height: 2.35rem;
-  pointer-events: none;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'><path d='M6 6h58v12H18v46H6z' fill='%23C9A24A' fill-opacity='.2' stroke='%23C9A24A' stroke-width='3.2' stroke-linejoin='round'/><path d='M16 16h32v8H24v24h-8z' fill='none' stroke='%238B241C' stroke-width='2'/><path d='M6 6c18-2 28 8 30 30' fill='none' stroke='%23E8C56A' stroke-width='1.6'/><circle cx='30' cy='30' r='5.2' fill='%23E8C85A' stroke='%238E6A24' stroke-width='1.5'/><circle cx='30' cy='30' r='1.7' fill='%238E6A24'/><path d='M26 10h6v4h6V10h6' fill='none' stroke='%238E6A24' stroke-width='1.6'/><path d='M10 26v6h4v6h-4v6' fill='none' stroke='%238E6A24' stroke-width='1.6'/></svg>") no-repeat center / contain;
-}
-
-.wall-corner-tl { top: -.12rem; left: -.12rem; }
-.wall-corner-tr { top: -.12rem; right: -.12rem; transform: rotate(90deg); }
-.wall-corner-br { bottom: -.12rem; right: -.12rem; transform: rotate(180deg); }
-.wall-corner-bl { bottom: -.12rem; left: -.12rem; transform: rotate(270deg); }
 
 .wall-board {
   position: absolute;
-  inset: 8.5%;
+  inset: 7.5%;
   overflow: hidden;
+  pointer-events: auto;
 }
 
 .wall-card {
