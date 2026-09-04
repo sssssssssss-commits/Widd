@@ -11,7 +11,9 @@ import {
   pad2,
   remaining,
   wallAfterWipe,
+  wallBoxesOverlap,
   wallHitUrl,
+  wallLeafSlot,
   wallRot,
   wallWithoutMine,
 } from "./js/lib.js";
@@ -66,6 +68,21 @@ assert.deepEqual(
   ["b"],
 );
 assert.equal(wallWithoutMine([{ by: "a" }, {}], "a", false).length, 1);
+
+for (const n of [1, 8, 14, 20, 30]) {
+  const slots = Array.from({ length: n }, (_, i) => wallLeafSlot(i, n));
+  for (let i = 0; i < n; i++) {
+    const s = slots[i];
+    assert.ok(s.left >= -0.2 && s.left + s.w <= 100.3, `n=${n} i=${i} x`);
+    assert.ok(s.top >= 0 && s.top + s.h <= 100.3, `n=${n} i=${i} y`);
+    const bow =
+      (s.c1x - s.ax) * (s.hy - s.ay) - (s.c1y - s.ay) * (s.hx - s.ax);
+    assert.ok(Math.abs(bow) > 0.8, `n=${n} i=${i} branch`);
+    for (let j = i + 1; j < n; j++) {
+      assert.equal(wallBoxesOverlap(s, slots[j]), false, `n=${n} ${i}/${j}`);
+    }
+  }
+}
 
 const ink = new Uint8ClampedArray([10, 10, 10, 255, 250, 248, 239, 255]);
 assert.equal(darkPixelCount(ink), 1);

@@ -28,6 +28,10 @@ body {
   overflow-x: hidden;
 }
 
+body.is-signing {
+  overflow: hidden;
+}
+
 .share-thumb {
   position: fixed;
   left: 0;
@@ -619,16 +623,18 @@ body::before {
   overflow: visible;
 }
 
-.wall-cords line {
+.wall-cords path {
+  fill: none;
   stroke: #c41e3a;
-  stroke-width: .75;
+  stroke-width: .7;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .wall-card {
   position: absolute;
   z-index: 1;
-  width: 26%;
+  width: var(--w, 20%);
   margin: 0;
   padding: .22rem .2rem .18rem;
   background: #6b1c2a;
@@ -671,20 +677,73 @@ body::before {
   width: 100%;
   aspect-ratio: 5 / 2;
   object-fit: contain;
-  background: #fff8ef;
-  mix-blend-mode: multiply;
+  background: #6b1c2a;
 }
 
 .wall-box canvas {
-  display: block;
+  display: none;
+}
+
+.wall-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: #3d1016;
+  padding: calc(var(--safe-top) + .7rem) 1rem calc(var(--safe-bot) + .9rem);
+  overscroll-behavior: none;
+}
+
+.wall-sheet[hidden] {
+  display: none !important;
+}
+
+.wall-sheet-title {
+  margin: 0 0 .55rem;
+  text-align: center;
+  color: #E8C85A;
+  letter-spacing: .5em;
+  font-size: .85rem;
+  font-weight: 400;
+}
+
+.wall-sheet canvas {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  height: auto;
-  margin-top: .7rem;
-  border: 1px solid #c9a24a80;
-  background: #fff8ef;
+  display: block;
+  background: #6b1c2a;
+  border: 1px solid #c9a24a;
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+.wall-sheet-hint {
+  min-height: 1.2em;
+  margin: .5rem 0 0;
+  text-align: center;
+  color: #E8C85A;
+  font-size: .72rem;
+  letter-spacing: .12em;
+}
+
+.wall-sheet-actions {
+  display: flex;
+  gap: .6rem;
+  margin-top: .7rem;
+}
+
+.wall-sheet-actions button {
+  flex: 1;
+  margin: 0;
+  background: transparent;
+  color: #E8C85A;
+  border: 1px solid #c9a24a;
+  padding: .75rem .4rem;
+  font: inherit;
+  letter-spacing: .28em;
 }
 
 .wall-actions {

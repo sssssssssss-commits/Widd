@@ -98,3 +98,72 @@ export function wallWithoutMine(items, by, dropUntagged) {
     return !dropUntagged;
   });
 }
+
+export function wallLeafSize(n) {
+  const count = Math.max(1, Number(n) || 1);
+  if (count <= 8) return { w: 20, h: 11 };
+  if (count <= 14) return { w: 16, h: 9 };
+  if (count <= 22) return { w: 13, h: 8 };
+  if (count <= 36) return { w: 11, h: 7 };
+  return { w: 9, h: 6 };
+}
+
+export function wallLeafSlot(i, n) {
+  const count = Math.max(Number(n) || 1, i + 1);
+  const { w, h } = wallLeafSize(count);
+  const gap = 2.6;
+  const r0 = 24 + h / 2;
+  const dr = h + gap + w * 0.22;
+  const rMax = Math.min(49 - w / 2, 48 - h / 2);
+  const ringCap = (rad) => Math.max(5, Math.floor((2 * Math.PI * rad) / (w + gap)));
+  let remain = i;
+  let ring = 0;
+  let r = r0;
+  let cap = ringCap(r);
+  while (remain >= cap && r + 0.01 < rMax) {
+    remain -= cap;
+    ring += 1;
+    r = Math.min(rMax, r0 + ring * dr);
+    cap = ringCap(r);
+    if (ring > 10) break;
+  }
+  const angle =
+    ((remain + (ring % 2) * 0.5) / cap) * Math.PI * 2 - Math.PI / 2;
+  const cx = 50 + r * Math.cos(angle);
+  const cy = 50 + r * Math.sin(angle);
+  const left = cx - w / 2;
+  const top = cy - h / 2;
+  const hx = cx;
+  const hy = top;
+  const dx = hx - 50;
+  const dy = hy - 50;
+  const dist = Math.hypot(dx, dy) || 1;
+  const attach = 16;
+  const ax = 50 + (dx / dist) * attach;
+  const ay = 50 + (dy / dist) * attach;
+  const ang = Math.atan2(hy - ay, hx - ax);
+  const side = i % 2 ? 1 : -1;
+  return {
+    left,
+    top,
+    w,
+    h,
+    hx,
+    hy,
+    ax,
+    ay,
+    c1x: ax + Math.cos(ang + side * 0.55) * dist * 0.42,
+    c1y: ay + Math.sin(ang + side * 0.55) * dist * 0.42,
+    c2x: hx - Math.cos(ang) * dist * 0.18,
+    c2y: hy - Math.sin(ang) * dist * 0.18,
+  };
+}
+
+export function wallBoxesOverlap(a, b, pad = 0.5) {
+  return (
+    a.left < b.left + b.w - pad &&
+    a.left + a.w - pad > b.left &&
+    a.top < b.top + b.h - pad &&
+    a.top + a.h - pad > b.top
+  );
+}

@@ -75,27 +75,63 @@ function wallRot(id) {
   return n - 6;
 }
 
-function wallSlot(i) {
-  const per = 8;
-  const ring = Math.floor(i / per);
-  const k = i % per;
-  const angle = (k / per) * Math.PI * 2 - Math.PI / 2 + ring * 0.2;
-  const r = 40 + ring * 12;
-  const left = 50 + r * Math.cos(angle) - 13;
-  const top = 50 + r * Math.sin(angle) - 8;
-  const hx = left + 13;
+function wallLeafSize(n) {
+  const count = Math.max(1, Number(n) || 1);
+  if (count <= 8) return { w: 20, h: 11 };
+  if (count <= 14) return { w: 16, h: 9 };
+  if (count <= 22) return { w: 13, h: 8 };
+  if (count <= 36) return { w: 11, h: 7 };
+  return { w: 9, h: 6 };
+}
+
+function wallLeafSlot(i, n) {
+  const count = Math.max(Number(n) || 1, i + 1);
+  const { w, h } = wallLeafSize(count);
+  const gap = 2.6;
+  const r0 = 24 + h / 2;
+  const dr = h + gap + w * 0.22;
+  const rMax = Math.min(49 - w / 2, 48 - h / 2);
+  const ringCap = (rad) => Math.max(5, Math.floor((2 * Math.PI * rad) / (w + gap)));
+  let remain = i;
+  let ring = 0;
+  let r = r0;
+  let cap = ringCap(r);
+  while (remain >= cap && r + 0.01 < rMax) {
+    remain -= cap;
+    ring += 1;
+    r = Math.min(rMax, r0 + ring * dr);
+    cap = ringCap(r);
+    if (ring > 10) break;
+  }
+  const angle =
+    ((remain + (ring % 2) * 0.5) / cap) * Math.PI * 2 - Math.PI / 2;
+  const cx = 50 + r * Math.cos(angle);
+  const cy = 50 + r * Math.sin(angle);
+  const left = cx - w / 2;
+  const top = cy - h / 2;
+  const hx = cx;
   const hy = top;
   const dx = hx - 50;
   const dy = hy - 50;
   const dist = Math.hypot(dx, dy) || 1;
-  const attach = 20;
+  const attach = 16;
+  const ax = 50 + (dx / dist) * attach;
+  const ay = 50 + (dy / dist) * attach;
+  const ang = Math.atan2(hy - ay, hx - ax);
+  const side = i % 2 ? 1 : -1;
   return {
     left,
     top,
+    w,
+    h,
     hx,
     hy,
-    ax: 50 + (dx / dist) * attach,
-    ay: 50 + (dy / dist) * attach,
+    ax,
+    ay,
+    c1x: ax + Math.cos(ang + side * 0.55) * dist * 0.42,
+    c1y: ay + Math.sin(ang + side * 0.55) * dist * 0.42,
+    c2x: hx - Math.cos(ang) * dist * 0.18,
+    c2y: hy - Math.sin(ang) * dist * 0.18,
   };
 }
 
@@ -128,6 +164,8 @@ function wallWithoutMine(items, by, dropUntagged) {
 const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
+const GOLD_INK = "#E8C85A";
+const WINE_PAD = "#6b1c2a";
 // ponytail: public counter, 6-month TTL on GET; Worker KV epoch if rsvp.endpoint is live
 const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-io/widd-wall";
 
@@ -337,8 +375,8 @@ function wallCard(item, i, fly, slot) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
   const rot = wallRot(item.id || String(i));
-  const pos = slot || wallSlot(i);
-  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;left:${pos.left}%;top:${pos.top}%">
+  const pos = slot || wallLeafSlot(i, i + 1);
+  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;--w:${pos.w}%;left:${pos.left}%;top:${pos.top}%">
     <span class="wall-knot" aria-hidden="true"></span>
     <img src="${src}" alt="">
   </figure>`;
@@ -347,16 +385,18 @@ function wallCard(item, i, fly, slot) {
 function paintWallBoard(items, flyId) {
   const board = $("wallBoard");
   if (!board) return;
-  const lines = [];
-  const cards = items.map((row, i) => {
-    if (!dataImageOk(row && row.img)) return "";
-    const slot = wallSlot(i);
-    lines.push(
-      `<line x1="${slot.ax.toFixed(1)}" y1="${slot.ay.toFixed(1)}" x2="${slot.hx.toFixed(1)}" y2="${slot.hy.toFixed(1)}"/>`,
+  const rows = (items || []).filter((row) => dataImageOk(row && row.img));
+  const n = rows.length;
+  const paths = [];
+  const cards = rows.map((row, i) => {
+    const slot = wallLeafSlot(i, n);
+    const p = (v) => Number(v).toFixed(1);
+    paths.push(
+      `<path d="M ${p(slot.ax)} ${p(slot.ay)} C ${p(slot.c1x)} ${p(slot.c1y)} ${p(slot.c2x)} ${p(slot.c2y)} ${p(slot.hx)} ${p(slot.hy)}"/>`,
     );
     return wallCard(row, i, row.id === flyId, slot);
   });
-  board.innerHTML = `<svg class="wall-cords" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines.join("")}</svg>${cards.join("")}`;
+  board.innerHTML = `<svg class="wall-cords" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${paths.join("")}</svg>${cards.join("")}`;
 }
 
 async function loadWallItems(url) {
@@ -380,17 +420,18 @@ async function loadWallItems(url) {
 function fitWallPad(canvas) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = canvas.clientWidth || 280;
-  const h = Math.max(112, Math.round(w * 0.4));
+  const h = canvas.clientHeight || Math.max(200, Math.round(w * 1.15));
+  if (w < 8 || h < 8) return canvas.getContext("2d");
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = "#fff8ef";
+  ctx.fillStyle = WINE_PAD;
   ctx.fillRect(0, 0, w, h);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = "#1a0c08";
-  ctx.lineWidth = 2.6;
+  ctx.strokeStyle = GOLD_INK;
+  ctx.lineWidth = Math.max(3.6, h / 55);
   return ctx;
 }
 
@@ -404,8 +445,8 @@ function bindWallPad(canvas, ctx, state) {
   };
   const mark = (p) => {
     ctx.beginPath();
-    ctx.fillStyle = "#1a0c08";
-    ctx.arc(p.x, p.y, 1.3, 0, Math.PI * 2);
+    ctx.fillStyle = GOLD_INK;
+    ctx.arc(p.x, p.y, Math.max(1.4, ctx.lineWidth / 2), 0, Math.PI * 2);
     ctx.fill();
     state.dirty = true;
   };
@@ -460,7 +501,7 @@ function exportWallPad(canvas) {
   tmp.width = 400;
   tmp.height = 160;
   const t = tmp.getContext("2d");
-  t.fillStyle = "#fff8ef";
+  t.fillStyle = WINE_PAD;
   t.fillRect(0, 0, 400, 160);
   t.drawImage(canvas, 0, 0, 400, 160);
   for (const q of [0.62, 0.48, 0.36]) {
@@ -505,22 +546,52 @@ function renderWall(cfg, guest) {
         <div class="wall-xi" aria-hidden="true">囍</div>
         <div class="wall-board" id="wallBoard"></div>
       </div>
-      <canvas id="wallPad" width="560" height="224" aria-label="手写签名"></canvas>
       <div class="wall-actions">
-        <button type="button" id="wallClear">重写</button>
-        <button type="button" id="wallSign">题上</button>
-      </div>
-      <div class="wall-actions">
+        <button type="button" id="wallOpen">签字</button>
         <button type="button" id="wallMine">撤下我的</button>
         ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
       </div>
       <p class="wall-hint" id="wallHint"></p>
     </div>`;
 
+  let sheet = $("wallSheet");
+  if (!sheet) {
+    sheet = document.createElement("div");
+    sheet.id = "wallSheet";
+    sheet.className = "wall-sheet";
+    sheet.hidden = true;
+    sheet.innerHTML = `<p class="wall-sheet-title">题字</p>
+      <canvas id="wallPad" width="560" height="800" aria-label="手写签名"></canvas>
+      <p class="wall-sheet-hint" id="wallSheetHint"></p>
+      <div class="wall-sheet-actions">
+        <button type="button" id="wallCancel">取消</button>
+        <button type="button" id="wallClear">重写</button>
+        <button type="button" id="wallPin">题上</button>
+      </div>`;
+    document.body.appendChild(sheet);
+  }
+
   const canvas = $("wallPad");
-  const ctx = fitWallPad(canvas);
   const pad = { dirty: false };
+  let ctx = canvas.getContext("2d");
   bindWallPad(canvas, ctx, pad);
+
+  const closeSheet = () => {
+    sheet.hidden = true;
+    document.body.classList.remove("is-signing");
+  };
+
+  const openSheet = () => {
+    sheet.hidden = false;
+    document.body.classList.add("is-signing");
+    $("wallSheetHint").textContent = "";
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        ctx = fitWallPad(canvas);
+        pad.dirty = false;
+      });
+    });
+  };
 
   const refresh = async (flyId) => {
     const epoch = await fetchWallEpoch(epochUrl);
@@ -530,10 +601,12 @@ function renderWall(cfg, guest) {
     return items;
   };
 
+  $("wallOpen").addEventListener("click", openSheet);
+  $("wallCancel").addEventListener("click", closeSheet);
   $("wallClear").addEventListener("click", () => {
-    fitWallPad(canvas);
+    ctx = fitWallPad(canvas);
     pad.dirty = false;
-    $("wallHint").textContent = "";
+    $("wallSheetHint").textContent = "";
   });
 
   refresh();
@@ -566,17 +639,18 @@ function renderWall(cfg, guest) {
     });
   }
 
-  $("wallSign").addEventListener("click", async () => {
-    const btn = $("wallSign");
+  $("wallPin").addEventListener("click", async () => {
+    const btn = $("wallPin");
+    const sheetHint = $("wallSheetHint");
     const hint = $("wallHint");
     const name = guest || "来宾";
     if (!pad.dirty) {
-      hint.textContent = "请先手写签名";
+      sheetHint.textContent = "请先手写签名";
       return;
     }
     const img = exportWallPad(canvas);
     if (!dataImageOk(img)) {
-      hint.textContent = "签名未能保存，请再写一次";
+      sheetHint.textContent = "签名未能保存，请再写一次";
       return;
     }
     const epoch = await fetchWallEpoch(epochUrl);
@@ -618,10 +692,10 @@ function renderWall(cfg, guest) {
     if (!items.some((row) => row.img === img || row.id === item.id)) items.push(item);
     const flyId = (items.find((row) => row.img === img) || item).id;
     paintWallBoard(items, flyId);
-    fitWallPad(canvas);
     pad.dirty = false;
     hint.textContent = "已上墙";
     btn.disabled = false;
+    closeSheet();
   });
 }
 
@@ -651,8 +725,6 @@ function openLetter() {
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;
-    const pad = $("wallPad");
-    if (pad) fitWallPad(pad);
   }, 900);
 }
 
