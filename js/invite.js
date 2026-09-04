@@ -189,7 +189,7 @@ function openLetter() {
 
 function startFoil(canvas, staticOnly) {
   const ctx = canvas.getContext("2d");
-  const GOLD = ["#C4A35A", "#E8D48B", "#8A7040"];
+  const GOLD = ["#C9A24A", "#E4C36A", "#C23B32", "#DE6B5C"];
   const fit = () => {
     canvas.width = innerWidth * devicePixelRatio;
     canvas.height = innerHeight * devicePixelRatio;
@@ -207,7 +207,7 @@ function startFoil(canvas, staticOnly) {
     vx: (Math.random() - 0.5) * 0.25,
     a: 0.25 + Math.random() * 0.5,
     c: GOLD[i % GOLD.length],
-    plum: i % 17 === 0,
+    plum: i % 11 === 0,
     rot: Math.random() * Math.PI,
   }));
 
@@ -215,14 +215,14 @@ function startFoil(canvas, staticOnly) {
     ctx.save();
     ctx.translate(b.x, b.y);
     ctx.rotate(b.rot);
-    ctx.fillStyle = `rgba(140,47,43,${b.a})`;
+    ctx.fillStyle = `rgba(194,59,50,${b.a})`;
     for (let i = 0; i < 5; i++) {
       ctx.rotate((Math.PI * 2) / 5);
       ctx.beginPath();
       ctx.ellipse(0, -b.s * 2.2, b.s * 1.1, b.s * 2, 0, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.fillStyle = `rgba(196,163,90,${b.a})`;
+    ctx.fillStyle = `rgba(228,195,106,${b.a})`;
     ctx.beginPath();
     ctx.arc(0, 0, b.s * 0.7, 0, Math.PI * 2);
     ctx.fill();
