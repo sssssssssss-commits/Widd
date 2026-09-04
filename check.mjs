@@ -71,8 +71,11 @@ assert.deepEqual(
 assert.equal(wallWithoutMine([{ by: "a" }, {}], "a", false).length, 1);
 
 assert.ok(strokeWidthFromTouch({ force: 0.9, radius: 0, speed: 0 }) > strokeWidthFromTouch({ force: 0.2, radius: 0, speed: 0 }));
-assert.ok(strokeWidthFromTouch({ force: 0, radius: 24, speed: 0 }) > strokeWidthFromTouch({ force: 0, radius: 8, speed: 0 }));
+assert.ok(strokeWidthFromTouch({ force: 0, radius: 24, speed: 0.12 }) > strokeWidthFromTouch({ force: 0, radius: 8, speed: 0.12 }));
 assert.ok(strokeWidthFromTouch({ force: 0, radius: 0, speed: 0.05 }) > strokeWidthFromTouch({ force: 0, radius: 0, speed: 0.8 }));
+const thick = strokeWidthFromTouch({ speed: 0.03 }, 4, 8);
+const thin = strokeWidthFromTouch({ speed: 0.8 }, 4, 8);
+assert.ok(thick / thin > 1.4 && thick / thin < 2.6);
 
 const first = wallSpreadSlot(0, 5);
 assert.ok(Math.abs(first.left + first.w / 2 - 50) < 1.2);

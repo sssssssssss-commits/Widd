@@ -130,13 +130,11 @@ export function wallBoxesOverlap(a, b, pad = 0.5) {
 export function strokeWidthFromTouch(input, minW = 2.2, maxW = 11) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;
+  const speed = Number(input && input.speed) || 0;
   const force = Number(input && input.force) || 0;
   const radius = Number(input && input.radius) || 0;
-  const speed = Number(input && input.speed) || 0;
-  let t = 0.5;
-  if (radius > 1.2) t = Math.max(0, Math.min(1, (radius - 6) / 22));
-  else if (force > 0.05 && force < 0.97) t = Math.min(1, force);
-  else t = Math.max(0, Math.min(1, 1 - (speed - 0.03) / 0.55));
-  t = 0.34 + t * 0.32;
+  let t = Math.max(0, Math.min(1, 1 - (speed - 0.03) / 0.5));
+  if (force > 0.05 && force < 0.97) t = t * 0.4 + Math.min(1, force) * 0.6;
+  else if (radius > 1.2) t = t * 0.72 + Math.max(0, Math.min(1, (radius - 8) / 18)) * 0.28;
   return lo + (hi - lo) * t;
 }

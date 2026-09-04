@@ -97,14 +97,12 @@ function wallSpreadSlot(i, n) {
 function strokeWidthFromTouch(input, minW, maxW) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;
+  const speed = Number(input && input.speed) || 0;
   const force = Number(input && input.force) || 0;
   const radius = Number(input && input.radius) || 0;
-  const speed = Number(input && input.speed) || 0;
-  let t = 0.5;
-  if (radius > 1.2) t = Math.max(0, Math.min(1, (radius - 6) / 22));
-  else if (force > 0.05 && force < 0.97) t = Math.min(1, force);
-  else t = Math.max(0, Math.min(1, 1 - (speed - 0.03) / 0.55));
-  t = 0.34 + t * 0.32;
+  let t = Math.max(0, Math.min(1, 1 - (speed - 0.03) / 0.5));
+  if (force > 0.05 && force < 0.97) t = t * 0.4 + Math.min(1, force) * 0.6;
+  else if (radius > 1.2) t = t * 0.72 + Math.max(0, Math.min(1, (radius - 8) / 18)) * 0.28;
   return lo + (hi - lo) * t;
 }
 
@@ -441,9 +439,9 @@ function bindWallPad(canvas, ctx, state) {
   let last = null;
   const widthOf = (e, p) => {
     const h = canvas.clientHeight || 280;
-    const mid = Math.max(3.4, h / 36);
-    const minW = mid * 0.84;
-    const maxW = mid * 1.2;
+    const mid = Math.max(3.6, h / 34);
+    const minW = mid * 0.7;
+    const maxW = mid * 1.42;
     const sample = touchSample(e);
     let speed = 0.12;
     if (last) {
@@ -455,7 +453,7 @@ function bindWallPad(canvas, ctx, state) {
       minW,
       maxW,
     );
-    return last ? last.w * 0.32 + raw * 0.68 : raw;
+    return last ? last.w * 0.22 + raw * 0.78 : raw;
   };
   const stamp = (x, y, w) => {
     ctx.beginPath();
@@ -821,11 +819,11 @@ function runFoil(canvas) {
     ph: Math.random() * 1000,
   }));
 
-  const motes = Array.from({ length: 72 }, (_, i) => ({
+  const motes = Array.from({ length: 58 }, (_, i) => ({
     x: Math.random() * innerWidth,
     y: Math.random() * innerHeight,
-    w: 1.15 + Math.random() * 1.7,
-    h: 0.45 + Math.random() * 0.55,
+    w: 1.9 + Math.random() * 2.6,
+    h: 0.75 + Math.random() * 0.9,
     vy: 0.12 + Math.random() * 0.22,
     a: 0.55 + Math.random() * 0.38,
     c: GOLD[i % GOLD.length],
