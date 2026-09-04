@@ -75,64 +75,30 @@ function wallRot(id) {
   return n - 6;
 }
 
-function wallLeafSize(n) {
-  const count = Math.max(1, Number(n) || 1);
-  if (count <= 8) return { w: 20, h: 11 };
-  if (count <= 14) return { w: 16, h: 9 };
-  if (count <= 22) return { w: 13, h: 8 };
-  if (count <= 36) return { w: 11, h: 7 };
-  return { w: 9, h: 6 };
-}
-
-function wallLeafSlot(i, n) {
+function wallGridSlot(i, n) {
   const count = Math.max(Number(n) || 1, i + 1);
-  const { w, h } = wallLeafSize(count);
-  const gap = 2.6;
-  const r0 = 24 + h / 2;
-  const dr = h + gap + w * 0.22;
-  const rMax = Math.min(49 - w / 2, 48 - h / 2);
-  const ringCap = (rad) => Math.max(5, Math.floor((2 * Math.PI * rad) / (w + gap)));
-  let remain = i;
-  let ring = 0;
-  let r = r0;
-  let cap = ringCap(r);
-  while (remain >= cap && r + 0.01 < rMax) {
-    remain -= cap;
-    ring += 1;
-    r = Math.min(rMax, r0 + ring * dr);
-    cap = ringCap(r);
-    if (ring > 10) break;
-  }
-  const angle =
-    ((remain + (ring % 2) * 0.5) / cap) * Math.PI * 2 - Math.PI / 2;
-  const cx = 50 + r * Math.cos(angle);
-  const cy = 50 + r * Math.sin(angle);
-  const left = cx - w / 2;
-  const top = cy - h / 2;
-  const hx = cx;
-  const hy = top;
-  const dx = hx - 50;
-  const dy = hy - 50;
-  const dist = Math.hypot(dx, dy) || 1;
-  const attach = 16;
-  const ax = 50 + (dx / dist) * attach;
-  const ay = 50 + (dy / dist) * attach;
-  const ang = Math.atan2(hy - ay, hx - ax);
-  const side = i % 2 ? 1 : -1;
+  const cols = count <= 4 ? 2 : count <= 9 ? 3 : 4;
+  const rows = Math.ceil(count / cols);
+  const gap = 2.2;
+  const w = (100 - gap * (cols + 1)) / cols;
+  const h = Math.min(w * 0.42, (100 - gap * (rows + 1)) / Math.max(rows, 1));
+  const col = i % cols;
+  const row = Math.floor(i / cols);
   return {
-    left,
-    top,
+    left: gap + col * (w + gap),
+    top: gap + row * (h + gap),
     w,
     h,
-    hx,
-    hy,
-    ax,
-    ay,
-    c1x: ax + Math.cos(ang + side * 0.55) * dist * 0.42,
-    c1y: ay + Math.sin(ang + side * 0.55) * dist * 0.42,
-    c2x: hx - Math.cos(ang) * dist * 0.18,
-    c2y: hy - Math.sin(ang) * dist * 0.18,
   };
+}
+
+function strokeWidthFromTouch(force, speed, minW, maxW) {
+  const lo = Number(minW) || 2.2;
+  const hi = Number(maxW) || 11;
+  const f = Number(force) || 0;
+  if (f > 0.02) return lo + Math.min(1, f) * (hi - lo);
+  const t = Math.max(0, Math.min(1, 1 - (Number(speed) || 0) / 2.4));
+  return lo + (hi - lo) * (0.28 + t * 0.5);
 }
 
 function isWallHost(search, key) {
@@ -164,8 +130,8 @@ function wallWithoutMine(items, by, dropUntagged) {
 const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
-const GOLD_INK = "#E8C85A";
-const WINE_PAD = "#6b1c2a";
+const GOLD_INK = "#D4A017";
+const PINK_PAD = "#F6D5DC";
 // ponytail: public counter, 6-month TTL on GET; Worker KV epoch if rsvp.endpoint is live
 const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-io/widd-wall";
 
@@ -375,9 +341,8 @@ function wallCard(item, i, fly, slot) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
   const rot = wallRot(item.id || String(i));
-  const pos = slot || wallLeafSlot(i, i + 1);
+  const pos = slot || wallGridSlot(i, i + 1);
   return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;--w:${pos.w}%;left:${pos.left}%;top:${pos.top}%">
-    <span class="wall-knot" aria-hidden="true"></span>
     <img src="${src}" alt="">
   </figure>`;
 }
@@ -387,16 +352,9 @@ function paintWallBoard(items, flyId) {
   if (!board) return;
   const rows = (items || []).filter((row) => dataImageOk(row && row.img));
   const n = rows.length;
-  const paths = [];
-  const cards = rows.map((row, i) => {
-    const slot = wallLeafSlot(i, n);
-    const p = (v) => Number(v).toFixed(1);
-    paths.push(
-      `<path d="M ${p(slot.ax)} ${p(slot.ay)} C ${p(slot.c1x)} ${p(slot.c1y)} ${p(slot.c2x)} ${p(slot.c2y)} ${p(slot.hx)} ${p(slot.hy)}"/>`,
-    );
-    return wallCard(row, i, row.id === flyId, slot);
-  });
-  board.innerHTML = `<svg class="wall-cords" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${paths.join("")}</svg>${cards.join("")}`;
+  board.innerHTML = rows
+    .map((row, i) => wallCard(row, i, row.id === flyId, wallGridSlot(i, n)))
+    .join("");
 }
 
 async function loadWallItems(url) {
@@ -420,55 +378,92 @@ async function loadWallItems(url) {
 function fitWallPad(canvas) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = canvas.clientWidth || 280;
-  const h = canvas.clientHeight || Math.max(200, Math.round(w * 1.15));
+  const h = canvas.clientHeight || Math.max(160, Math.round(w * 0.42));
   if (w < 8 || h < 8) return canvas.getContext("2d");
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = WINE_PAD;
+  ctx.fillStyle = PINK_PAD;
   ctx.fillRect(0, 0, w, h);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.strokeStyle = GOLD_INK;
-  ctx.lineWidth = Math.max(3.6, h / 55);
+  ctx.fillStyle = GOLD_INK;
   return ctx;
+}
+
+function padPoint(canvas, e) {
+  const t = e.touches ? e.touches[0] : e;
+  const r = canvas.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return { x: 0, y: 0 };
+  if (innerHeight > innerWidth + 8) {
+    return {
+      x: (t.clientY - r.top) * (canvas.clientWidth / r.height),
+      y: (r.right - t.clientX) * (canvas.clientHeight / r.width),
+    };
+  }
+  return {
+    x: (t.clientX - r.left) * (canvas.clientWidth / r.width),
+    y: (t.clientY - r.top) * (canvas.clientHeight / r.height),
+  };
+}
+
+function touchForce(e) {
+  const t = e.touches && e.touches[0];
+  if (!t) return 0;
+  const f = t.force || t.webkitForce || 0;
+  return f > 0.01 && f <= 1 ? f : 0;
 }
 
 function bindWallPad(canvas, ctx, state) {
   let drawing = false;
   let last = null;
-  const pt = (e) => {
-    const r = canvas.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
-    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  const widthOf = (e, p) => {
+    const h = canvas.clientHeight || 280;
+    const minW = Math.max(2.1, h / 90);
+    const maxW = Math.max(minW + 2, h / 16);
+    let speed = 0;
+    if (last) {
+      const dt = Math.max(8, Date.now() - last.t);
+      speed = (Math.hypot(p.x - last.x, p.y - last.y) / dt) * 16;
+    }
+    return strokeWidthFromTouch(touchForce(e), speed, minW, maxW);
   };
-  const mark = (p) => {
+  const stamp = (x, y, w) => {
     ctx.beginPath();
     ctx.fillStyle = GOLD_INK;
-    ctx.arc(p.x, p.y, Math.max(1.4, ctx.lineWidth / 2), 0, Math.PI * 2);
+    ctx.arc(x, y, w / 2, 0, Math.PI * 2);
     ctx.fill();
     state.dirty = true;
+  };
+  const ribbon = (a, b, w0, w1) => {
+    const dist = Math.hypot(b.x - a.x, b.y - a.y);
+    const steps = Math.max(1, Math.ceil(dist / 1.4));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      stamp(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, w0 + (w1 - w0) * t);
+    }
   };
   const down = (e) => {
     e.preventDefault();
     drawing = true;
-    last = pt(e);
-    mark(last);
+    const p = padPoint(canvas, e);
+    const w = widthOf(e, p);
+    last = { x: p.x, y: p.y, w, t: Date.now() };
+    stamp(p.x, p.y, w);
   };
   const move = (e) => {
     if (!drawing) return;
     e.preventDefault();
-    const p = pt(e);
-    ctx.beginPath();
-    ctx.moveTo(last.x, last.y);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
-    last = p;
-    state.dirty = true;
+    const p = padPoint(canvas, e);
+    const w = widthOf(e, p);
+    ribbon(last, p, last.w, w);
+    last = { x: p.x, y: p.y, w, t: Date.now() };
   };
   const up = () => {
     drawing = false;
+    last = null;
   };
   const opts = { passive: false };
   let touchAt = 0;
@@ -501,7 +496,7 @@ function exportWallPad(canvas) {
   tmp.width = 400;
   tmp.height = 160;
   const t = tmp.getContext("2d");
-  t.fillStyle = WINE_PAD;
+  t.fillStyle = PINK_PAD;
   t.fillRect(0, 0, 400, 160);
   t.drawImage(canvas, 0, 0, 400, 160);
   for (const q of [0.62, 0.48, 0.36]) {
@@ -544,7 +539,10 @@ function renderWall(cfg, guest) {
       <h2>签名墙</h2>
       <div class="wall-yard">
         <div class="wall-xi" aria-hidden="true">囍</div>
-        <div class="wall-board" id="wallBoard"></div>
+        <div class="wall-veil" aria-hidden="true"></div>
+        <div class="wall-frame">
+          <div class="wall-board" id="wallBoard"></div>
+        </div>
       </div>
       <div class="wall-actions">
         <button type="button" id="wallOpen">签字</button>
@@ -560,14 +558,18 @@ function renderWall(cfg, guest) {
     sheet.id = "wallSheet";
     sheet.className = "wall-sheet";
     sheet.hidden = true;
-    sheet.innerHTML = `<p class="wall-sheet-title">题字</p>
-      <canvas id="wallPad" width="560" height="800" aria-label="手写签名"></canvas>
-      <p class="wall-sheet-hint" id="wallSheetHint"></p>
-      <div class="wall-sheet-actions">
+    sheet.innerHTML = `<div class="wall-sheet-stage">
+      <div class="wall-sheet-pad">
+        <canvas id="wallPad" width="800" height="360" aria-label="手写签名"></canvas>
+      </div>
+      <div class="wall-sheet-side">
+        <p class="wall-sheet-title">题字</p>
+        <p class="wall-sheet-hint" id="wallSheetHint"></p>
         <button type="button" id="wallCancel">取消</button>
         <button type="button" id="wallClear">重写</button>
-        <button type="button" id="wallPin">题上</button>
-      </div>`;
+        <button type="button" id="wallPin">完成</button>
+      </div>
+    </div>`;
     document.body.appendChild(sheet);
   }
 
@@ -579,12 +581,19 @@ function renderWall(cfg, guest) {
   const closeSheet = () => {
     sheet.hidden = true;
     document.body.classList.remove("is-signing");
+    try {
+      screen.orientation.unlock();
+    } catch {}
   };
 
   const openSheet = () => {
     sheet.hidden = false;
     document.body.classList.add("is-signing");
     $("wallSheetHint").textContent = "";
+    try {
+      const ori = screen.orientation;
+      if (ori && ori.lock) ori.lock("landscape").catch(() => {});
+    } catch {}
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         ctx = fitWallPad(canvas);

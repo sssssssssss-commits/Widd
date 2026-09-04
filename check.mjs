@@ -12,10 +12,11 @@ import {
   remaining,
   wallAfterWipe,
   wallBoxesOverlap,
+  wallGridSlot,
   wallHitUrl,
-  wallLeafSlot,
   wallRot,
   wallWithoutMine,
+  strokeWidthFromTouch,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -69,15 +70,15 @@ assert.deepEqual(
 );
 assert.equal(wallWithoutMine([{ by: "a" }, {}], "a", false).length, 1);
 
-for (const n of [1, 8, 14, 20, 30]) {
-  const slots = Array.from({ length: n }, (_, i) => wallLeafSlot(i, n));
+assert.ok(strokeWidthFromTouch(1, 0) > strokeWidthFromTouch(0.2, 0));
+assert.ok(strokeWidthFromTouch(0, 0) > strokeWidthFromTouch(0, 3));
+
+for (const n of [1, 4, 9, 16, 30]) {
+  const slots = Array.from({ length: n }, (_, i) => wallGridSlot(i, n));
   for (let i = 0; i < n; i++) {
     const s = slots[i];
-    assert.ok(s.left >= -0.2 && s.left + s.w <= 100.3, `n=${n} i=${i} x`);
-    assert.ok(s.top >= 0 && s.top + s.h <= 100.3, `n=${n} i=${i} y`);
-    const bow =
-      (s.c1x - s.ax) * (s.hy - s.ay) - (s.c1y - s.ay) * (s.hx - s.ax);
-    assert.ok(Math.abs(bow) > 0.8, `n=${n} i=${i} branch`);
+    assert.ok(s.left >= 0 && s.left + s.w <= 100.2, `n=${n} i=${i} x`);
+    assert.ok(s.top >= 0 && s.top + s.h <= 100.2, `n=${n} i=${i} y`);
     for (let j = i + 1; j < n; j++) {
       assert.equal(wallBoxesOverlap(s, slots[j]), false, `n=${n} ${i}/${j}`);
     }

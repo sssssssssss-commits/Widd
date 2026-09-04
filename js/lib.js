@@ -99,63 +99,20 @@ export function wallWithoutMine(items, by, dropUntagged) {
   });
 }
 
-export function wallLeafSize(n) {
-  const count = Math.max(1, Number(n) || 1);
-  if (count <= 8) return { w: 20, h: 11 };
-  if (count <= 14) return { w: 16, h: 9 };
-  if (count <= 22) return { w: 13, h: 8 };
-  if (count <= 36) return { w: 11, h: 7 };
-  return { w: 9, h: 6 };
-}
-
-export function wallLeafSlot(i, n) {
+export function wallGridSlot(i, n) {
   const count = Math.max(Number(n) || 1, i + 1);
-  const { w, h } = wallLeafSize(count);
-  const gap = 2.6;
-  const r0 = 24 + h / 2;
-  const dr = h + gap + w * 0.22;
-  const rMax = Math.min(49 - w / 2, 48 - h / 2);
-  const ringCap = (rad) => Math.max(5, Math.floor((2 * Math.PI * rad) / (w + gap)));
-  let remain = i;
-  let ring = 0;
-  let r = r0;
-  let cap = ringCap(r);
-  while (remain >= cap && r + 0.01 < rMax) {
-    remain -= cap;
-    ring += 1;
-    r = Math.min(rMax, r0 + ring * dr);
-    cap = ringCap(r);
-    if (ring > 10) break;
-  }
-  const angle =
-    ((remain + (ring % 2) * 0.5) / cap) * Math.PI * 2 - Math.PI / 2;
-  const cx = 50 + r * Math.cos(angle);
-  const cy = 50 + r * Math.sin(angle);
-  const left = cx - w / 2;
-  const top = cy - h / 2;
-  const hx = cx;
-  const hy = top;
-  const dx = hx - 50;
-  const dy = hy - 50;
-  const dist = Math.hypot(dx, dy) || 1;
-  const attach = 16;
-  const ax = 50 + (dx / dist) * attach;
-  const ay = 50 + (dy / dist) * attach;
-  const ang = Math.atan2(hy - ay, hx - ax);
-  const side = i % 2 ? 1 : -1;
+  const cols = count <= 4 ? 2 : count <= 9 ? 3 : 4;
+  const rows = Math.ceil(count / cols);
+  const gap = 2.2;
+  const w = (100 - gap * (cols + 1)) / cols;
+  const h = Math.min(w * 0.42, (100 - gap * (rows + 1)) / Math.max(rows, 1));
+  const col = i % cols;
+  const row = Math.floor(i / cols);
   return {
-    left,
-    top,
+    left: gap + col * (w + gap),
+    top: gap + row * (h + gap),
     w,
     h,
-    hx,
-    hy,
-    ax,
-    ay,
-    c1x: ax + Math.cos(ang + side * 0.55) * dist * 0.42,
-    c1y: ay + Math.sin(ang + side * 0.55) * dist * 0.42,
-    c2x: hx - Math.cos(ang) * dist * 0.18,
-    c2y: hy - Math.sin(ang) * dist * 0.18,
   };
 }
 
@@ -166,4 +123,14 @@ export function wallBoxesOverlap(a, b, pad = 0.5) {
     a.top < b.top + b.h - pad &&
     a.top + a.h - pad > b.top
   );
+}
+
+export function strokeWidthFromTouch(force, speed, minW = 2.2, maxW = 11) {
+  const lo = Number(minW) || 2.2;
+  const hi = Number(maxW) || 11;
+  const f = Number(force) || 0;
+  if (f > 0.02) return lo + Math.min(1, f) * (hi - lo);
+  // ponytail: Touch.force is 0 on most Android; slow stroke reads heavier until a real pressure API exists
+  const t = Math.max(0, Math.min(1, 1 - (Number(speed) || 0) / 2.4));
+  return lo + (hi - lo) * (0.28 + t * 0.5);
 }
