@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0B0A09">
+  <meta name="format-detection" content="telephone=no">
+  <title>婚礼请柬</title>
+  <meta name="description" content="一封信，等你拆">
+  <meta property="og:title" content="婚礼请柬">
+  <meta property="og:description" content="一封信，等你拆">
+  <meta property="og:image" content="assets/seal.svg">
+  <link rel="icon" href="assets/seal.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/invite.css">
+</head>
+<body>
+  <canvas id="foil" class="foil" aria-hidden="true"></canvas>
+
+  <div id="gate" class="gate">
+    <p class="gate-hint">一封信，等你拆</p>
+    <div class="envelope-stage">
+      <div class="envelope" id="envelope">
+        <div class="envelope-back"></div>
+        <div class="letter-peek"></div>
+        <div class="envelope-body"></div>
+        <div class="envelope-flap"></div>
+        <button type="button" class="seal" id="seal" aria-label="拆开请柬">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="72" height="72" aria-hidden="true">
+            <rect x="4" y="4" width="112" height="112" rx="4" fill="#8C2F2B"/>
+            <rect x="10" y="10" width="100" height="100" rx="2" fill="none" stroke="#E8DFD0" stroke-width="2.2"/>
+            <rect x="16" y="16" width="88" height="88" fill="none" stroke="#E8DFD0" stroke-width="1"/>
+            <text x="60" y="86" text-anchor="middle" fill="#E8DFD0"
+              font-family="Songti SC, STSong, SimSun, serif" font-size="64">囍</text>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <main id="letter" class="letter" hidden>
+    <article class="letter-inner">
+      <p class="address" id="address">恭请光临</p>
+
+      <header class="names" id="names"></header>
+
+      <p class="opener" id="opener"></p>
+
+      <section class="when" aria-label="婚期">
+        <p class="when-text" id="whenText"></p>
+        <div class="clepsydra" id="clepsydra" aria-live="polite">
+          <div class="tick"><strong id="d">0</strong><i></i><span>日</span></div>
+          <div class="tick"><strong id="h">00</strong><i></i><span>时</span></div>
+          <div class="tick"><strong id="m">00</strong><i></i><span>分</span></div>
+          <div class="tick"><strong id="s">00</strong><i></i><span>秒</span></div>
+        </div>
+        <p class="when-past" id="whenPast" hidden>良辰已至</p>
+      </section>
+
+      <section class="scrolls-wrap" aria-label="照片">
+        <div class="scrolls" id="scrolls"></div>
+      </section>
+
+      <section class="venues" id="venues"></section>
+
+      <section class="rsvp" id="rsvp"></section>
+
+      <p class="wall-soon" id="wallSoon" hidden>签名墙 · 即将开启</p>
+
+      <footer class="colophon" id="colophon"></footer>
+    </article>
+  </main>
+
+  <script type="module" src="js/invite.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+export function guestFromSearch(search) {
+  const raw = String(search || "");
+  const q = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
+  return (q.get("to") || "").trim().slice(0, 20);
+}
+
+export function remaining(now, then) {
+  const ms = then - now;
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, past: true };
+  }
+  const s = Math.floor(ms / 1000);
+  return {
+    days: Math.floor(s / 86400),
+    hours: Math.floor((s % 86400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+    seconds: s % 60,
+    past: false,
+  };
+}
+
+export function coupleLine(groom, bride) {
+  const a = `${groom?.family || ""}${groom?.name || ""}`.trim();
+  const b = `${bride?.family || ""}${bride?.name || ""}`.trim();
+  return [a, b].filter(Boolean).join(" 与 ");
+}
+
+export function mapLinks({ name, address, lat, lng }) {
+  const n = encodeURIComponent(name || "婚礼");
+  const a = encodeURIComponent(address || "");
+  return {
+    amap: `https://uri.amap.com/marker?position=${lng},${lat}&name=${n}&src=widd&coordinate=gaode&callnative=1`,
+    tencent: `https://apis.map.qq.com/uri/v1/marker?marker=coord:${lat},${lng};title:${n};addr:${a}&referer=widd`,
+  };
+}
+
+export function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+export function escAttr(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]),
+  );
+}

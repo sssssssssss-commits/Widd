@@ -1,0 +1,9 @@
+name = "widd-rsvp"
+main = "rsvp.js"
+compatibility_date = "2026-09-01"
+
+# wrangler kv namespace create RSVP
+# 把返回的 id 填到下面
+[[kv_namespaces]]
+binding = "RSVP"
+id = "replace-me"
