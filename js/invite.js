@@ -76,9 +76,15 @@ function wallRot(id) {
 }
 
 function wallSlot(i) {
-  const col = i % 2;
-  const row = Math.floor(i / 2) % 6;
-  return { left: col === 0 ? 3 : 71, top: 5 + row * 14.2 };
+  const per = 8;
+  const ring = Math.floor(i / per);
+  const k = i % per;
+  const angle = (k / per) * Math.PI * 2 - Math.PI / 2 + ring * 0.2;
+  const r = 32 + ring * 13;
+  return {
+    left: 50 + r * Math.cos(angle) - 13,
+    top: 50 + r * Math.sin(angle) - 8,
+  };
 }
 
 const RSVP_KEY = "widd-rsvp";
@@ -254,22 +260,20 @@ function writeLocalWall(rows) {
   } catch {}
 }
 
-function wallCard(item, fly) {
+function wallCard(item, i, fly) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
-  const rot = wallRot(item.id || item.name);
-  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg">
+  const rot = wallRot(item.id || String(i));
+  const slot = wallSlot(i);
+  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;left:${slot.left}%;top:${slot.top}%">
     <img src="${src}" alt="">
-    <figcaption>${escAttr(item.name || "")}</figcaption>
   </figure>`;
 }
 
 function paintWallBoard(items, flyId) {
   const board = $("wallBoard");
-  const empty = $("wallEmpty");
   if (!board) return;
-  board.innerHTML = items.map((row) => wallCard(row, row.id === flyId)).join("");
-  if (empty) empty.hidden = items.length > 0;
+  board.innerHTML = items.map((row, i) => wallCard(row, i, row.id === flyId)).join("");
 }
 
 async function loadWallItems(url) {
@@ -395,18 +399,18 @@ function renderWall(cfg, guest) {
   soon.hidden = true;
   wall.hidden = false;
   const url = wallEndpoint(cfg);
-  wall.innerHTML = `<div class="rsvp-box wall-box">
+  wall.innerHTML = `<div class="wall-box">
       <h2>签名墙</h2>
-      <div class="wall-board" id="wallBoard"></div>
-      <p class="wall-empty" id="wallEmpty">还没有落款</p>
-      <label for="wallName">芳名</label>
-      <input id="wallName" maxlength="20" value="${escAttr(guest)}" autocomplete="name">
+      <div class="wall-yard">
+        <div class="wall-xi" aria-hidden="true">囍</div>
+        <div class="wall-board" id="wallBoard"></div>
+      </div>
       <canvas id="wallPad" width="560" height="224" aria-label="手写签名"></canvas>
       <div class="wall-actions">
         <button type="button" id="wallClear">重写</button>
         <button type="button" id="wallSign">题上</button>
       </div>
-      <p class="wall-hint" id="wallHint">${url ? "请题一字，飞入墙上" : "先留在这台手机上；配上回执地址后宾客可同看"}</p>
+      <p class="wall-hint" id="wallHint"></p>
     </div>`;
 
   const canvas = $("wallPad");
@@ -425,9 +429,9 @@ function renderWall(cfg, guest) {
   $("wallSign").addEventListener("click", async () => {
     const btn = $("wallSign");
     const hint = $("wallHint");
-    const name = clipText($("wallName").value, 20) || guest || "来宾";
+    const name = guest || "来宾";
     if (!pad.dirty) {
-      hint.textContent = "请先在框内手写签名";
+      hint.textContent = "请先手写签名";
       return;
     }
     const img = exportWallPad(canvas);
@@ -473,8 +477,7 @@ function renderWall(cfg, guest) {
     paintWallBoard(items, flyId);
     fitWallPad(canvas);
     pad.dirty = false;
-    $("wallName").value = name;
-    hint.textContent = shared ? "已上墙" : "已上墙";
+    hint.textContent = "已上墙";
     btn.disabled = false;
   });
 }
