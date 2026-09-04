@@ -81,14 +81,6 @@ export function wallRot(id) {
   return (wallHash(id) % 21) - 10;
 }
 
-export function wallJitter(id) {
-  const h = wallHash(id);
-  return {
-    dx: ((h % 31) - 15) * 0.22,
-    dy: (((h / 31) | 0) % 29 - 14) * 0.18,
-  };
-}
-
 export function wallMineCount(items, by) {
   const id = String(by || "");
   if (!id) return 0;
@@ -122,22 +114,29 @@ export function wallWithoutMine(items, by, dropUntagged) {
 }
 
 export function wallSpreadSlot(i, n) {
-  const count = Math.max(Number(n) || 1, i + 1);
-  const w = count > 20 ? 9.2 : count > 10 ? 10.8 : 12;
-  const h = w * 0.42;
-  const gap = 1.15;
-  let cols = Math.floor((100 - gap) / (w + gap));
-  if (cols < 3) cols = 3;
-  if (cols % 2 === 0) cols -= 1;
-  const row = Math.floor(i / cols);
-  const k = i % cols;
-  const colOff = k === 0 ? 0 : Math.ceil(k / 2) * (k % 2 === 1 ? -1 : 1);
-  const rowOff = row === 0 ? 0 : Math.ceil(row / 2) * (row % 2 === 1 ? -1 : 1);
-  let left = 50 + colOff * (w + gap) - w / 2;
-  let top = 50 + rowOff * (h + gap) - h / 2;
-  left = Math.min(100 - w - 0.3, Math.max(0.3, left));
-  top = Math.min(100 - h - 0.3, Math.max(0.3, top));
-  return { left, top, w, h };
+  const count = Math.max(1, Number(n) || 1);
+  const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
+  const gap = 1.6;
+  const cap = 50;
+  // ponytail: 0.82 leaves AABB room for ±10° tilt; bump slack if overlap returns
+  const slack = 0.82;
+  let best = null;
+  for (let cols = 1; cols <= count; cols++) {
+    const rows = Math.ceil(count / cols);
+    const cellW = (100 - gap * (cols + 1)) / cols;
+    const cellH = (100 - gap * (rows + 1)) / rows;
+    const size = Math.min(cellW, cellH) * slack;
+    if (size <= 0) continue;
+    if (!best || size > best.size) best = { cols, rows, cellW, cellH, size, gap };
+  }
+  const size = Math.min(cap, best.size);
+  const row = Math.floor(idx / best.cols);
+  const col = idx % best.cols;
+  const nThisRow = row === best.rows - 1 ? count - row * best.cols : best.cols;
+  const rowShift = ((best.cols - nThisRow) * (best.cellW + gap)) / 2;
+  const left = gap + rowShift + col * (best.cellW + gap) + (best.cellW - size) / 2;
+  const top = gap + row * (best.cellH + gap) + (best.cellH - size) / 2;
+  return { left, top, w: size, h: size };
 }
 
 export function wallBoxesOverlap(a, b, pad = 0.5) {

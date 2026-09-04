@@ -83,14 +83,6 @@ function wallRot(id) {
   return (wallHash(id) % 21) - 10;
 }
 
-function wallJitter(id) {
-  const h = wallHash(id);
-  return {
-    dx: ((h % 31) - 15) * 0.22,
-    dy: (((h / 31) | 0) % 29 - 14) * 0.18,
-  };
-}
-
 function wallMineCount(items, by) {
   const id = String(by || "");
   if (!id) return 0;
@@ -98,22 +90,28 @@ function wallMineCount(items, by) {
 }
 
 function wallSpreadSlot(i, n) {
-  const count = Math.max(Number(n) || 1, i + 1);
-  const w = count > 20 ? 9.2 : count > 10 ? 10.8 : 12;
-  const h = w * 0.42;
-  const gap = 1.15;
-  let cols = Math.floor((100 - gap) / (w + gap));
-  if (cols < 3) cols = 3;
-  if (cols % 2 === 0) cols -= 1;
-  const row = Math.floor(i / cols);
-  const k = i % cols;
-  const colOff = k === 0 ? 0 : Math.ceil(k / 2) * (k % 2 === 1 ? -1 : 1);
-  const rowOff = row === 0 ? 0 : Math.ceil(row / 2) * (row % 2 === 1 ? -1 : 1);
-  let left = 50 + colOff * (w + gap) - w / 2;
-  let top = 50 + rowOff * (h + gap) - h / 2;
-  left = Math.min(100 - w - 0.3, Math.max(0.3, left));
-  top = Math.min(100 - h - 0.3, Math.max(0.3, top));
-  return { left, top, w, h };
+  const count = Math.max(1, Number(n) || 1);
+  const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
+  const gap = 1.6;
+  const cap = 50;
+  const slack = 0.82;
+  let best = null;
+  for (let cols = 1; cols <= count; cols++) {
+    const rows = Math.ceil(count / cols);
+    const cellW = (100 - gap * (cols + 1)) / cols;
+    const cellH = (100 - gap * (rows + 1)) / rows;
+    const size = Math.min(cellW, cellH) * slack;
+    if (size <= 0) continue;
+    if (!best || size > best.size) best = { cols, rows, cellW, cellH, size, gap };
+  }
+  const size = Math.min(cap, best.size);
+  const row = Math.floor(idx / best.cols);
+  const col = idx % best.cols;
+  const nThisRow = row === best.rows - 1 ? count - row * best.cols : best.cols;
+  const rowShift = ((best.cols - nThisRow) * (best.cellW + gap)) / 2;
+  const left = gap + rowShift + col * (best.cellW + gap) + (best.cellW - size) / 2;
+  const top = gap + row * (best.cellH + gap) + (best.cellH - size) / 2;
+  return { left, top, w: size, h: size };
 }
 
 function strokeWidthFromTouch(input, minW, maxW) {
@@ -158,6 +156,7 @@ const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
 const GOLD_INK = "#D4A017";
+const INK_EDGE = "#1A120C";
 // ponytail: public counter, 6-month TTL on GET; Worker KV epoch if rsvp.endpoint is live
 const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-io/widd-wall";
 
@@ -368,11 +367,8 @@ function wallCard(item, i, fly, slot) {
   if (!dataImageOk(src)) return "";
   const key = item.id || String(i);
   const rot = wallRot(key);
-  const jit = wallJitter(key);
   const pos = slot || wallSpreadSlot(i, i + 1);
-  const left = Math.min(100 - pos.w - 0.3, Math.max(0.3, pos.left + jit.dx));
-  const top = Math.min(100 - pos.h - 0.3, Math.max(0.3, pos.top + jit.dy));
-  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;--w:${pos.w}%;left:${left}%;top:${top}%">
+  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;--w:${pos.w}%;--h:${pos.h}%;left:${pos.left}%;top:${pos.top}%">
     <img src="${src}" alt="">
   </figure>`;
 }
@@ -413,10 +409,35 @@ async function loadWallItems(url) {
   }
 }
 
-function fitWallPad(canvas) {
+function paintGoldInk(ctx, pts, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  if (!pts || !pts.length) return;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    ctx.beginPath();
+    ctx.fillStyle = INK_EDGE;
+    ctx.arc(p.x, p.y, p.w / 2 + Math.max(1.15, p.w * 0.26), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    ctx.beginPath();
+    ctx.fillStyle = GOLD_INK;
+    ctx.arc(p.x, p.y, p.w / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function fitWallPad(canvas, state) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = canvas.clientWidth || 280;
   const h = canvas.clientHeight || Math.max(160, Math.round(w * 0.42));
+  if (state) {
+    state.pts = [];
+    state.dirty = false;
+  }
   if (w < 8 || h < 8) return canvas.getContext("2d");
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
@@ -463,6 +484,15 @@ function touchSample(e) {
 function bindWallPad(canvas, ctx, state) {
   let drawing = false;
   let last = null;
+  if (!state.pts) state.pts = [];
+  const cssBox = () => ({
+    w: canvas.clientWidth || 280,
+    h: canvas.clientHeight || 160,
+  });
+  const paint = () => {
+    const box = cssBox();
+    paintGoldInk(ctx, state.pts, box.w, box.h);
+  };
   const widthOf = (e, p) => {
     const h = canvas.clientHeight || 280;
     const mid = Math.max(3.6, h / 34);
@@ -481,20 +511,19 @@ function bindWallPad(canvas, ctx, state) {
     );
     return last ? last.w * 0.22 + raw * 0.78 : raw;
   };
-  const stamp = (x, y, w) => {
-    ctx.beginPath();
-    ctx.fillStyle = GOLD_INK;
-    ctx.arc(x, y, w / 2, 0, Math.PI * 2);
-    ctx.fill();
-    state.dirty = true;
-  };
   const ribbon = (a, b, w0, w1) => {
     const dist = Math.hypot(b.x - a.x, b.y - a.y);
     const steps = Math.max(1, Math.ceil(dist / 1.2));
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      stamp(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, w0 + (w1 - w0) * t);
+      state.pts.push({
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        w: w0 + (w1 - w0) * t,
+      });
     }
+    state.dirty = true;
+    paint();
   };
   const down = (e) => {
     e.preventDefault();
@@ -502,7 +531,9 @@ function bindWallPad(canvas, ctx, state) {
     const p = padPoint(canvas, e);
     const w = widthOf(e, p);
     last = { x: p.x, y: p.y, w, t: e.timeStamp || Date.now() };
-    stamp(p.x, p.y, w);
+    state.pts.push({ x: p.x, y: p.y, w });
+    state.dirty = true;
+    paint();
   };
   const move = (e) => {
     if (!drawing) return;
@@ -590,6 +621,14 @@ function renderWall(cfg, guest) {
         <div class="wall-xi" aria-hidden="true">囍</div>
         <div class="wall-veil" aria-hidden="true"></div>
         <div class="wall-frame">
+          <span class="wall-leiwen wall-leiwen-t" aria-hidden="true"></span>
+          <span class="wall-leiwen wall-leiwen-b" aria-hidden="true"></span>
+          <span class="wall-leiwen wall-leiwen-l" aria-hidden="true"></span>
+          <span class="wall-leiwen wall-leiwen-r" aria-hidden="true"></span>
+          <span class="wall-corner wall-corner-tl" aria-hidden="true"></span>
+          <span class="wall-corner wall-corner-tr" aria-hidden="true"></span>
+          <span class="wall-corner wall-corner-bl" aria-hidden="true"></span>
+          <span class="wall-corner wall-corner-br" aria-hidden="true"></span>
           <div class="wall-board" id="wallBoard"></div>
         </div>
       </div>
@@ -645,8 +684,7 @@ function renderWall(cfg, guest) {
     } catch {}
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        ctx = fitWallPad(canvas);
-        pad.dirty = false;
+        ctx = fitWallPad(canvas, pad);
       });
     });
   };
@@ -669,8 +707,7 @@ function renderWall(cfg, guest) {
   });
   $("wallCancel").addEventListener("click", closeSheet);
   $("wallClear").addEventListener("click", () => {
-    ctx = fitWallPad(canvas);
-    pad.dirty = false;
+    ctx = fitWallPad(canvas, pad);
     $("wallSheetHint").textContent = "";
   });
 

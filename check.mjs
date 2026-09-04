@@ -14,7 +14,6 @@ import {
   wallBoxesOverlap,
   wallSpreadSlot,
   wallHitUrl,
-  wallJitter,
   wallMineCount,
   wallRot,
   wallWithoutMine,
@@ -52,9 +51,6 @@ assert.equal(
 assert.equal(dataImageOk("data:image/png;base64," + "A".repeat(80), 100000), true);
 assert.equal(wallRot("abc"), wallRot("abc"));
 assert.ok(Math.abs(wallRot("sig-1")) <= 10);
-assert.equal(wallJitter("abc").dx, wallJitter("abc").dx);
-assert.ok(Math.abs(wallJitter("sig-1").dx) <= 3.4);
-assert.ok(Math.abs(wallJitter("sig-1").dy) <= 2.6);
 assert.equal(wallMineCount([{ by: "a" }, { by: "a" }, { by: "a" }, { by: "b" }], "a"), 3);
 assert.equal(wallMineCount([], "a"), 0);
 
@@ -84,20 +80,37 @@ const thick = strokeWidthFromTouch({ speed: 0.03 }, 4, 8);
 const thin = strokeWidthFromTouch({ speed: 0.8 }, 4, 8);
 assert.ok(thick / thin > 1.4 && thick / thin < 2.6);
 
-const first = wallSpreadSlot(0, 5);
+const first = wallSpreadSlot(0, 1);
+assert.ok(Math.abs(first.w - 50) < 1.2);
+assert.ok(Math.abs(first.h - 50) < 1.2);
 assert.ok(Math.abs(first.left + first.w / 2 - 50) < 1.2);
 assert.ok(Math.abs(first.top + first.h / 2 - 50) < 1.2);
-assert.ok(wallSpreadSlot(1, 5).left + wallSpreadSlot(1, 5).w / 2 < 50);
-assert.ok(wallSpreadSlot(2, 5).left + wallSpreadSlot(2, 5).w / 2 > 50);
+assert.ok(first.w * first.h >= 2300);
+assert.ok(wallSpreadSlot(0, 4).w < first.w);
+assert.ok(wallSpreadSlot(0, 9).w < wallSpreadSlot(0, 4).w);
+assert.ok(wallSpreadSlot(0, 16).w < wallSpreadSlot(0, 9).w);
 
-for (const n of [1, 4, 9, 16, 30]) {
+function rotBox(s, deg) {
+  const r = (deg * Math.PI) / 180;
+  const c = Math.abs(Math.cos(r));
+  const si = Math.abs(Math.sin(r));
+  const aw = s.w * c + s.h * si;
+  const ah = s.w * si + s.h * c;
+  const cx = s.left + s.w / 2;
+  const cy = s.top + s.h / 2;
+  return { left: cx - aw / 2, top: cy - ah / 2, w: aw, h: ah };
+}
+
+for (const n of [1, 2, 3, 4, 5, 9, 16, 30]) {
   const slots = Array.from({ length: n }, (_, i) => wallSpreadSlot(i, n));
+  const sized = slots.map((s) => rotBox(s, 10));
   for (let i = 0; i < n; i++) {
     const s = slots[i];
-    assert.ok(s.left >= 0 && s.left + s.w <= 100.2, `n=${n} i=${i} x`);
-    assert.ok(s.top >= 0 && s.top + s.h <= 100.2, `n=${n} i=${i} y`);
+    assert.ok(s.left >= -0.2 && s.left + s.w <= 100.2, `n=${n} i=${i} x`);
+    assert.ok(s.top >= -0.2 && s.top + s.h <= 100.2, `n=${n} i=${i} y`);
     for (let j = i + 1; j < n; j++) {
-      assert.equal(wallBoxesOverlap(s, slots[j]), false, `n=${n} ${i}/${j}`);
+      assert.equal(wallBoxesOverlap(s, slots[j], 0.2), false, `n=${n} ${i}/${j}`);
+      assert.equal(wallBoxesOverlap(sized[i], sized[j], 0.05), false, `rot n=${n} ${i}/${j}`);
     }
   }
 }
