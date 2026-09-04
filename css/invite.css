@@ -599,12 +599,12 @@ body::before {
   display: grid;
   place-items: center;
   font-family: "KaiTi", "KaiTi_GB2312", "STKaiti", "Kaiti SC", "华文楷体", "Noto Serif SC", serif;
-  font-size: 68vw;
-  font-size: 94cqh;
+  font-size: 56vw;
+  font-size: 78cqh;
   font-weight: 700;
   font-style: normal;
   color: #8B241C;
-  opacity: .7;
+  opacity: .6;
   pointer-events: none;
   z-index: 0;
   line-height: 1;
