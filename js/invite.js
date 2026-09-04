@@ -69,10 +69,32 @@ function darkPixelCount(data, threshold) {
   return n;
 }
 
+function wallHash(id) {
+  let n = 2166136261;
+  const s = String(id || "0");
+  for (let i = 0; i < s.length; i++) {
+    n ^= s.charCodeAt(i);
+    n = Math.imul(n, 16777619);
+  }
+  return n >>> 0;
+}
+
 function wallRot(id) {
-  let n = 0;
-  for (const c of String(id || "")) n = (n + c.charCodeAt(0)) % 13;
-  return n - 6;
+  return (wallHash(id) % 21) - 10;
+}
+
+function wallJitter(id) {
+  const h = wallHash(id);
+  return {
+    dx: ((h % 31) - 15) * 0.22,
+    dy: (((h / 31) | 0) % 29 - 14) * 0.18,
+  };
+}
+
+function wallMineCount(items, by) {
+  const id = String(by || "");
+  if (!id) return 0;
+  return (Array.isArray(items) ? items : []).filter((row) => String(row?.by || "") === id).length;
 }
 
 function wallSpreadSlot(i, n) {
@@ -344,9 +366,13 @@ async function bumpWallEpoch(getUrl) {
 function wallCard(item, i, fly, slot) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
-  const rot = wallRot(item.id || String(i));
+  const key = item.id || String(i);
+  const rot = wallRot(key);
+  const jit = wallJitter(key);
   const pos = slot || wallSpreadSlot(i, i + 1);
-  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;--w:${pos.w}%;left:${pos.left}%;top:${pos.top}%">
+  const left = Math.min(100 - pos.w - 0.3, Math.max(0.3, pos.left + jit.dx));
+  const top = Math.min(100 - pos.h - 0.3, Math.max(0.3, pos.top + jit.dy));
+  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;--w:${pos.w}%;left:${left}%;top:${top}%">
     <img src="${src}" alt="">
   </figure>`;
 }
@@ -633,7 +659,14 @@ function renderWall(cfg, guest) {
     return items;
   };
 
-  $("wallOpen").addEventListener("click", openSheet);
+  $("wallOpen").addEventListener("click", async () => {
+    const items = await refresh();
+    if (wallMineCount(items, by) >= 3) {
+      $("wallHint").textContent = "每人最多留下三幅";
+      return;
+    }
+    openSheet();
+  });
   $("wallCancel").addEventListener("click", closeSheet);
   $("wallClear").addEventListener("click", () => {
     ctx = fitWallPad(canvas);
@@ -686,6 +719,11 @@ function renderWall(cfg, guest) {
       return;
     }
     const epoch = await fetchWallEpoch(epochUrl);
+    const existing = wallAfterWipe(await loadWallItems(url), epoch);
+    if (wallMineCount(existing, by) >= 3) {
+      sheetHint.textContent = "每人最多留下三幅";
+      return;
+    }
     const item = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       name,
@@ -703,6 +741,11 @@ function renderWall(cfg, guest) {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ kind: "wall", name, img, by, epoch }),
         });
+        if (res.status === 409) {
+          sheetHint.textContent = "每人最多留下三幅";
+          btn.disabled = false;
+          return;
+        }
         if (!res.ok) throw new Error();
         const data = await res.json().catch(() => ({}));
         if (data.id) item.id = data.id;

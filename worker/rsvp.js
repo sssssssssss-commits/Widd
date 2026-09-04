@@ -38,6 +38,10 @@ async function saveWall(env, body) {
   const by = clip(body.by, 80);
   const img = String(body.img || "");
   if (!imageOk(img)) return json({ ok: false }, 400);
+  if (by) {
+    const mine = (await listWall(env)).filter((r) => String(r.by || "") === by);
+    if (mine.length >= 3) return json({ ok: false }, 409);
+  }
   const id = `${Date.now()}-${crypto.randomUUID()}`;
   const row = {
     id,

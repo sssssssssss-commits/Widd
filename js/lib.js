@@ -67,10 +67,32 @@ export function darkPixelCount(data, threshold = 40) {
   return n;
 }
 
+export function wallHash(id) {
+  let n = 2166136261;
+  const s = String(id || "0");
+  for (let i = 0; i < s.length; i++) {
+    n ^= s.charCodeAt(i);
+    n = Math.imul(n, 16777619);
+  }
+  return n >>> 0;
+}
+
 export function wallRot(id) {
-  let n = 0;
-  for (const c of String(id || "")) n = (n + c.charCodeAt(0)) % 13;
-  return n - 6;
+  return (wallHash(id) % 21) - 10;
+}
+
+export function wallJitter(id) {
+  const h = wallHash(id);
+  return {
+    dx: ((h % 31) - 15) * 0.22,
+    dy: (((h / 31) | 0) % 29 - 14) * 0.18,
+  };
+}
+
+export function wallMineCount(items, by) {
+  const id = String(by || "");
+  if (!id) return 0;
+  return (Array.isArray(items) ? items : []).filter((row) => String(row?.by || "") === id).length;
 }
 
 export function isWallHost(search, key) {

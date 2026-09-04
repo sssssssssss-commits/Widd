@@ -14,6 +14,8 @@ import {
   wallBoxesOverlap,
   wallSpreadSlot,
   wallHitUrl,
+  wallJitter,
+  wallMineCount,
   wallRot,
   wallWithoutMine,
   strokeWidthFromTouch,
@@ -49,7 +51,12 @@ assert.equal(
 );
 assert.equal(dataImageOk("data:image/png;base64," + "A".repeat(80), 100000), true);
 assert.equal(wallRot("abc"), wallRot("abc"));
-assert.ok(Math.abs(wallRot("sig-1")) <= 6);
+assert.ok(Math.abs(wallRot("sig-1")) <= 10);
+assert.equal(wallJitter("abc").dx, wallJitter("abc").dx);
+assert.ok(Math.abs(wallJitter("sig-1").dx) <= 3.4);
+assert.ok(Math.abs(wallJitter("sig-1").dy) <= 2.6);
+assert.equal(wallMineCount([{ by: "a" }, { by: "a" }, { by: "a" }, { by: "b" }], "a"), 3);
+assert.equal(wallMineCount([], "a"), 0);
 
 assert.equal(isWallHost("?host=xi8k2m", "xi8k2m"), true);
 assert.equal(isWallHost("?open=1&host=xi8k2m", "xi8k2m"), true);
