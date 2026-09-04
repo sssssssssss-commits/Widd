@@ -80,7 +80,7 @@ function wallSlot(i) {
   const ring = Math.floor(i / per);
   const k = i % per;
   const angle = (k / per) * Math.PI * 2 - Math.PI / 2 + ring * 0.2;
-  const r = 32 + ring * 13;
+  const r = 40 + ring * 12;
   return {
     left: 50 + r * Math.cos(angle) - 13,
     top: 50 + r * Math.sin(angle) - 8,
@@ -398,6 +398,9 @@ function renderWall(cfg, guest) {
   }
   soon.hidden = true;
   wall.hidden = false;
+  if (new URLSearchParams(location.search).has("clearwall")) {
+    try { localStorage.removeItem(WALL_KEY); } catch {}
+  }
   const url = wallEndpoint(cfg);
   wall.innerHTML = `<div class="wall-box">
       <h2>签名墙</h2>

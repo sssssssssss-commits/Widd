@@ -239,8 +239,18 @@ body::before {
     #F4EEE4;
 }
 
+.letter::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(255, 248, 239, 0.72);
+}
+
 .letter-inner {
   position: relative;
+  z-index: 1;
   width: min(calc(100% - 1.2rem), var(--letter-w));
   margin: 0 auto;
   padding: calc(5.6rem + var(--safe-top)) 1.5rem calc(5.4rem + var(--safe-bot));
@@ -581,13 +591,16 @@ body::before {
   inset: 0;
   display: grid;
   place-items: center;
-  font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "Songti SC", serif;
-  font-size: min(38vw, 6.4rem);
+  font-family: "KaiTi", "KaiTi_GB2312", "STKaiti", "Kaiti SC", "华文楷体", "Noto Serif SC", serif;
+  font-size: min(58vw, 10rem);
+  font-weight: 700;
+  font-style: normal;
   color: #8B241C;
-  opacity: .9;
+  opacity: .92;
   pointer-events: none;
   z-index: 0;
   line-height: 1;
+  letter-spacing: 0;
 }
 
 .wall-board {
