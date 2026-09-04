@@ -234,18 +234,20 @@ body::before {
   z-index: 1;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--paper);
+  background:
+    url("../assets/paper.jpg") center top / cover no-repeat,
+    #9a1c1c;
 }
 
 .letter-inner {
-  width: min(100%, var(--letter-w));
-  margin: 0 auto;
-  padding: calc(5.8rem + var(--safe-top)) 1.7rem calc(6.2rem + var(--safe-bot));
+  width: min(calc(100% - 1.4rem), var(--letter-w));
+  margin: 0.9rem auto 1.2rem;
+  padding: calc(2.2rem + var(--safe-top)) 1.5rem calc(2.6rem + var(--safe-bot));
   overflow-x: hidden;
-  background:
-    url("../assets/frame.jpg") center top / cover no-repeat,
-    var(--paper);
-  text-shadow: 0 1px 0 #fff9;
+  background: rgba(255, 248, 239, 0.94);
+  border: 1px solid #d4b45a;
+  box-shadow: 0 0 0 6px rgba(154, 28, 28, 0.18);
+  color: #1f120e;
 }
 
 .letter-inner > * + * { margin-top: 2.1rem; }
@@ -262,7 +264,7 @@ body::before {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1.8rem;
+  gap: .9rem;
 }
 
 .names .person {
@@ -279,20 +281,20 @@ body::before {
 }
 
 .names .person .name {
-  writing-mode: vertical-rl;
-  letter-spacing: .4em;
-  font-size: 1.7rem;
-  line-height: 1;
-  height: 4.2em;
-  color: var(--ink);
+  font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "STXingkai", "LiSu", "华文楷体", "华文行楷", "Songti SC", serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  line-height: 1.15;
+  color: #1a0c08;
 }
 
 .names .amp {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   border: 1px solid var(--gold);
   color: var(--cinnabar);
-  font-size: .72rem;
+  font-size: 1.05rem;
   display: grid;
   place-items: center;
   flex: none;
@@ -368,14 +370,14 @@ body::before {
   font-size: .8rem;
 }
 
-.scrolls-wrap { margin-left: -1.7rem; margin-right: -1.7rem; }
+.scrolls-wrap { margin-left: -1.5rem; margin-right: -1.5rem; }
 
 .scrolls {
   display: flex;
   gap: 1.1rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding: .4rem 1.7rem;
+  padding: .4rem 1.5rem;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -438,6 +440,7 @@ body::before {
   font-style: normal;
   font-size: .82rem;
   letter-spacing: .08em;
+  line-height: 1.7;
   color: var(--ink-soft);
   margin-bottom: 1rem;
 }
