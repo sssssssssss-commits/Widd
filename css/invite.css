@@ -258,7 +258,7 @@ body::before {
   width: min(calc(100% - 1.2rem), var(--letter-w));
   margin: 0 auto;
   padding: calc(5.6rem + var(--safe-top)) 1.5rem calc(5.4rem + var(--safe-bot));
-  overflow-x: hidden;
+  overflow: visible;
   background: transparent;
   color: var(--ink);
 }
@@ -575,7 +575,7 @@ body::before {
 }
 
 .wall-box h2 {
-  margin: 0 0 1rem;
+  margin: 0 0 .7rem;
   text-align: center;
   font-size: .8rem;
   font-weight: 400;
@@ -583,11 +583,19 @@ body::before {
   color: var(--ink);
 }
 
+.wall {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 0 .32rem;
+  box-sizing: border-box;
+}
+
 .wall-yard {
   position: relative;
   width: 100%;
-  aspect-ratio: 5 / 3;
-  margin: 0 0 1rem;
+  aspect-ratio: 4 / 3;
+  margin: 0 0 .6rem;
 }
 
 .wall-xi {
@@ -596,7 +604,7 @@ body::before {
   display: grid;
   place-items: center;
   font-family: "KaiTi", "KaiTi_GB2312", "STKaiti", "Kaiti SC", "华文楷体", "Noto Serif SC", serif;
-  font-size: min(36vw, 6.4rem);
+  font-size: min(42vw, 7.2rem);
   font-weight: 700;
   font-style: normal;
   color: #8B241C;
@@ -617,7 +625,7 @@ body::before {
 
 .wall-frame {
   position: absolute;
-  inset: 7%;
+  inset: 1.5%;
   z-index: 2;
   border: 2px solid #c9a24a;
   box-shadow: inset 0 0 0 1px #e8c56a80, 0 0 0 1px #c9a24a55;

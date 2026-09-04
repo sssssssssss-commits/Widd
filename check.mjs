@@ -12,7 +12,7 @@ import {
   remaining,
   wallAfterWipe,
   wallBoxesOverlap,
-  wallGridSlot,
+  wallSpreadSlot,
   wallHitUrl,
   wallRot,
   wallWithoutMine,
@@ -74,8 +74,14 @@ assert.ok(strokeWidthFromTouch({ force: 0.9, radius: 0, speed: 0 }) > strokeWidt
 assert.ok(strokeWidthFromTouch({ force: 0, radius: 24, speed: 0 }) > strokeWidthFromTouch({ force: 0, radius: 8, speed: 0 }));
 assert.ok(strokeWidthFromTouch({ force: 0, radius: 0, speed: 0.05 }) > strokeWidthFromTouch({ force: 0, radius: 0, speed: 0.8 }));
 
+const first = wallSpreadSlot(0, 5);
+assert.ok(Math.abs(first.left + first.w / 2 - 50) < 1.2);
+assert.ok(Math.abs(first.top + first.h / 2 - 50) < 1.2);
+assert.ok(wallSpreadSlot(1, 5).left + wallSpreadSlot(1, 5).w / 2 < 50);
+assert.ok(wallSpreadSlot(2, 5).left + wallSpreadSlot(2, 5).w / 2 > 50);
+
 for (const n of [1, 4, 9, 16, 30]) {
-  const slots = Array.from({ length: n }, (_, i) => wallGridSlot(i, n));
+  const slots = Array.from({ length: n }, (_, i) => wallSpreadSlot(i, n));
   for (let i = 0; i < n; i++) {
     const s = slots[i];
     assert.ok(s.left >= 0 && s.left + s.w <= 100.2, `n=${n} i=${i} x`);

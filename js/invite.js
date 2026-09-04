@@ -75,21 +75,23 @@ function wallRot(id) {
   return n - 6;
 }
 
-function wallGridSlot(i, n) {
+function wallSpreadSlot(i, n) {
   const count = Math.max(Number(n) || 1, i + 1);
-  const cols = count <= 4 ? 2 : count <= 9 ? 3 : 4;
-  const rows = Math.ceil(count / cols);
-  const gap = 2.2;
-  const w = (100 - gap * (cols + 1)) / cols;
-  const h = Math.min(w * 0.42, (100 - gap * (rows + 1)) / Math.max(rows, 1));
-  const col = i % cols;
+  const w = count > 20 ? 9.2 : count > 10 ? 10.8 : 12;
+  const h = w * 0.42;
+  const gap = 1.15;
+  let cols = Math.floor((100 - gap) / (w + gap));
+  if (cols < 3) cols = 3;
+  if (cols % 2 === 0) cols -= 1;
   const row = Math.floor(i / cols);
-  return {
-    left: gap + col * (w + gap),
-    top: gap + row * (h + gap),
-    w,
-    h,
-  };
+  const k = i % cols;
+  const colOff = k === 0 ? 0 : Math.ceil(k / 2) * (k % 2 === 1 ? -1 : 1);
+  const rowOff = row === 0 ? 0 : Math.ceil(row / 2) * (row % 2 === 1 ? -1 : 1);
+  let left = 50 + colOff * (w + gap) - w / 2;
+  let top = 50 + rowOff * (h + gap) - h / 2;
+  left = Math.min(100 - w - 0.3, Math.max(0.3, left));
+  top = Math.min(100 - h - 0.3, Math.max(0.3, top));
+  return { left, top, w, h };
 }
 
 function strokeWidthFromTouch(input, minW, maxW) {
@@ -98,10 +100,11 @@ function strokeWidthFromTouch(input, minW, maxW) {
   const force = Number(input && input.force) || 0;
   const radius = Number(input && input.radius) || 0;
   const speed = Number(input && input.speed) || 0;
-  let t = 0.45;
+  let t = 0.5;
   if (radius > 1.2) t = Math.max(0, Math.min(1, (radius - 6) / 22));
   else if (force > 0.05 && force < 0.97) t = Math.min(1, force);
   else t = Math.max(0, Math.min(1, 1 - (speed - 0.03) / 0.55));
+  t = 0.34 + t * 0.32;
   return lo + (hi - lo) * t;
 }
 
@@ -344,7 +347,7 @@ function wallCard(item, i, fly, slot) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
   const rot = wallRot(item.id || String(i));
-  const pos = slot || wallGridSlot(i, i + 1);
+  const pos = slot || wallSpreadSlot(i, i + 1);
   return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg;--w:${pos.w}%;left:${pos.left}%;top:${pos.top}%">
     <img src="${src}" alt="">
   </figure>`;
@@ -353,10 +356,18 @@ function wallCard(item, i, fly, slot) {
 function paintWallBoard(items, flyId) {
   const board = $("wallBoard");
   if (!board) return;
-  const rows = (items || []).filter((row) => dataImageOk(row && row.img));
+  const rows = (items || [])
+    .filter((row) => dataImageOk(row && row.img))
+    .slice()
+    .sort((a, b) => {
+      const ta = String(a.at || "");
+      const tb = String(b.at || "");
+      if (ta && tb && ta !== tb) return ta.localeCompare(tb);
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    });
   const n = rows.length;
   board.innerHTML = rows
-    .map((row, i) => wallCard(row, i, row.id === flyId, wallGridSlot(i, n)))
+    .map((row, i) => wallCard(row, i, row.id === flyId, wallSpreadSlot(i, n)))
     .join("");
 }
 
@@ -430,8 +441,9 @@ function bindWallPad(canvas, ctx, state) {
   let last = null;
   const widthOf = (e, p) => {
     const h = canvas.clientHeight || 280;
-    const minW = Math.max(2.4, h / 52);
-    const maxW = Math.max(minW + 4, h / 10);
+    const mid = Math.max(3.4, h / 36);
+    const minW = mid * 0.84;
+    const maxW = mid * 1.2;
     const sample = touchSample(e);
     let speed = 0.12;
     if (last) {
@@ -778,8 +790,9 @@ function startFoil(canvas) {
 
 function runFoil(canvas) {
   const ctx = canvas.getContext("2d");
-  const PETAL = ["#C23B32", "#D4564A", "#B8322C", "#E07A6A"];
-  const GOLD = ["#E8C85A", "#F4DC8A", "#D4A93A"];
+  const PETAL = ["#C23B32", "#D4564A", "#C4453C", "#E07A6A"];
+  const PETAL_HI = ["#E8A8A0", "#F2C4BC", "#E89088", "#F6D4CC"];
+  const GOLD = ["#E8C85A", "#F4DC8A", "#D4A93A", "#F8E7A8", "#C9A24A"];
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const fit = () => {
     const w = innerWidth || 320;
@@ -793,82 +806,89 @@ function runFoil(canvas) {
   fit();
   addEventListener("resize", fit, { passive: true });
 
-  const petals = Array.from({ length: 22 }, (_, i) => ({
+  const petals = Array.from({ length: 16 }, (_, i) => ({
     x: Math.random() * innerWidth,
     y: Math.random() * innerHeight,
-    s: 10 + Math.random() * 12,
-    vy: 0.45 + Math.random() * 0.55,
-    amp: 0.55 + Math.random() * 0.75,
-    sway: 36 + Math.random() * 28,
-    spin: (Math.random() - 0.5) * 0.04,
-    a: 0.72 + Math.random() * 0.22,
+    s: 5.2 + Math.random() * 4.4,
+    vy: 0.28 + Math.random() * 0.38,
+    amp: 0.35 + Math.random() * 0.5,
+    sway: 42 + Math.random() * 36,
+    spin: (Math.random() - 0.5) * 0.025,
+    a: 0.62 + Math.random() * 0.28,
     c: PETAL[i % PETAL.length],
+    hi: PETAL_HI[i % PETAL_HI.length],
     rot: Math.random() * Math.PI * 2,
     ph: Math.random() * 1000,
   }));
 
-  const motes = Array.from({ length: 55 }, (_, i) => ({
+  const motes = Array.from({ length: 72 }, (_, i) => ({
     x: Math.random() * innerWidth,
     y: Math.random() * innerHeight,
-    s: 1.8 + Math.random() * 2.8,
-    w: 2.5 + Math.random() * 4.5,
-    h: 1.1 + Math.random() * 1.6,
-    vy: 0.18 + Math.random() * 0.32,
-    a: 0.7 + Math.random() * 0.3,
+    w: 1.15 + Math.random() * 1.7,
+    h: 0.45 + Math.random() * 0.55,
+    vy: 0.12 + Math.random() * 0.22,
+    a: 0.55 + Math.random() * 0.38,
     c: GOLD[i % GOLD.length],
     ph: Math.random() * 1000,
-    twk: 14 + Math.random() * 18,
-    spark: i % 4 === 0,
+    twk: 18 + Math.random() * 22,
     rot: Math.random() * Math.PI,
+    spin: 0.008 + Math.random() * 0.016,
   }));
 
   const petalPath = (ctx, p) => {
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.rot);
-    const flip = 0.72 + 0.28 * Math.sin(p.ph);
-    ctx.scale(flip, 1);
+    ctx.scale(0.58 + 0.42 * Math.abs(Math.sin(p.ph)), 1);
     const w = p.s;
-    const h = p.s * 1.55;
+    const h = p.s * 1.72;
     ctx.beginPath();
-    ctx.moveTo(0, h * 0.48);
-    ctx.bezierCurveTo(-w, h * 0.18, -w * 0.35, -h * 0.42, 0, -h * 0.52);
-    ctx.bezierCurveTo(w * 0.35, -h * 0.42, w, h * 0.18, 0, h * 0.48);
+    ctx.moveTo(0, h * 0.5);
+    ctx.bezierCurveTo(-w * 1.02, h * 0.1, -w * 0.5, -h * 0.52, 0, -h * 0.12);
+    ctx.bezierCurveTo(w * 0.5, -h * 0.52, w * 1.02, h * 0.1, 0, h * 0.5);
     ctx.fillStyle = p.c;
-    ctx.globalAlpha = p.a;
+    ctx.globalAlpha = p.a * 0.9;
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(0, h * 0.32);
-    ctx.quadraticCurveTo(w * 0.06, 0, 0, -h * 0.38);
-    ctx.strokeStyle = "rgba(232,200,90,0.75)";
-    ctx.lineWidth = Math.max(0.5, p.s * 0.07);
-    ctx.globalAlpha = p.a * 0.9;
+    ctx.moveTo(0, h * 0.3);
+    ctx.bezierCurveTo(-w * 0.42, 0.02 * h, -w * 0.18, -h * 0.22, 0, -h * 0.02);
+    ctx.bezierCurveTo(w * 0.18, -h * 0.22, w * 0.42, 0.02 * h, 0, h * 0.3);
+    ctx.fillStyle = p.hi;
+    ctx.globalAlpha = p.a * 0.32;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.36);
+    ctx.quadraticCurveTo(w * 0.03, h * 0.04, 0, -h * 0.06);
+    ctx.strokeStyle = "rgba(232,200,90,0.5)";
+    ctx.lineWidth = 0.4;
+    ctx.globalAlpha = p.a * 0.75;
     ctx.stroke();
     ctx.restore();
   };
 
   const mote = (ctx, g, t) => {
-    const tw = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(t / g.twk + g.ph));
+    const tw = 0.58 + 0.42 * (0.5 + 0.5 * Math.sin(t / g.twk + g.ph));
     ctx.save();
     ctx.translate(g.x, g.y);
     ctx.rotate(g.rot);
+    ctx.scale(1, 0.38 + 0.62 * Math.abs(Math.cos(g.rot * 0.85)));
     ctx.globalAlpha = g.a * tw;
+    ctx.beginPath();
+    ctx.moveTo(0, -g.h);
+    ctx.lineTo(g.w, 0);
+    ctx.lineTo(0, g.h);
+    ctx.lineTo(-g.w, 0);
+    ctx.closePath();
     ctx.fillStyle = g.c;
-    ctx.fillRect(-g.w, -g.h, g.w * 2, g.h * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, -g.h * 0.55);
+    ctx.lineTo(g.w * 0.42, 0);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
     ctx.fillStyle = "#fff6d0";
     ctx.globalAlpha = g.a * tw * 0.5;
-    ctx.fillRect(-g.w, -g.h, g.w * 0.9, g.h * 0.7);
-    if (g.spark) {
-      ctx.globalAlpha = g.a * tw;
-      ctx.strokeStyle = g.c;
-      ctx.lineWidth = 0.9;
-      ctx.beginPath();
-      ctx.moveTo(-g.w * 2.4, 0);
-      ctx.lineTo(g.w * 2.4, 0);
-      ctx.moveTo(0, -g.w * 2.4);
-      ctx.lineTo(0, g.w * 2.4);
-      ctx.stroke();
-    }
+    ctx.fill();
     ctx.restore();
   };
 
@@ -879,8 +899,8 @@ function runFoil(canvas) {
     for (const g of motes) {
       if (move) {
         g.y += g.vy;
-        g.x += Math.sin(t / 55 + g.ph) * 0.18;
-        g.rot += 0.01;
+        g.x += Math.sin(t / 62 + g.ph) * 0.14;
+        g.rot += g.spin;
         if (g.y > innerHeight + 8) {
           g.y = -8;
           g.x = Math.random() * innerWidth;
