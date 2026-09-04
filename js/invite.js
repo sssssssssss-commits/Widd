@@ -362,6 +362,18 @@ async function bumpWallEpoch(getUrl) {
   return Number(data.value) || 0;
 }
 
+function wallPaintRows(items) {
+  return (items || [])
+    .filter((row) => dataImageOk(row && row.img))
+    .slice()
+    .sort((a, b) => {
+      const ta = String(a.at || "");
+      const tb = String(b.at || "");
+      if (ta && tb && ta !== tb) return ta.localeCompare(tb);
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    });
+}
+
 function wallCard(item, i, fly, slot) {
   const src = item && item.img;
   if (!dataImageOk(src)) return "";
@@ -376,19 +388,159 @@ function wallCard(item, i, fly, slot) {
 function paintWallBoard(items, flyId) {
   const board = $("wallBoard");
   if (!board) return;
-  const rows = (items || [])
-    .filter((row) => dataImageOk(row && row.img))
-    .slice()
-    .sort((a, b) => {
-      const ta = String(a.at || "");
-      const tb = String(b.at || "");
-      if (ta && tb && ta !== tb) return ta.localeCompare(tb);
-      return String(a.id || "").localeCompare(String(b.id || ""));
-    });
+  const rows = wallPaintRows(items);
   const n = rows.length;
   board.innerHTML = rows
     .map((row, i) => wallCard(row, i, row.id === flyId, wallSpreadSlot(i, n)))
     .join("");
+}
+
+function loadKeepImg(src) {
+  return new Promise((resolve) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => resolve(null);
+    im.src = src;
+  });
+}
+
+function drawKeepContained(ctx, im, dx, dy, dw, dh) {
+  const ir = (im.width || 1) / (im.height || 1);
+  const br = dw / dh;
+  let w = dw;
+  let h = dh;
+  let x = dx;
+  let y = dy;
+  if (ir > br) {
+    h = dw / ir;
+    y = dy + (dh - h) / 2;
+  } else {
+    w = dh * ir;
+    x = dx + (dw - w) / 2;
+  }
+  const o = Math.max(1, w * 0.008);
+  ctx.save();
+  ctx.shadowColor = "#1A120C";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = o;
+  ctx.shadowOffsetY = 0;
+  ctx.drawImage(im, x, y, w, h);
+  ctx.shadowOffsetX = -o;
+  ctx.drawImage(im, x, y, w, h);
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = o;
+  ctx.drawImage(im, x, y, w, h);
+  ctx.shadowOffsetY = -o;
+  ctx.drawImage(im, x, y, w, h);
+  ctx.restore();
+  ctx.drawImage(im, x, y, w, h);
+}
+
+function drawKeepFrame(ctx, w, h) {
+  const m = Math.round(w * 0.024);
+  const gold = "#c9a24a";
+  const pale = "#e8c56a";
+  ctx.save();
+  ctx.strokeStyle = "#7a1f1a";
+  ctx.lineWidth = Math.max(2, w * 0.0035);
+  ctx.strokeRect(m * 0.35, m * 0.35, w - m * 0.7, h - m * 0.7);
+  ctx.strokeStyle = pale;
+  ctx.lineWidth = Math.max(3, w * 0.008);
+  ctx.strokeRect(m * 0.62, m * 0.62, w - m * 1.24, h - m * 1.24);
+  ctx.strokeStyle = gold;
+  ctx.lineWidth = Math.max(4, w * 0.01);
+  ctx.strokeRect(m, m, w - 2 * m, h - 2 * m);
+  ctx.strokeStyle = pale;
+  ctx.lineWidth = Math.max(2, w * 0.004);
+  const inner = m + w * 0.012;
+  ctx.strokeRect(inner, inner, w - 2 * inner, h - 2 * inner);
+  ctx.strokeStyle = "#8e6a24";
+  ctx.lineWidth = Math.max(1.5, w * 0.003);
+  const inner2 = inner + w * 0.008;
+  ctx.strokeRect(inner2, inner2, w - 2 * inner2, h - 2 * inner2);
+  const s = Math.max(22, w * 0.055);
+  const nails = [
+    [m, m, 0],
+    [w - m, m, Math.PI / 2],
+    [w - m, h - m, Math.PI],
+    [m, h - m, -Math.PI / 2],
+  ];
+  for (let i = 0; i < nails.length; i++) {
+    const x = nails[i][0];
+    const y = nails[i][1];
+    const rot = nails[i][2];
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.strokeStyle = gold;
+    ctx.lineWidth = Math.max(3, w * 0.007);
+    ctx.beginPath();
+    ctx.moveTo(s, 0);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(0, s);
+    ctx.stroke();
+    ctx.strokeStyle = "#8B241C";
+    ctx.lineWidth = Math.max(1.5, w * 0.003);
+    ctx.strokeRect(s * 0.22, s * 0.22, s * 0.38, s * 0.38);
+    ctx.fillStyle = "#E8C85A";
+    ctx.beginPath();
+    ctx.arc(s * 0.42, s * 0.42, Math.max(3, s * 0.1), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#8E6A24";
+    ctx.beginPath();
+    ctx.arc(s * 0.42, s * 0.42, Math.max(1.2, s * 0.035), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+async function snapshotWall(items) {
+  const yard = document.querySelector(".wall-yard");
+  const cssW = (yard && yard.clientWidth) || 360;
+  const W = Math.min(1600, Math.max(800, Math.round(cssW * 2.4)));
+  const H = Math.round((W * 3) / 4);
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#F5EFE2";
+  ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  ctx.fillStyle = "rgba(139,36,28,0.16)";
+  ctx.font = `700 ${Math.round(H * 0.38)}px "KaiTi","KaiTi_GB2312","STKaiti","Kaiti SC","华文楷体",serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("囍", W / 2, H / 2);
+  ctx.restore();
+  const fx = W * 0.024;
+  const fy = H * 0.024;
+  const fw = W - 2 * fx;
+  const fh = H - 2 * fy;
+  const bx = fx + fw * 0.085;
+  const by = fy + fh * 0.085;
+  const bw = fw * 0.83;
+  const bh = fh * 0.83;
+  const rows = wallPaintRows(items);
+  const n = rows.length;
+  for (let i = 0; i < n; i++) {
+    const im = await loadKeepImg(rows[i].img);
+    if (!im) continue;
+    const slot = wallSpreadSlot(i, n);
+    const cw = (bw * slot.w) / 100;
+    const ch = (bh * slot.h) / 100;
+    const cx = bx + (bw * slot.left) / 100 + cw / 2;
+    const cy = by + (bh * slot.top) / 100 + ch / 2;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((wallRot(rows[i].id || String(i)) * Math.PI) / 180);
+    drawKeepContained(ctx, im, -cw / 2, -ch / 2, cw, ch);
+    ctx.restore();
+  }
+  drawKeepFrame(ctx, W, H);
+  const png = canvas.toDataURL("image/png");
+  if (!png || png.length < 80) throw new Error("empty");
+  return png;
 }
 
 async function loadWallItems(url) {
@@ -635,6 +787,7 @@ function renderWall(cfg, guest) {
       <div class="wall-actions">
         <button type="button" id="wallOpen">签字</button>
         <button type="button" id="wallMine">撤下我的</button>
+        ${host ? `<button type="button" id="wallSave">保存签名墙</button>` : ""}
         ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
       </div>
       <p class="wall-hint" id="wallHint"></p>
@@ -659,6 +812,23 @@ function renderWall(cfg, guest) {
       </div>
     </div>`;
     document.body.appendChild(sheet);
+  }
+
+  let keep = $("wallKeep");
+  if (!keep) {
+    keep = document.createElement("div");
+    keep.id = "wallKeep";
+    keep.className = "wall-keep";
+    keep.hidden = true;
+    keep.innerHTML = `<p class="wall-keep-hint">长按图片保存到相册</p>
+      <img id="wallKeepImg" alt="签名墙">
+      <button type="button" id="wallKeepClose">关闭</button>`;
+    document.body.appendChild(keep);
+    $("wallKeepClose").addEventListener("click", () => {
+      keep.hidden = true;
+      const img = $("wallKeepImg");
+      if (img) img.removeAttribute("src");
+    });
   }
 
   const canvas = $("wallPad");
@@ -722,6 +892,32 @@ function renderWall(cfg, guest) {
     await refresh();
     hint.textContent = "已撤下你的签名";
   });
+
+  const saveBtn = $("wallSave");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", async () => {
+      const hint = $("wallHint");
+      hint.textContent = "正在生成…";
+      saveBtn.disabled = true;
+      try {
+        const items = await refresh();
+        const png = await snapshotWall(items);
+        const img = $("wallKeepImg");
+        img.src = png;
+        keep.hidden = false;
+        hint.textContent = "";
+        if (!/MicroMessenger/i.test(navigator.userAgent)) {
+          const a = document.createElement("a");
+          a.href = png;
+          a.download = "widd-wall.png";
+          a.click();
+        }
+      } catch {
+        hint.textContent = "保存失败，请再试一次";
+      }
+      saveBtn.disabled = false;
+    });
+  }
 
   const wipeBtn = $("wallWipe");
   if (wipeBtn) {

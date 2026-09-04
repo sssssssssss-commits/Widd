@@ -879,6 +879,48 @@ body::before {
   color: var(--ink-soft);
 }
 
+.wall-keep {
+  position: fixed;
+  inset: 0;
+  z-index: 32;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
+  padding: 1.1rem 1rem var(--safe-bot);
+  background: rgba(30, 18, 14, .9);
+}
+
+.wall-keep[hidden] {
+  display: none !important;
+}
+
+.wall-keep-hint {
+  margin: 0;
+  color: #E8C85A;
+  letter-spacing: .18em;
+  font-size: .78rem;
+}
+
+.wall-keep img {
+  max-width: 92%;
+  max-height: 72%;
+  background: #F5EFE2;
+  -webkit-touch-callout: default;
+  pointer-events: auto;
+}
+
+.wall-keep button {
+  margin: 0;
+  background: transparent;
+  color: #E8C85A;
+  border: 1px solid #c9a24a;
+  padding: .55rem 1.4rem;
+  font: inherit;
+  letter-spacing: .28em;
+}
+
 .wall-soon {
   margin: 0;
   text-align: center;
