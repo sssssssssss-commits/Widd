@@ -589,7 +589,7 @@ body::before {
   aspect-ratio: 4 / 3;
   margin: 0 0 .6rem;
   overflow: hidden;
-  background: #f3c9d4;
+  background: #EFE6D4;
 }
 
 .wall-xi {
@@ -601,8 +601,8 @@ body::before {
   font-size: min(42vw, 7.2rem);
   font-weight: 700;
   font-style: normal;
-  color: #c45a62;
-  opacity: .32;
+  color: #8B241C;
+  opacity: .16;
   pointer-events: none;
   z-index: 0;
   line-height: 1;
@@ -614,21 +614,29 @@ body::before {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: rgba(255, 232, 238, .22);
+  opacity: .22;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='xuan'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55 .12' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23xuan)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
 }
 
 .wall-frame {
   position: absolute;
   inset: 2.4%;
   z-index: 2;
-  background: #f7d5de;
+  background-color: #F5EFE2;
+  background-image:
+    radial-gradient(ellipse at 50% 42%, #FAF6EC 0%, transparent 64%),
+    repeating-linear-gradient(86deg, transparent 0 7px, rgba(139, 119, 90, .04) 8px, transparent 9px),
+    repeating-linear-gradient(-8deg, transparent 0 11px, rgba(120, 102, 78, .03) 12px, transparent 14px),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='pulp'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.04' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23pulp)' opacity='.35'/%3E%3C/svg%3E");
+  background-size: auto, auto, auto, 220px 180px;
   border: 3px solid #c9a24a;
   box-shadow:
     0 0 0 1px #7a1f1a,
     0 0 0 4px #e8c56a,
     0 0 0 5px #7a1f1a,
     inset 0 0 0 2px #e8c56a,
-    inset 0 0 0 5px #f7d5de,
+    inset 0 0 0 5px #F5EFE2,
     inset 0 0 0 6px #8e6a24;
 }
 
