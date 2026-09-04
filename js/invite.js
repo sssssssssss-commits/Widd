@@ -155,7 +155,7 @@ function wallWithoutMine(items, by, dropUntagged) {
 const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
-const GOLD_INK = "#D4A017";
+const GOLD_INK = "#F6D34A";
 const INK_EDGE = "#1A120C";
 // ponytail: public counter, 6-month TTL on GET; Worker KV epoch if rsvp.endpoint is live
 const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-io/widd-wall";
@@ -504,8 +504,25 @@ async function snapshotWall(items) {
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#F5EFE2";
+  ctx.fillStyle = "#F6F1E6";
   ctx.fillRect(0, 0, W, H);
+  const paper = await loadKeepImg("assets/xuan.jpg");
+  if (paper) {
+    const ir = (paper.width || 1) / (paper.height || 1);
+    const br = W / H;
+    let dw = W;
+    let dh = H;
+    let dx = 0;
+    let dy = 0;
+    if (ir > br) {
+      dw = H * ir;
+      dx = (W - dw) / 2;
+    } else {
+      dh = W / ir;
+      dy = (H - dh) / 2;
+    }
+    ctx.drawImage(paper, dx, dy, dw, dh);
+  }
   ctx.save();
   ctx.fillStyle = "rgba(139,36,28,0.16)";
   ctx.font = `700 ${Math.round(H * 0.38)}px "KaiTi","KaiTi_GB2312","STKaiti","Kaiti SC","华文楷体",serif`;
