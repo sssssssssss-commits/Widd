@@ -2,7 +2,7 @@
 
 手机竖信，微信里打开。点朱印拆开，金箔慢落。改 [data/wedding.json](data/wedding.json) 即可换姓名、日期、地点和照片。
 
-签名墙按计划留到下一期：`signatureWall` 为 `false` 时，信末只显示「签名墙 · 即将开启」。
+签名墙：`signatureWall` 为 `true` 时，信末可手写落款。同一只 `rsvp.endpoint` Worker 负责收回执和签名；没配地址时签名只留在这台手机上。
 
 ## 本地预览
 
@@ -28,8 +28,9 @@ npx --yes serve .
 | `datetimeText` | 信上显示的日子（可写农历） |
 | `venues` | `name`、`address`、`lat`、`lng`（高德坐标） |
 | `photos` | 立轴图，竖图，每张压到 200–400KB |
-| `rsvp.endpoint` | Cloudflare Worker 地址，有则显示回执表 |
+| `rsvp.endpoint` | Cloudflare Worker 地址，有则显示回执表，签名墙也走这里 |
 | `rsvp.surveyUrl` | 没 Worker 时，按钮跳转腾讯问卷（同窗口，不嵌 iframe） |
+| `signatureWall` | `true` 开启签名墙；`false` 只显示「即将开启」 |
 | `share` | 网页标题，微信会抓 |
 
 照片放到 `assets/photos/`，占位 SVG 可直接换掉。
@@ -58,7 +59,7 @@ npx wrangler kv namespace create RSVP
 npx wrangler deploy
 ```
 
-把 Worker 的 `https://….workers.dev` 填进 `rsvp.endpoint`。
+把 Worker 的 `https://….workers.dev` 填进 `rsvp.endpoint`。回执和签名墙共用这个地址。
 
 **方式 B**：建一份腾讯问卷，链接填进 `rsvp.surveyUrl`。两种都空时，页面只写「请直接回复邀约人」。
 
@@ -74,6 +75,7 @@ npx wrangler deploy
 - 立轴能横滑
 - 「高德出发 / 腾讯地图」能跳出
 - 回执能提交或能跳到问卷
+- 签名墙能手写、点「题上」，卡片会飞上墙
 - 转发给自己，看标题和缩略图
 
 系统开了「减少动态效果」时，拆信会直接入信，金箔停在原地。

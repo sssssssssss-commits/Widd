@@ -44,7 +44,39 @@ function escAttr(s) {
   );
 }
 
+function clipText(v, n) {
+  return String(v ?? "").trim().slice(0, n);
+}
+
+function dataImageOk(s, max) {
+  max = max || 100000;
+  return (
+    typeof s === "string" &&
+    s.length >= 80 &&
+    s.length <= max &&
+    /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s)
+  );
+}
+
+function darkPixelCount(data, threshold) {
+  threshold = threshold || 40;
+  const cut = threshold * 3;
+  let n = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 12) continue;
+    if (data[i] + data[i + 1] + data[i + 2] < cut) n += 1;
+  }
+  return n;
+}
+
+function wallRot(id) {
+  let n = 0;
+  for (const c of String(id || "")) n = (n + c.charCodeAt(0)) % 13;
+  return n - 6;
+}
+
 const RSVP_KEY = "widd-rsvp";
+const WALL_KEY = "widd-wall";
 
 const $ = (id) => document.getElementById(id);
 
@@ -197,6 +229,228 @@ function stampDone() {
   if (stamp) stamp.classList.add("is-on");
 }
 
+function wallEndpoint(cfg) {
+  return cfg.wall?.endpoint || cfg.rsvp?.endpoint || "";
+}
+
+function readLocalWall() {
+  try {
+    const rows = JSON.parse(localStorage.getItem(WALL_KEY) || "[]");
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalWall(rows) {
+  localStorage.setItem(WALL_KEY, JSON.stringify(rows.slice(-80)));
+}
+
+function wallCard(item, fly) {
+  if (!dataImageOk(item.img)) return "";
+  const rot = wallRot(item.id || item.name);
+  return `<figure class="wall-card${fly ? " is-in" : ""}" style="--rot:${rot}deg">
+    <img src="${item.img}" alt="">
+    <figcaption>${escAttr(item.name || "")}</figcaption>
+  </figure>`;
+}
+
+function paintWallBoard(items, flyId) {
+  const board = $("wallBoard");
+  const empty = $("wallEmpty");
+  if (!board) return;
+  board.innerHTML = items.map((row) => wallCard(row, row.id === flyId)).join("");
+  if (empty) empty.hidden = items.length > 0;
+}
+
+async function loadWallItems(url) {
+  const local = readLocalWall();
+  if (!url) return local;
+  try {
+    const res = await fetch(url, { cache: "no-cache" });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const remote = Array.isArray(data.items) ? data.items : [];
+    const byId = new Map();
+    for (const row of remote.concat(local)) {
+      if (row && row.id) byId.set(row.id, row);
+    }
+    return [...byId.values()];
+  } catch {
+    return local;
+  }
+}
+
+function fitWallPad(canvas) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = canvas.clientWidth || 280;
+  const h = Math.max(112, Math.round(w * 0.4));
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = "#fff8ef";
+  ctx.fillRect(0, 0, w, h);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#1a0c08";
+  ctx.lineWidth = 2.6;
+  return ctx;
+}
+
+function bindWallPad(canvas, ctx) {
+  let drawing = false;
+  let last = null;
+  const pt = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  };
+  const down = (e) => {
+    e.preventDefault();
+    drawing = true;
+    last = pt(e);
+  };
+  const move = (e) => {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = pt(e);
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    last = p;
+  };
+  const up = () => {
+    drawing = false;
+  };
+  const opts = { passive: false };
+  let touchAt = 0;
+  const mouseDown = (e) => {
+    if (Date.now() - touchAt < 800) return;
+    down(e);
+  };
+  const mouseMove = (e) => {
+    if (Date.now() - touchAt < 800) return;
+    move(e);
+  };
+  canvas.addEventListener("touchstart", (e) => {
+    touchAt = Date.now();
+    down(e);
+  }, opts);
+  canvas.addEventListener("touchmove", (e) => {
+    touchAt = Date.now();
+    move(e);
+  }, opts);
+  canvas.addEventListener("touchend", up);
+  canvas.addEventListener("touchcancel", up);
+  canvas.addEventListener("mousedown", mouseDown);
+  canvas.addEventListener("mousemove", mouseMove);
+  canvas.addEventListener("mouseup", up);
+  canvas.addEventListener("mouseleave", up);
+}
+
+function exportWallPad(canvas) {
+  const tmp = document.createElement("canvas");
+  tmp.width = 400;
+  tmp.height = 160;
+  const t = tmp.getContext("2d");
+  t.fillStyle = "#fff8ef";
+  t.fillRect(0, 0, 400, 160);
+  t.drawImage(canvas, 0, 0, 400, 160);
+  for (const q of [0.62, 0.48, 0.36]) {
+    const s = tmp.toDataURL("image/jpeg", q);
+    if (s.length <= 100000) return s;
+  }
+  return "";
+}
+
+function renderWall(cfg, guest) {
+  const soon = $("wallSoon");
+  const wall = $("wall");
+  if (cfg.signatureWall !== true) {
+    soon.hidden = false;
+    wall.hidden = true;
+    return;
+  }
+  soon.hidden = true;
+  wall.hidden = false;
+  const url = wallEndpoint(cfg);
+  wall.innerHTML = `<div class="rsvp-box wall-box">
+      <h2>签名墙</h2>
+      <div class="wall-board" id="wallBoard"></div>
+      <p class="wall-empty" id="wallEmpty">还没有落款</p>
+      <label for="wallName">芳名</label>
+      <input id="wallName" maxlength="20" value="${escAttr(guest)}" autocomplete="name">
+      <canvas id="wallPad" width="560" height="224" aria-label="手写签名"></canvas>
+      <div class="wall-actions">
+        <button type="button" id="wallClear">重写</button>
+        <button type="button" id="wallSign">题上</button>
+      </div>
+      <p class="wall-hint" id="wallHint">${url ? "请题一字，飞入墙上" : "先留在这台手机上；配上回执地址后宾客可同看"}</p>
+    </div>`;
+
+  const canvas = $("wallPad");
+  const ctx = fitWallPad(canvas);
+  bindWallPad(canvas, ctx);
+
+  $("wallClear").addEventListener("click", () => fitWallPad(canvas));
+
+  loadWallItems(url).then((items) => paintWallBoard(items));
+
+  $("wallSign").addEventListener("click", async () => {
+    const btn = $("wallSign");
+    const hint = $("wallHint");
+    const name = clipText($("wallName").value, 20);
+    if (!name) {
+      hint.textContent = "请写下芳名";
+      return;
+    }
+    const ink = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    if (darkPixelCount(ink) < 80) {
+      hint.textContent = "请先在框内手写签名";
+      return;
+    }
+    const img = exportWallPad(canvas);
+    if (!dataImageOk(img)) {
+      hint.textContent = "签名过大，请写得再简一些";
+      return;
+    }
+    const item = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      name,
+      img,
+      at: new Date().toISOString(),
+    };
+    btn.disabled = true;
+    let shared = false;
+    if (url) {
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kind: "wall", name, img }),
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json().catch(() => ({}));
+        if (data.id) item.id = data.id;
+        shared = true;
+      } catch {
+        shared = false;
+      }
+    }
+    if (!shared) writeLocalWall(readLocalWall().concat(item));
+    else writeLocalWall(readLocalWall().filter((row) => row.img !== img));
+    const items = await loadWallItems(url);
+    if (!items.some((row) => row.img === img || row.id === item.id)) items.push(item);
+    const flyId = (items.find((row) => row.img === img) || item).id;
+    paintWallBoard(items, flyId);
+    fitWallPad(canvas);
+    hint.textContent = shared ? "已上墙" : url ? "已题于本机，稍后再试同看" : "已题于本机";
+    btn.disabled = false;
+  });
+}
+
 function startClepsydra(iso) {
   const then = Date.parse(iso);
   const paint = () => {
@@ -223,6 +477,8 @@ function openLetter() {
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;
+    const pad = $("wallPad");
+    if (pad) fitWallPad(pad);
   }, 900);
 }
 
@@ -404,7 +660,7 @@ async function main() {
   renderScrolls(cfg.photos);
   renderVenues(cfg.venues);
   renderRsvp(cfg, guest);
-  $("wallSoon").hidden = cfg.signatureWall === true;
+  renderWall(cfg, guest);
   $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
   startClepsydra(cfg.datetime);
   bindGate();

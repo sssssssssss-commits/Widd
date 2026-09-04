@@ -43,3 +43,32 @@ export function escAttr(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]),
   );
 }
+
+export function clipText(v, n) {
+  return String(v ?? "").trim().slice(0, n);
+}
+
+export function dataImageOk(s, max = 100000) {
+  return (
+    typeof s === "string" &&
+    s.length >= 80 &&
+    s.length <= max &&
+    /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(s)
+  );
+}
+
+export function darkPixelCount(data, threshold = 40) {
+  const cut = threshold * 3;
+  let n = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 12) continue;
+    if (data[i] + data[i + 1] + data[i + 2] < cut) n += 1;
+  }
+  return n;
+}
+
+export function wallRot(id) {
+  let n = 0;
+  for (const c of String(id || "")) n = (n + c.charCodeAt(0)) % 13;
+  return n - 6;
+}

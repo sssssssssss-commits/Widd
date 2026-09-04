@@ -23,7 +23,7 @@
     "endpoint": "",
     "surveyUrl": ""
   },
-  "signatureWall": false,
+  "signatureWall": true,
   "share": {
     "title": "李某 与 王某 婚礼请柬",
     "description": "一封信，等你拆",

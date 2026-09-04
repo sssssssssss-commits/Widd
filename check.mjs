@@ -1,5 +1,16 @@
 import assert from "node:assert/strict";
-import { coupleLine, escAttr, guestFromSearch, mapLinks, pad2, remaining } from "./js/lib.js";
+import {
+  clipText,
+  coupleLine,
+  darkPixelCount,
+  dataImageOk,
+  escAttr,
+  guestFromSearch,
+  mapLinks,
+  pad2,
+  remaining,
+  wallRot,
+} from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
 assert.equal(guestFromSearch("?to=%E6%9D%8E%E5%9B%9B"), "李四");
@@ -21,5 +32,19 @@ assert.match(links.tencent, /referer=widd/);
 
 assert.equal(escAttr(`张"三`), "张&quot;三");
 assert.equal(escAttr("<x>"), "&lt;x&gt;");
+
+assert.equal(clipText("  张三  ", 20), "张三");
+assert.equal(clipText("一二三四五六七八九十一", 4), "一二三四");
+assert.equal(dataImageOk("data:image/jpeg;base64,QQ=="), false);
+assert.equal(
+  dataImageOk(`data:image/jpeg;base64,${"A".repeat(80)}=`),
+  true,
+);
+assert.equal(dataImageOk("data:image/png;base64," + "A".repeat(80), 100000), false);
+assert.equal(wallRot("abc"), wallRot("abc"));
+assert.ok(Math.abs(wallRot("sig-1")) <= 6);
+
+const ink = new Uint8ClampedArray([10, 10, 10, 255, 250, 248, 239, 255]);
+assert.equal(darkPixelCount(ink), 1);
 
 console.log("ok");
