@@ -228,7 +228,7 @@ body::before {
   to { opacity: 0; transform: scale(1.15); }
 }
 
-/* —— 信笺 —— */
+/* —— 信笺（红底婚书；封面 .gate 仍用 frame.jpg） —— */
 .letter {
   position: relative;
   z-index: 1;
@@ -236,18 +236,47 @@ body::before {
   min-height: 100dvh;
   background:
     url("../assets/paper.jpg") center top / cover no-repeat,
-    #9a1c1c;
+    #8a1515;
 }
 
 .letter-inner {
+  position: relative;
   width: min(calc(100% - 1.4rem), var(--letter-w));
   margin: 0.9rem auto 1.2rem;
   padding: calc(2.2rem + var(--safe-top)) 1.5rem calc(2.6rem + var(--safe-bot));
   overflow-x: hidden;
-  background: rgba(255, 248, 239, 0.94);
-  border: 1px solid #d4b45a;
-  box-shadow: 0 0 0 6px rgba(154, 28, 28, 0.18);
-  color: #1f120e;
+  color: #F6E6C4;
+  background:
+    linear-gradient(180deg, rgba(120, 18, 18, 0.38), rgba(88, 10, 10, 0.48)),
+    url("../assets/paper.jpg") center top / cover no-repeat,
+    #9a1c1c;
+  border: 1px solid #e8c85a;
+  box-shadow:
+    0 0 0 4px #6e1212,
+    0 0 0 5px #e4c36a,
+    0 0 0 9px #7a1818,
+    0 0 0 10px #c9a24a88;
+}
+
+.letter-inner::before {
+  content: "囍";
+  position: absolute;
+  left: 50%;
+  top: 36%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  font-size: min(42vw, 9rem);
+  font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "Songti SC", serif;
+  color: #e8c85a;
+  opacity: .14;
+  pointer-events: none;
+  z-index: 0;
+  line-height: 1;
+}
+
+.letter-inner > * {
+  position: relative;
+  z-index: 1;
 }
 
 .letter-inner > * + * { margin-top: 2.1rem; }
@@ -280,13 +309,28 @@ body::before {
   color: var(--ink-soft);
 }
 
+.letter-inner .address,
+.letter-inner .opener,
+.letter-inner .when-text,
+.letter-inner .tick strong,
+.letter-inner .tick span,
+.letter-inner .venue .label,
+.letter-inner .venue address,
+.letter-inner .colophon,
+.letter-inner .names .person small,
+.letter-inner .rsvp-hint,
+.letter-inner .wall-soon,
+.letter-inner .scroll figcaption {
+  color: inherit;
+}
+
 .names .person .name {
   font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "STXingkai", "LiSu", "华文楷体", "华文行楷", "Songti SC", serif;
   font-size: 2.6rem;
   font-weight: 700;
   letter-spacing: .16em;
   line-height: 1.15;
-  color: #1a0c08;
+  color: #F8EBC8;
 }
 
 .names .amp {
@@ -368,6 +412,13 @@ body::before {
   letter-spacing: .4em;
   color: var(--cinnabar);
   font-size: .8rem;
+}
+
+.letter-inner .when-past { color: #E8C85A; }
+
+.letter-inner .rsvp-box,
+.letter-inner .navs a {
+  color: #3A241C;
 }
 
 .scrolls-wrap { margin-left: -1.5rem; margin-right: -1.5rem; }
