@@ -129,47 +129,41 @@ export function wallExceptHidden(items, hidden) {
 export function wallSpreadSlot(i, n) {
   const count = Math.max(1, Number(n) || 1);
   const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
-  const gap = 1.6;
   const cap = 50;
-  const slack = 0.82;
-  let best = null;
-  for (let cols = 1; cols <= count; cols++) {
-    const rows = Math.ceil(count / cols);
-    const cellW = (100 - gap * (cols + 1)) / cols;
-    const cellH = (100 - gap * (rows + 1)) / rows;
-    const size = Math.min(cellW, cellH) * slack;
-    if (size <= 0) continue;
-    if (!best || size > best.size) best = { cols, rows, cellW, cellH, size, gap };
+  if (count === 1) {
+    return { left: 25, top: 25, w: cap, h: cap };
   }
-  const size = Math.min(cap, best.size);
-  const cells = [];
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const rot = Math.abs(Math.cos(Math.PI / 18)) + Math.abs(Math.sin(Math.PI / 18));
+  const pad = 0.28;
+  const pts = [];
   for (let k = 0; k < count; k++) {
-    const row = Math.floor(k / best.cols);
-    const col = k % best.cols;
-    const nThisRow = row === best.rows - 1 ? count - row * best.cols : best.cols;
-    const rowShift = ((best.cols - nThisRow) * (best.cellW + gap)) / 2;
-    const left = gap + rowShift + col * (best.cellW + gap) + (best.cellW - size) / 2;
-    const top = gap + row * (best.cellH + gap) + (best.cellH - size) / 2;
-    const cx = left + size / 2;
-    const cy = top + size / 2;
-    cells.push({
-      left: Math.max(0, Math.min(100 - size, left)),
-      top: Math.max(0, Math.min(100 - size, top)),
-      d: (cx - 50) * (cx - 50) + (cy - 50) * (cy - 50),
-      ang: Math.atan2(cy - 50, cx - 50),
-    });
+    const h = wallHash(String(k));
+    const spin = ((h % 800) / 800 - 0.5) * 0.16;
+    const stretch = 1 + (((((h / 800) | 0) % 800) / 800) - 0.5) * 0.04;
+    const th = k * golden + spin;
+    const r = Math.sqrt(k) * stretch;
+    pts.push({ x: r * Math.cos(th), y: r * Math.sin(th) });
   }
-  cells.sort((a, b) => a.d - b.d || a.ang - b.ang);
-  const cell = cells[idx];
-  const h = wallHash(String(idx) + ":" + count);
-  const jig = count <= 1 ? 0 : 1;
-  const roomX = Math.max(0, (best.cellW - size) * 0.12);
-  const roomY = Math.max(0, (best.cellH - size) * 0.12);
-  const jx = jig * ((h % 1000) / 1000 - 0.5) * 2 * roomX;
-  const jy = jig * ((((h / 1000) | 0) % 1000) / 1000 - 0.5) * 2 * roomY;
+  let minCheb = Infinity;
+  let maxAbs = 0;
+  for (let a = 0; a < count; a++) {
+    maxAbs = Math.max(maxAbs, Math.abs(pts[a].x), Math.abs(pts[a].y));
+    for (let b = a + 1; b < count; b++) {
+      const cheb = Math.max(Math.abs(pts[a].x - pts[b].x), Math.abs(pts[a].y - pts[b].y));
+      if (cheb < minCheb) minCheb = cheb;
+    }
+  }
+  if (!(minCheb > 0) || !(maxAbs > 0)) {
+    return { left: 25, top: 25, w: cap, h: cap };
+  }
+  const t = maxAbs / minCheb;
+  const size = Math.min(cap, Math.max(4, (50 - pad * t) / (rot * t + 0.5)));
+  const u = (rot * size + pad) / minCheb;
+  const p = pts[idx];
   return {
-    left: Math.max(0, Math.min(100 - size, cell.left + jx)),
-    top: Math.max(0, Math.min(100 - size, cell.top + jy)),
+    left: Math.max(0, Math.min(100 - size, 50 + u * p.x - size / 2)),
+    top: Math.max(0, Math.min(100 - size, 50 + u * p.y - size / 2)),
     w: size,
     h: size,
   };

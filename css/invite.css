@@ -956,6 +956,7 @@ body.is-signing .bless {
   line-height: 1.68rem;
   letter-spacing: .05em;
   color: #E8C85A;
+  opacity: .2;
   text-shadow:
     -1px -1px 0 #1a0c08,
      1px -1px 0 #1a0c08,
@@ -969,21 +970,29 @@ body.is-signing .bless {
   transition: opacity .7s ease, font-size .35s ease;
 }
 
+.bless-line.is-edge {
+  opacity: .42;
+}
+
+.bless-line.is-near {
+  opacity: .72;
+}
+
 .bless-line.is-now {
   height: 2.22rem;
   font-size: 1.28rem;
   line-height: 2.22rem;
+  opacity: 1;
   color: #C23B32;
   text-shadow:
-    -1px -1px 0 #E4C36A,
-     1px -1px 0 #E4C36A,
-    -1px  1px 0 #E4C36A,
-     1px  1px 0 #E4C36A,
-     0   -1px 0 #F4DC8A,
-     0    1px 0 #F4DC8A,
-    -1px  0   0 #F4DC8A,
-     1px  0   0 #F4DC8A,
-     0    0   6px #E4C36A66;
+    -1px -1px 0 #1a0c08,
+     1px -1px 0 #1a0c08,
+    -1px  1px 0 #1a0c08,
+     1px  1px 0 #1a0c08,
+     0   -1px 0 #1a0c08,
+     0    1px 0 #1a0c08,
+    -1px  0   0 #1a0c08,
+     1px  0   0 #1a0c08;
 }
 
 .bless.is-still .bless-line {

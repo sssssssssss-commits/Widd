@@ -111,6 +111,8 @@ assert.ok(wallSpreadSlot(0, 16).w < wallSpreadSlot(0, 9).w);
     return x * x + y * y;
   };
   assert.ok(dist(near) < dist(far));
+  const xs = new Set(Array.from({ length: 9 }, (_, i) => wallSpreadSlot(i, 9).left.toFixed(1)));
+  assert.ok(xs.size >= 6);
 }
 
 function rotBox(s, deg) {
