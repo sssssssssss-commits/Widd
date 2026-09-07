@@ -1229,7 +1229,6 @@ function startBless(cfg) {
     }
   };
   const step = () => {
-    lane.hidden = false;
     paint(cur);
     clearTimeout(watch);
     const mine = ++lock;
