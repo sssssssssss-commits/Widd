@@ -197,7 +197,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=15", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=16", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -543,7 +543,7 @@ async function snapshotWall(items) {
       dx = (W - dw) / 2;
     }
     ctx.save();
-    ctx.globalAlpha = 0.7;
+    ctx.globalAlpha = 0.6;
     ctx.drawImage(paper, dx, dy, dw, dh);
     ctx.restore();
   }
@@ -1169,7 +1169,194 @@ function startClepsydra(iso) {
   setInterval(paint, 1000);
 }
 
-function openLetter() {
+let blessOn = false;
+
+function blessLines(cfg) {
+  const rows = Array.isArray(cfg && cfg.blessing) ? cfg.blessing : [];
+  return rows.map((s) => String(s || "").trim()).filter(Boolean);
+}
+
+function boomBless(canvas, ms, done) {
+  const finish = () => {
+    if (finish.done) return;
+    finish.done = true;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.hidden = true;
+    }
+    done();
+  };
+  if (!canvas || typeof requestAnimationFrame !== "function") {
+    setTimeout(finish, ms);
+    return;
+  }
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    setTimeout(finish, ms);
+    return;
+  }
+  canvas.hidden = false;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = canvas.clientWidth || 200;
+  const h = canvas.clientHeight || 140;
+  canvas.width = Math.max(1, Math.floor(w * dpr));
+  canvas.height = Math.max(1, Math.floor(h * dpr));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pal = ["#E8C85A", "#F4DC8A", "#C23B32", "#F7E7C6", "#D4A93A"];
+  const sparks = [];
+  const rockets = [];
+  const burst = (x, y, c) => {
+    for (let i = 0; i < 28; i++) {
+      const a = (Math.PI * 2 * i) / 28 + Math.random() * 0.22;
+      const sp = 1.1 + Math.random() * 2.5;
+      sparks.push({
+        x,
+        y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp * 0.86 - 0.35,
+        life: 0,
+        max: 24 + Math.random() * 20,
+        r: 1.05 + Math.random() * 1.45,
+        c: i % 5 === 0 ? "#fff6d0" : c,
+      });
+    }
+  };
+  const launch = () => {
+    rockets.push({
+      x: 16 + Math.random() * Math.max(12, w * 0.52),
+      y: h - 2,
+      vx: 0.12 + Math.random() * 0.5,
+      vy: -(2.45 + Math.random() * 1.15),
+      c: pal[(Math.random() * pal.length) | 0],
+    });
+  };
+  const t0 = performance.now();
+  let nextLaunch = 0;
+  const tick = (now) => {
+    if (finish.done) return;
+    const t = now - t0;
+    if (t >= ms) {
+      finish();
+      return;
+    }
+    ctx.clearRect(0, 0, w, h);
+    if (t >= nextLaunch && t < ms - 620) {
+      launch();
+      nextLaunch = t + 460 + Math.random() * 180;
+    }
+    for (let i = rockets.length - 1; i >= 0; i--) {
+      const r = rockets[i];
+      r.x += r.vx;
+      r.y += r.vy;
+      r.vy += 0.03;
+      ctx.globalAlpha = 0.95;
+      ctx.fillStyle = r.c;
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, 1.65, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff6d0";
+      ctx.beginPath();
+      ctx.arc(r.x, r.y + 2.6, 1.05, 0, Math.PI * 2);
+      ctx.fill();
+      if (r.vy >= -0.12 || r.y < h * 0.2) {
+        burst(r.x, r.y, r.c);
+        rockets.splice(i, 1);
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const p = sparks[i];
+      p.life += 1;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.045;
+      p.vx *= 0.985;
+      const a = 1 - p.life / p.max;
+      if (a <= 0) {
+        sparks.splice(i, 1);
+        continue;
+      }
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.c;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+function startBless(cfg) {
+  if (blessOn) return;
+  const lines = blessLines(cfg);
+  const root = $("bless");
+  const line = $("blessLine");
+  const fw = $("blessFw");
+  if (!lines.length || !root || !line) return;
+  blessOn = true;
+  root.hidden = false;
+  const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  if (still) root.classList.add("is-still");
+  if (fw) fw.hidden = true;
+  let i = 0;
+  let watch = 0;
+  let lock = 0;
+  const flyMs = (text) => Math.round(4800 + String(text).length * 220);
+  const clearMove = () => {
+    line.style.transition = "none";
+    line.style.webkitTransition = "none";
+    line.style.opacity = "1";
+    line.style.left = still ? "0px" : "100%";
+    line.style.transform = "translateX(0)";
+    line.style.webkitTransform = "translateX(0)";
+  };
+  const play = () => {
+    if (fw) fw.hidden = true;
+    line.textContent = lines[i];
+    clearMove();
+    void line.offsetWidth;
+    const ms = still ? 3200 : flyMs(lines[i]);
+    if (still) {
+      line.style.transition = "opacity .55s linear";
+      setTimeout(() => {
+        line.style.opacity = "0";
+      }, 2600);
+    } else {
+      const tw = Math.max(line.scrollWidth, 8);
+      const move = `left ${ms}ms linear, transform ${ms}ms linear`;
+      line.style.transition = move;
+      line.style.webkitTransition = `left ${ms}ms linear, -webkit-transform ${ms}ms linear`;
+      line.style.left = "0px";
+      line.style.transform = `translateX(-${tw}px)`;
+      line.style.webkitTransform = `translateX(-${tw}px)`;
+    }
+    clearTimeout(watch);
+    const mine = ++lock;
+    watch = setTimeout(() => {
+      if (mine === lock) advance();
+    }, ms + 80);
+  };
+  const advance = () => {
+    lock += 1;
+    clearTimeout(watch);
+    i += 1;
+    if (i < lines.length) {
+      play();
+      return;
+    }
+    line.textContent = "";
+    clearMove();
+    i = 0;
+    const after = () => play();
+    if (still) setTimeout(after, 3000);
+    else boomBless(fw, 3000, after);
+  };
+  play();
+}
+
+function openLetter(cfg) {
   const gate = $("gate");
   const env = $("envelope");
   const seal = $("seal");
@@ -1180,6 +1367,7 @@ function openLetter() {
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;
+    startBless(cfg);
   }, 900);
 }
 
@@ -1424,10 +1612,10 @@ function bindTapXi() {
   );
 }
 
-function bindGate() {
+function bindGate(cfg) {
   const go = () => {
     $("seal").disabled = true;
-    openLetter();
+    openLetter(cfg);
   };
   $("seal").addEventListener("click", go);
   // ponytail: ?open=1 skips the seal for content preview; remove once guests only get the share link
@@ -1448,7 +1636,7 @@ async function main() {
   renderWall(cfg, guest);
   $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
   startClepsydra(cfg.datetime);
-  bindGate();
+  bindGate(cfg);
   bindTapXi();
   startFoil($("foil"));
 }
