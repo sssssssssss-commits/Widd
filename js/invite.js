@@ -1185,55 +1185,55 @@ function boomBless(canvas, ms, done) {
       if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
       canvas.hidden = true;
     }
-    done();
+    if (typeof done === "function") done();
   };
   setTimeout(finish, ms);
   if (!canvas || typeof requestAnimationFrame !== "function") return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   canvas.hidden = false;
-  void canvas.offsetWidth;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const w = canvas.clientWidth || 240;
-  const h = canvas.clientHeight || 180;
-  canvas.width = Math.max(1, Math.floor(w * dpr));
-  canvas.height = Math.max(1, Math.floor(h * dpr));
+  const cssW = Math.max(canvas.clientWidth || 0, 200);
+  const cssH = Math.max(canvas.clientHeight || 0, 140);
+  canvas.width = Math.max(1, Math.floor(cssW * dpr));
+  canvas.height = Math.max(1, Math.floor(cssH * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const pal = ["#E8C85A", "#F4DC8A", "#C23B32", "#F7E7C6", "#D4A93A"];
+  const pal = ["#E8C85A", "#F4DC8A", "#C23B32", "#F7E7C6", "#FF6B4A"];
   const sparks = [];
   const rockets = [];
   const burst = (x, y, c) => {
-    for (let i = 0; i < 36; i++) {
-      const a = (Math.PI * 2 * i) / 36 + Math.random() * 0.2;
+    for (let i = 0; i < 42; i++) {
+      const a = (Math.PI * 2 * i) / 42 + Math.random() * 0.2;
       const sp = 1.4 + Math.random() * 3.2;
       sparks.push({
         x,
         y,
         vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp * 0.86 - 0.4,
+        vy: Math.sin(a) * sp * 0.86 - 0.55,
         life: 0,
         max: 28 + Math.random() * 22,
-        r: 1.4 + Math.random() * 1.8,
-        c: i % 5 === 0 ? "#fff6d0" : c,
+        r: 1.6 + Math.random() * 2.1,
+        c: i % 4 === 0 ? "#fff6d0" : c,
       });
     }
   };
   const launch = () => {
     rockets.push({
-      x: 22 + Math.random() * Math.max(16, w * 0.62),
-      y: h - 4,
-      vx: 0.1 + Math.random() * 0.55,
+      x: 22 + Math.random() * Math.max(16, cssW * 0.62),
+      y: cssH - 4,
+      vx: (Math.random() - 0.35) * 0.9,
       vy: -(3.1 + Math.random() * 1.4),
       c: pal[(Math.random() * pal.length) | 0],
     });
   };
-  const t0 = Date.now();
+  let t0 = 0;
   let nextLaunch = 0;
-  const tick = () => {
+  const tick = (now) => {
     if (finish.done) return;
-    const t = Date.now() - t0;
-    ctx.clearRect(0, 0, w, h);
-    if (t >= nextLaunch && t < ms - 500) {
+    if (!t0) t0 = now;
+    const t = now - t0;
+    ctx.clearRect(0, 0, cssW, cssH);
+    if (t >= nextLaunch && t < ms - 480) {
       launch();
       nextLaunch = t + 380 + Math.random() * 160;
     }
@@ -1241,17 +1241,17 @@ function boomBless(canvas, ms, done) {
       const r = rockets[i];
       r.x += r.vx;
       r.y += r.vy;
-      r.vy += 0.032;
+      r.vy += 0.038;
       ctx.globalAlpha = 0.95;
       ctx.fillStyle = r.c;
       ctx.beginPath();
-      ctx.arc(r.x, r.y, 2.1, 0, Math.PI * 2);
+      ctx.arc(r.x, r.y, 2.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#fff6d0";
       ctx.beginPath();
       ctx.arc(r.x, r.y + 3.2, 1.3, 0, Math.PI * 2);
       ctx.fill();
-      if (r.vy >= -0.12 || r.y < h * 0.22) {
+      if (r.vy >= -0.08 || r.y < cssH * 0.22) {
         burst(r.x, r.y, r.c);
         rockets.splice(i, 1);
       }
@@ -1261,7 +1261,7 @@ function boomBless(canvas, ms, done) {
       p.life += 1;
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.048;
+      p.vy += 0.05;
       p.vx *= 0.985;
       const a = 1 - p.life / p.max;
       if (a <= 0) {
@@ -1285,67 +1285,60 @@ function startBless(cfg) {
   const lines = blessLines(cfg);
   const root = $("bless");
   const lane = $("blessLane");
-  const track = $("blessTrack");
   const fw = $("blessFw");
-  if (!lines.length || !root || !lane || !track) return;
+  if (!lines.length || !root || !lane) return;
   blessOn = true;
   root.hidden = false;
   const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   if (still) root.classList.add("is-still");
   if (fw) fw.hidden = true;
-  const row = 1.7;
-  const pad = 2;
-  const gap = "\u00a0";
-  const items = [gap, gap].concat(lines, [gap, gap]);
-  track.innerHTML = items
-    .map((t) => `<p class="bless-line">${escAttr(t)}</p>`)
+  const kind = ["is-edge", "is-near", "is-now", "is-near", "is-edge"];
+  lane.innerHTML = kind
+    .map((k) => `<p class="bless-line ${k}">&nbsp;</p>`)
     .join("");
-  const nodes = track.children;
+  const slots = lane.children;
   let cur = 0;
   let watch = 0;
   let lock = 0;
   const holdMs = (text) => (still ? 2800 : Math.round(3600 + String(text).length * 140));
-  const moveMs = still ? 0 : 750;
-  const paint = (i, animate) => {
-    const dur = animate && !still ? moveMs / 1000 + "s" : "0s";
-    track.style.webkitTransition = "-webkit-transform " + dur + " ease";
-    track.style.transition = "transform " + dur + " ease";
-    const y = -(i * row);
-    track.style.webkitTransform = "translateY(" + y + "em)";
-    track.style.transform = "translateY(" + y + "em)";
-    const now = i + pad;
-    for (let k = 0; k < nodes.length; k++) {
-      const d = Math.abs(k - now);
-      nodes[k].className =
-        "bless-line" + (d === 0 ? " is-now" : d === 1 ? " is-near" : d === 2 ? " is-edge" : "");
+  const paint = (i) => {
+    for (let s = 0; s < 5; s++) {
+      const idx = i + s - 2;
+      const t = idx >= 0 && idx < lines.length ? lines[idx] : "";
+      slots[s].textContent = t || "\u00a0";
+      slots[s].className = "bless-line " + kind[s];
     }
   };
   const step = () => {
     if (fw) fw.hidden = true;
     lane.hidden = false;
-    paint(cur, true);
+    paint(cur);
     clearTimeout(watch);
     const mine = ++lock;
     watch = setTimeout(() => {
       if (mine === lock) advance();
-    }, holdMs(lines[cur]) + moveMs);
+    }, holdMs(lines[cur]));
+  };
+  const rest = () => {
+    lock += 1;
+    clearTimeout(watch);
+    lane.hidden = true;
+    paint(0);
+    boomBless(fw, 3000, null);
+    watch = setTimeout(() => {
+      cur = 0;
+      step();
+    }, 3000);
   };
   const advance = () => {
     lock += 1;
     clearTimeout(watch);
     cur += 1;
-    if (cur < lines.length) {
-      step();
-      return;
-    }
-    lane.hidden = true;
-    cur = 0;
-    paint(0, false);
-    boomBless(fw, 3000, () => step());
+    if (cur < lines.length) step();
+    else rest();
   };
-  paint(0, false);
-  for (let k = 0; k < nodes.length; k++) nodes[k].className = "bless-line";
-  void track.offsetWidth;
+  paint(0);
+  void lane.offsetWidth;
   step();
 }
 
