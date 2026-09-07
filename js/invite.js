@@ -58,6 +58,27 @@ function dataImageOk(s, max) {
   );
 }
 
+function inkBounds(data, w, h) {
+  const width = Number(w) || 0;
+  const height = Number(h) || 0;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] > 12) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return null;
+  return { minX, minY, maxX, maxY };
+}
+
 function darkPixelCount(data, threshold) {
   threshold = threshold || 40;
   const cut = threshold * 3;
@@ -176,7 +197,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=14", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=15", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -330,11 +351,24 @@ function wallEndpoints(cfg) {
     const s = String(u || "").trim();
     if (s && out.indexOf(s) < 0) out.push(s);
   };
-  add(cfg.wall?.endpoint);
   const extra = cfg.wall?.endpoints;
   if (Array.isArray(extra)) extra.forEach(add);
+  add(cfg.wall?.endpoint);
   add(cfg.rsvp?.endpoint);
+  try {
+    const last = sessionStorage.getItem("widd-wall-url");
+    if (last && out.indexOf(last) > 0) {
+      out.splice(out.indexOf(last), 1);
+      out.unshift(last);
+    }
+  } catch {}
   return out;
+}
+
+function rememberWallUrl(url) {
+  try {
+    if (url) sessionStorage.setItem("widd-wall-url", url);
+  } catch {}
 }
 
 function readLocalWall() {
@@ -391,7 +425,7 @@ async function fetchTimed(url, opts, ms) {
 
 async function fetchWallEpoch(getUrl) {
   try {
-    const res = await fetchTimed(bust(getUrl || WALL_EPOCH_GET));
+    const res = await fetchTimed(bust(getUrl || WALL_EPOCH_GET), null, 2500);
     if (res.status === 404) return 0;
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -552,19 +586,35 @@ async function loadWallItems(urls) {
   const local = readLocalWall();
   const list = Array.isArray(urls) ? urls : urls ? [urls] : [];
   if (!list.length) return { ok: false, items: local };
-  for (let i = 0; i < list.length; i++) {
+  const tryOne = async (url) => {
+    const res = await fetchTimed(bust(url), null, 4000);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (!Array.isArray(data.items)) throw new Error();
+    rememberWallUrl(url);
+    return { ok: true, items: data.items, url };
+  };
+  if (list.length === 1) {
     try {
-      const res = await fetchTimed(bust(list[i]), null, 12000);
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (Array.isArray(data.items)) return { ok: true, items: data.items };
-    } catch {}
+      return await tryOne(list[0]);
+    } catch {
+      return { ok: false, items: local };
+    }
+  }
+  const got = await Promise.all(
+    list.map((url) =>
+      tryOne(url).catch(() => null),
+    ),
+  );
+  for (let i = 0; i < got.length; i++) {
+    if (got[i]) return got[i];
   }
   return { ok: false, items: local };
 }
 
 async function postWall(urls, body) {
   const list = Array.isArray(urls) ? urls : urls ? [urls] : [];
+  let conflict = null;
   for (let i = 0; i < list.length; i++) {
     try {
       const res = await fetchTimed(
@@ -574,13 +624,18 @@ async function postWall(urls, body) {
           headers: { "content-type": "text/plain" },
           body: JSON.stringify(body),
         },
-        8000,
+        4000,
       );
-      if (res.status === 409) return { ok: false, status: 409, res, url: list[i] };
-      if (res.ok) return { ok: true, res, url: list[i] };
+      if (res.status === 409) {
+        conflict = { ok: false, status: 409, res, url: list[i] };
+        continue;
+      }
+      if (!res.ok) continue;
+      rememberWallUrl(list[i]);
+      return { ok: true, res, url: list[i] };
     } catch {}
   }
-  return { ok: false };
+  return conflict || { ok: false };
 }
 
 function paintGoldInk(ctx, pts, w, h) {
@@ -764,18 +819,35 @@ function bindWallPad(canvas, ctx, state) {
 }
 
 function exportWallPad(canvas) {
-  const tryOut = (w, h, type, q) => {
+  const w = canvas.width;
+  const h = canvas.height;
+  if (w < 4 || h < 4) return "";
+  let box;
+  try {
+    box = inkBounds(canvas.getContext("2d").getImageData(0, 0, w, h).data, w, h);
+  } catch {
+    box = null;
+  }
+  if (!box) return "";
+  const pad = Math.max(3, Math.round(Math.min(w, h) * 0.04));
+  const minX = Math.max(0, box.minX - pad);
+  const minY = Math.max(0, box.minY - pad);
+  const cw = Math.min(w - minX, box.maxX - minX + 1 + pad);
+  const ch = Math.min(h - minY, box.maxY - minY + 1 + pad);
+  const tryPng = (tw, th) => {
     const tmp = document.createElement("canvas");
-    tmp.width = w;
-    tmp.height = h;
+    tmp.width = tw;
+    tmp.height = th;
     const t = tmp.getContext("2d");
-    t.fillStyle = "#f4eee4";
-    t.fillRect(0, 0, w, h);
-    t.drawImage(canvas, 0, 0, w, h);
-    const out = type === "jpeg" ? tmp.toDataURL("image/jpeg", q) : tmp.toDataURL("image/png");
-    return dataImageOk(out) ? out : "";
+    t.clearRect(0, 0, tw, th);
+    t.drawImage(canvas, minX, minY, cw, ch, 0, 0, tw, th);
+    const png = tmp.toDataURL("image/png");
+    return dataImageOk(png) ? png : "";
   };
-  return tryOut(360, 144, "jpeg", 0.7) || tryOut(280, 112, "jpeg", 0.55) || tryOut(200, 80, "png");
+  const scale = Math.min(1, 360 / Math.max(cw, 1));
+  const tw = Math.max(8, Math.round(cw * scale));
+  const th = Math.max(8, Math.round(ch * scale));
+  return tryPng(tw, th) || tryPng(Math.max(8, Math.round(tw * 0.7)), Math.max(8, Math.round(th * 0.7)));
 }
 
 function renderWall(cfg, guest) {
@@ -915,8 +987,10 @@ function renderWall(cfg, guest) {
   } catch {}
 
   const refresh = async (flyId) => {
-    epochCache = await fetchWallEpoch(epochUrl);
-    const got = await loadWallItems(urls);
+    const gotP = loadWallItems(urls);
+    const epochP = fetchWallEpoch(epochUrl);
+    const got = await gotP;
+    epochCache = await epochP;
     let items = got.ok ? got.items : wallAfterWipe(got.items, epochCache);
     items = mergePending(items);
     writeLocalWall(items);
@@ -938,7 +1012,7 @@ function renderWall(cfg, guest) {
   });
 
   refresh();
-  setInterval(refresh, 20000);
+  setInterval(refresh, 8000);
 
   $("wallMine").addEventListener("click", () => {
     if (!window.confirm("确定撤下你留下的签名？")) return;

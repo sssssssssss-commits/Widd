@@ -21,6 +21,7 @@ import {
   strokeWidthFromTouch,
   cssQuarterTurn,
   padMapTouch,
+  inkBounds,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -135,5 +136,10 @@ assert.equal(cssQuarterTurn("matrix(1, 0, 0, 1, 0, 0)"), false);
 const box = { left: 0, top: 0, right: 100, width: 100, height: 200 };
 assert.deepEqual(padMapTouch(box, 50, 0, 200, 100, true), { x: 0, y: 50 });
 assert.deepEqual(padMapTouch(box, 0, 0, 200, 100, false), { x: 0, y: 0 });
+
+const pix = new Uint8ClampedArray(4 * 4);
+pix[4 * 3 + 3] = 255;
+assert.deepEqual(inkBounds(pix, 2, 2), { minX: 1, minY: 1, maxX: 1, maxY: 1 });
+assert.equal(inkBounds(new Uint8ClampedArray(16), 2, 2), null);
 
 console.log("ok");

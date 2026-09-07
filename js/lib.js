@@ -187,6 +187,27 @@ export function padMapTouch(rect, clientX, clientY, cw, ch, rotated) {
   };
 }
 
+export function inkBounds(data, w, h) {
+  const width = Number(w) || 0;
+  const height = Number(h) || 0;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] > 12) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return null;
+  return { minX, minY, maxX, maxY };
+}
+
 export function strokeWidthFromTouch(input, minW = 2.2, maxW = 11) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;
