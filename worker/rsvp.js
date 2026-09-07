@@ -2,6 +2,7 @@ const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers": "content-type",
   "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-max-age": "86400",
 };
 
 function json(data, status = 200) {
@@ -33,15 +34,24 @@ async function listWall(env) {
   return rows.slice(-80).map(({ id, name, img, at, by, epoch }) => ({ id, name, img, at, by, epoch }));
 }
 
+async function countMine(env, by) {
+  const listed = await env.RSVP.list({ prefix: "sig:" });
+  const hits = await Promise.all(
+    listed.keys.map(async (k) => {
+      if (k.metadata && k.metadata.by != null) return String(k.metadata.by) === by;
+      const row = await env.RSVP.get(k.name, "json");
+      return !!(row && String(row.by || "") === by);
+    }),
+  );
+  return hits.filter(Boolean).length;
+}
+
 async function saveWall(env, body) {
   const name = clip(body.name, 20) || "来宾";
   const by = clip(body.by, 80);
   const img = String(body.img || "");
   if (!imageOk(img)) return json({ ok: false }, 400);
-  if (by) {
-    const mine = (await listWall(env)).filter((r) => String(r.by || "") === by);
-    if (mine.length >= 3) return json({ ok: false }, 409);
-  }
+  if (by && (await countMine(env, by)) >= 3) return json({ ok: false }, 409);
   const id = `${Date.now()}-${crypto.randomUUID()}`;
   const row = {
     id,
@@ -51,7 +61,7 @@ async function saveWall(env, body) {
     by,
     epoch: Number(body.epoch) || 0,
   };
-  await env.RSVP.put(`sig:${id}`, JSON.stringify(row));
+  await env.RSVP.put(`sig:${id}`, JSON.stringify(row), { metadata: { by } });
   return json({ ok: true, id, name, at: row.at });
 }
 
@@ -89,7 +99,7 @@ export default {
 
     let body;
     try {
-      body = await request.json();
+      body = JSON.parse(await request.text());
     } catch {
       return json({ ok: false }, 400);
     }

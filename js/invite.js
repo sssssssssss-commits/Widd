@@ -356,18 +356,25 @@ function wallBy() {
   }
 }
 
+function bust(url) {
+  if (!url) return url;
+  return `${url}${url.indexOf("?") >= 0 ? "&" : "?"}t=${Date.now()}`;
+}
+
 async function fetchTimed(url, opts, ms) {
   const wait = Number(ms) || 4000;
   const ac = typeof AbortController !== "undefined" ? new AbortController() : null;
   const timer = ac ? setTimeout(() => ac.abort(), wait) : null;
+  const req = opts ? Object.assign({}, opts) : {};
+  delete req.cache;
   try {
     if (!ac) {
       return await Promise.race([
-        fetch(url, opts || {}),
+        fetch(url, req),
         new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), wait)),
       ]);
     }
-    return await fetch(url, Object.assign({}, opts || {}, { signal: ac.signal }));
+    return await fetch(url, Object.assign(req, { signal: ac.signal }));
   } finally {
     if (timer) clearTimeout(timer);
   }
@@ -375,7 +382,7 @@ async function fetchTimed(url, opts, ms) {
 
 async function fetchWallEpoch(getUrl) {
   try {
-    const res = await fetchTimed(getUrl || WALL_EPOCH_GET, { cache: "no-store" });
+    const res = await fetchTimed(bust(getUrl || WALL_EPOCH_GET));
     if (res.status === 404) return 0;
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -386,7 +393,7 @@ async function fetchWallEpoch(getUrl) {
 }
 
 async function bumpWallEpoch(getUrl) {
-  const res = await fetchTimed(wallHitUrl(getUrl || WALL_EPOCH_GET), { cache: "no-store" });
+  const res = await fetchTimed(bust(wallHitUrl(getUrl || WALL_EPOCH_GET)));
   if (!res.ok) throw new Error();
   const data = await res.json();
   return Number(data.value) || 0;
@@ -536,7 +543,7 @@ async function loadWallItems(url) {
   const local = readLocalWall();
   if (!url) return local;
   try {
-    const res = await fetchTimed(url, { cache: "no-cache" });
+    const res = await fetchTimed(bust(url), null, 12000);
     if (!res.ok) throw new Error();
     const data = await res.json();
     return Array.isArray(data.items) ? data.items : [];
@@ -726,27 +733,32 @@ function bindWallPad(canvas, ctx, state) {
 }
 
 function exportWallPad(canvas) {
-  const tryPng = (w, h) => {
+  const tryOut = (w, h, type, q) => {
     const tmp = document.createElement("canvas");
     tmp.width = w;
     tmp.height = h;
     const t = tmp.getContext("2d");
-    t.clearRect(0, 0, w, h);
+    t.fillStyle = "#f4eee4";
+    t.fillRect(0, 0, w, h);
     t.drawImage(canvas, 0, 0, w, h);
-    const png = tmp.toDataURL("image/png");
-    return dataImageOk(png) ? png : "";
+    const out = type === "jpeg" ? tmp.toDataURL("image/jpeg", q) : tmp.toDataURL("image/png");
+    return dataImageOk(out) ? out : "";
   };
-  return tryPng(400, 160) || tryPng(280, 112) || tryPng(200, 80);
+  return tryOut(360, 144, "jpeg", 0.7) || tryOut(280, 112, "jpeg", 0.55) || tryOut(200, 80, "png");
 }
 
 async function postWall(url, body) {
   if (!url) return false;
   try {
-    const res = await fetchTimed(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const res = await fetchTimed(
+      url,
+      {
+        method: "POST",
+        headers: { "content-type": "text/plain" },
+        body: JSON.stringify(body),
+      },
+      8000,
+    );
     return res.ok;
   } catch {
     return false;
@@ -1005,14 +1017,17 @@ function renderWall(cfg, guest) {
     writeLocalWall(mergePending(readLocalWall()));
     paintWallBoard(readLocalWall(), item.id);
     pad.dirty = false;
-    hint.textContent = "已上墙";
+    hint.textContent = "正在同步…";
     closeSheet();
-    if (!url) return;
+    if (!url) {
+      hint.textContent = "已上墙";
+      return;
+    }
     fetchTimed(
       url,
       {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "text/plain" },
         body: JSON.stringify({ kind: "wall", name, img, by, epoch: item.epoch }),
       },
       8000,
@@ -1039,6 +1054,7 @@ function renderWall(cfg, guest) {
         for (let i = pending.length - 1; i >= 0; i--) {
           if (pending[i].img === img) pending.splice(i, 1);
         }
+        hint.textContent = "已上墙";
         refresh(item.id);
       })
       .catch(() => {
