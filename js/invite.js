@@ -215,14 +215,14 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=19", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=20", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
 
 function applyShare(cfg) {
   const title = cfg.share?.title || cfg.title || "婚礼请柬";
-  const desc = cfg.share?.description || "一封信，等你拆";
+  const desc = cfg.share?.description || "锦书遥寄，待君亲启。";
   const origin = (cfg.share?.origin || "").replace(/\/$/, "");
   const abs = (p) => {
     if (!p) return p;

@@ -950,7 +950,7 @@ body.is-signing .bless {
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
-  font-family: "PingFang SC", "Hiragino Sans GB", "Heiti SC", "STHeiti", "Microsoft YaHei", "微软雅黑", "Noto Sans SC", sans-serif;
+  font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "华文楷体", "楷体", serif;
   font-size: .98rem;
   font-weight: 400;
   line-height: 1.68rem;
@@ -972,7 +972,7 @@ body.is-signing .bless {
 
 .bless-line.is-now {
   height: 2.22rem;
-  font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "华文楷体", "楷体", serif;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Heiti SC", "STHeiti", "Microsoft YaHei", "微软雅黑", "Noto Sans SC", sans-serif;
   font-size: 1.28rem;
   font-weight: 700;
   line-height: 2.22rem;
