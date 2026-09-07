@@ -239,7 +239,7 @@ body::before {
   min-height: 100vh;
   min-height: 100dvh;
   background:
-    url("../assets/letter.jpg") center top / 100% auto no-repeat,
+    url("../assets/letter.jpg?v=2") center top / 100% auto no-repeat,
     #F4EEE4;
 }
 
@@ -249,7 +249,7 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: rgba(255, 248, 239, 0.72);
+  background: rgba(255, 248, 239, 0.2);
 }
 
 .letter-inner {
