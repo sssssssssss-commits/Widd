@@ -25,11 +25,30 @@ function imageOk(s) {
   );
 }
 
+const INDEX = "sig-index";
+
+async function readIndex(env) {
+  const raw = await env.RSVP.get(INDEX);
+  if (raw == null) return null;
+  try {
+    const ids = JSON.parse(raw);
+    return Array.isArray(ids) ? ids.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeIndex(env, ids) {
+  await env.RSVP.put(INDEX, JSON.stringify((ids || []).slice(-80)));
+}
+
 async function listWall(env) {
-  const listed = await env.RSVP.list({ prefix: "sig:" });
-  const rows = (
-    await Promise.all(listed.keys.map((k) => env.RSVP.get(k.name, "json")))
-  ).filter(Boolean);
+  let ids = await readIndex(env);
+  if (ids == null) {
+    const listed = await env.RSVP.list({ prefix: "sig:" });
+    ids = listed.keys.map((k) => k.name.replace(/^sig:/, ""));
+  }
+  const rows = (await Promise.all(ids.map((id) => env.RSVP.get(`sig:${id}`, "json")))).filter(Boolean);
   rows.sort((a, b) => String(a.at).localeCompare(String(b.at)));
   return rows.slice(-80).map(({ id, name, img, at, by, epoch }) => ({ id, name, img, at, by, epoch }));
 }
@@ -62,6 +81,10 @@ async function saveWall(env, body) {
     epoch: Number(body.epoch) || 0,
   };
   await env.RSVP.put(`sig:${id}`, JSON.stringify(row), { metadata: { by } });
+  let ids = await readIndex(env);
+  if (ids == null) ids = [];
+  if (ids.indexOf(id) < 0) ids.push(id);
+  await writeIndex(env, ids);
   return json({ ok: true, id, name, at: row.at });
 }
 
@@ -73,14 +96,26 @@ async function clearMine(env, body) {
     .slice(0, 20);
   if (!by && !ids.length) return json({ ok: false }, 400);
   await Promise.all(ids.map((id) => env.RSVP.delete(`sig:${id}`)));
-  if (!by) return json({ ok: true });
-  const listed = await env.RSVP.list({ prefix: "sig:" });
-  await Promise.all(
-    listed.keys.map(async (k) => {
-      const row = await env.RSVP.get(k.name, "json");
-      if (row && String(row.by || "") === by) await env.RSVP.delete(k.name);
-    }),
-  );
+  if (by) {
+    const listed = await env.RSVP.list({ prefix: "sig:" });
+    await Promise.all(
+      listed.keys.map(async (k) => {
+        const row = await env.RSVP.get(k.name, "json");
+        if (row && String(row.by || "") === by) {
+          await env.RSVP.delete(k.name);
+          ids.push(k.name.replace(/^sig:/, ""));
+        }
+      }),
+    );
+  }
+  const index = await readIndex(env);
+  if (index) {
+    const drop = new Set(ids);
+    await writeIndex(
+      env,
+      index.filter((id) => !drop.has(id)),
+    );
+  }
   return json({ ok: true });
 }
 
@@ -88,38 +123,45 @@ async function wipeWall(env, body, host) {
   if (!host || clip(body.host, 40) !== host) return json({ ok: false }, 403);
   const listed = await env.RSVP.list({ prefix: "sig:" });
   await Promise.all(listed.keys.map((k) => env.RSVP.delete(k.name)));
+  await writeIndex(env, []);
   return json({ ok: true });
 }
 
+export async function handleRequest(request, env) {
+  if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
+  if (request.method === "GET") return json({ ok: true, items: await listWall(env) });
+  if (request.method !== "POST") return json({ ok: false }, 405);
+
+  let body;
+  try {
+    body = JSON.parse(await request.text());
+  } catch {
+    return json({ ok: false }, 400);
+  }
+
+  if (body.kind === "wall") return saveWall(env, body);
+  if (body.kind === "wall-mine") return clearMine(env, body);
+  if (body.kind === "wall-wipe") return wipeWall(env, body, env.WALL_HOST);
+
+  const row = {
+    name: clip(body.name, 20),
+    attending: Boolean(body.attending),
+    count: Math.min(20, Math.max(0, Number(body.count) || 0)),
+    notes: clip(body.notes, 200),
+    to: clip(body.to, 20),
+    at: new Date().toISOString(),
+  };
+  if (!row.name) return json({ ok: false }, 400);
+
+  const id = `${Date.now()}-${crypto.randomUUID()}`;
+  await env.RSVP.put(id, JSON.stringify(row));
+  return json({ ok: true });
+}
+
+export function onRequest({ request, env }) {
+  return handleRequest(request, env);
+}
+
 export default {
-  async fetch(request, env) {
-    if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
-    if (request.method === "GET") return json({ ok: true, items: await listWall(env) });
-    if (request.method !== "POST") return json({ ok: false }, 405);
-
-    let body;
-    try {
-      body = JSON.parse(await request.text());
-    } catch {
-      return json({ ok: false }, 400);
-    }
-
-    if (body.kind === "wall") return saveWall(env, body);
-    if (body.kind === "wall-mine") return clearMine(env, body);
-    if (body.kind === "wall-wipe") return wipeWall(env, body, env.WALL_HOST);
-
-    const row = {
-      name: clip(body.name, 20),
-      attending: Boolean(body.attending),
-      count: Math.min(20, Math.max(0, Number(body.count) || 0)),
-      notes: clip(body.notes, 200),
-      to: clip(body.to, 20),
-      at: new Date().toISOString(),
-    };
-    if (!row.name) return json({ ok: false }, 400);
-
-    const id = `${Date.now()}-${crypto.randomUUID()}`;
-    await env.RSVP.put(id, JSON.stringify(row));
-    return json({ ok: true });
-  },
+  fetch: handleRequest,
 };

@@ -176,7 +176,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=13", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=14", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -324,8 +324,17 @@ function stampDone() {
   if (stamp) stamp.classList.add("is-on");
 }
 
-function wallEndpoint(cfg) {
-  return cfg.wall?.endpoint || cfg.rsvp?.endpoint || "";
+function wallEndpoints(cfg) {
+  const out = [];
+  const add = (u) => {
+    const s = String(u || "").trim();
+    if (s && out.indexOf(s) < 0) out.push(s);
+  };
+  add(cfg.wall?.endpoint);
+  const extra = cfg.wall?.endpoints;
+  if (Array.isArray(extra)) extra.forEach(add);
+  add(cfg.rsvp?.endpoint);
+  return out;
 }
 
 function readLocalWall() {
@@ -539,17 +548,39 @@ async function snapshotWall(items) {
   return png;
 }
 
-async function loadWallItems(url) {
+async function loadWallItems(urls) {
   const local = readLocalWall();
-  if (!url) return local;
-  try {
-    const res = await fetchTimed(bust(url), null, 12000);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    return Array.isArray(data.items) ? data.items : [];
-  } catch {
-    return local;
+  const list = Array.isArray(urls) ? urls : urls ? [urls] : [];
+  if (!list.length) return { ok: false, items: local };
+  for (let i = 0; i < list.length; i++) {
+    try {
+      const res = await fetchTimed(bust(list[i]), null, 12000);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (Array.isArray(data.items)) return { ok: true, items: data.items };
+    } catch {}
   }
+  return { ok: false, items: local };
+}
+
+async function postWall(urls, body) {
+  const list = Array.isArray(urls) ? urls : urls ? [urls] : [];
+  for (let i = 0; i < list.length; i++) {
+    try {
+      const res = await fetchTimed(
+        list[i],
+        {
+          method: "POST",
+          headers: { "content-type": "text/plain" },
+          body: JSON.stringify(body),
+        },
+        8000,
+      );
+      if (res.status === 409) return { ok: false, status: 409, res, url: list[i] };
+      if (res.ok) return { ok: true, res, url: list[i] };
+    } catch {}
+  }
+  return { ok: false };
 }
 
 function paintGoldInk(ctx, pts, w, h) {
@@ -747,24 +778,6 @@ function exportWallPad(canvas) {
   return tryOut(360, 144, "jpeg", 0.7) || tryOut(280, 112, "jpeg", 0.55) || tryOut(200, 80, "png");
 }
 
-async function postWall(url, body) {
-  if (!url) return false;
-  try {
-    const res = await fetchTimed(
-      url,
-      {
-        method: "POST",
-        headers: { "content-type": "text/plain" },
-        body: JSON.stringify(body),
-      },
-      8000,
-    );
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
 function renderWall(cfg, guest) {
   const soon = $("wallSoon");
   const wall = $("wall");
@@ -775,7 +788,8 @@ function renderWall(cfg, guest) {
   }
   soon.hidden = true;
   wall.hidden = false;
-  const url = wallEndpoint(cfg);
+  const urls = wallEndpoints(cfg);
+  const url = urls[0] || "";
   const host = isWallHost(location.search, cfg.wallHost);
   const by = wallBy();
   const epochUrl = cfg.wallEpoch || WALL_EPOCH_GET;
@@ -902,7 +916,8 @@ function renderWall(cfg, guest) {
 
   const refresh = async (flyId) => {
     epochCache = await fetchWallEpoch(epochUrl);
-    let items = wallAfterWipe(await loadWallItems(url), epochCache);
+    const got = await loadWallItems(urls);
+    let items = got.ok ? got.items : wallAfterWipe(got.items, epochCache);
     items = mergePending(items);
     writeLocalWall(items);
     paintWallBoard(items, flyId);
@@ -940,7 +955,7 @@ function renderWall(cfg, guest) {
     paintWallBoard(next);
     $("wallHint").textContent = "已撤下你的签名";
     const ids = mine.map((row) => row.id).filter(Boolean);
-    postWall(url, { kind: "wall-mine", by, ids });
+    postWall(urls, { kind: "wall-mine", by, ids });
   });
 
   const saveBtn = $("wallSave");
@@ -981,7 +996,7 @@ function renderWall(cfg, guest) {
         await bumpWallEpoch(epochUrl);
         shared = true;
       } catch {}
-      shared = (await postWall(url, { kind: "wall-wipe", host: cfg.wallHost })) || shared;
+      shared = (await postWall(urls, { kind: "wall-wipe", host: cfg.wallHost })).ok || shared;
       await refresh();
       hint.textContent = shared ? "墙上已清空" : "本机已清，别人手机需能联网才会一起清";
     });
@@ -1023,37 +1038,30 @@ function renderWall(cfg, guest) {
       hint.textContent = "已上墙";
       return;
     }
-    fetchTimed(
-      url,
-      {
-        method: "POST",
-        headers: { "content-type": "text/plain" },
-        body: JSON.stringify({ kind: "wall", name, img, by, epoch: item.epoch }),
-      },
-      8000,
-    )
-      .then(async (res) => {
+    postWall(urls, { kind: "wall", name, img, by, epoch: item.epoch })
+      .then(async (sent) => {
         if (g !== writeGen) {
-          const data = res.ok ? await res.json().catch(() => ({})) : {};
-          const extra = data.id ? [data.id] : [];
-          postWall(url, { kind: "wall-mine", by, ids: [item.id].concat(extra) });
-          return;
-        }
-        if (res.status === 409) {
-          for (let i = pending.length - 1; i >= 0; i--) {
-            if (pending[i].id === item.id) pending.splice(i, 1);
+          if (sent.ok) {
+            const data = await sent.res.json().catch(() => ({}));
+            const extra = data.id ? [data.id] : [];
+            postWall(urls, { kind: "wall-mine", by, ids: [item.id].concat(extra) });
           }
-          writeLocalWall(readLocalWall().filter((row) => row.id !== item.id && row.img !== img));
-          paintWallBoard(readLocalWall());
-          hint.textContent = "每人最多留下三幅";
           return;
         }
-        if (!res.ok) throw new Error();
-        const data = await res.json().catch(() => ({}));
-        if (data.id) item.id = data.id;
-        for (let i = pending.length - 1; i >= 0; i--) {
-          if (pending[i].img === img) pending.splice(i, 1);
+        if (!sent.ok) {
+          if (sent.status === 409) {
+            for (let i = pending.length - 1; i >= 0; i--) {
+              if (pending[i].id === item.id) pending.splice(i, 1);
+            }
+            writeLocalWall(readLocalWall().filter((row) => row.id !== item.id && row.img !== img));
+            paintWallBoard(readLocalWall());
+            hint.textContent = "每人最多留下三幅";
+            return;
+          }
+          throw new Error();
         }
+        const data = await sent.res.json().catch(() => ({}));
+        if (data.id) item.id = data.id;
         hint.textContent = "已上墙";
         refresh(item.id);
       })

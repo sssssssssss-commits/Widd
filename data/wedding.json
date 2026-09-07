@@ -24,7 +24,11 @@
     "surveyUrl": ""
   },
   "wall": {
-    "endpoint": "https://widd-rsvp.sssssssssss-widd.workers.dev"
+    "endpoint": "https://widd-rsvp.sssssssssss-widd.workers.dev",
+    "endpoints": [
+      "https://widd-wall.pages.dev",
+      "https://widd-rsvp.sssssssssss-widd.workers.dev"
+    ]
   },
   "signatureWall": true,
   "wallHost": "xi8k2m",
