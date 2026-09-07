@@ -638,8 +638,27 @@ async function postWall(urls, body) {
   return conflict || { ok: false };
 }
 
-function paintGoldInk(ctx, pts, w, h) {
-  ctx.clearRect(0, 0, w, h);
+function ptsBounds(pts) {
+  if (!pts || !pts.length) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const r = (Number(p && p.w) || 0) / 2 + 1.2;
+    const x = Number(p && p.x) || 0;
+    const y = Number(p && p.y) || 0;
+    if (x - r < minX) minX = x - r;
+    if (y - r < minY) minY = y - r;
+    if (x + r > maxX) maxX = x + r;
+    if (y + r > maxY) maxY = y + r;
+  }
+  if (!Number.isFinite(minX)) return null;
+  return { minX, minY, maxX, maxY };
+}
+
+function strokeGoldInk(ctx, pts) {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   if (!pts || !pts.length) return;
@@ -657,6 +676,38 @@ function paintGoldInk(ctx, pts, w, h) {
     ctx.arc(p.x, p.y, p.w / 2, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+function paintGoldInk(ctx, pts, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  strokeGoldInk(ctx, pts);
+}
+
+function exportWallPad(pts) {
+  const box = ptsBounds(pts);
+  if (!box) return "";
+  const gap = 8;
+  const width = box.maxX - box.minX + gap * 2;
+  const height = box.maxY - box.minY + gap * 2;
+  if (width < 4 || height < 4) return "";
+  const tryPng = (tw, th, scale) => {
+    const tmp = document.createElement("canvas");
+    tmp.width = tw;
+    tmp.height = th;
+    const t = tmp.getContext("2d", { alpha: true });
+    t.clearRect(0, 0, tw, th);
+    t.setTransform(scale, 0, 0, scale, (-box.minX + gap) * scale, (-box.minY + gap) * scale);
+    strokeGoldInk(t, pts);
+    const png = tmp.toDataURL("image/png");
+    return dataImageOk(png) ? png : "";
+  };
+  const scale = Math.min(2, 360 / Math.max(width, height, 1));
+  const tw = Math.max(8, Math.round(width * scale));
+  const th = Math.max(8, Math.round(height * scale));
+  return (
+    tryPng(tw, th, scale) ||
+    tryPng(Math.max(8, Math.round(tw * 0.65)), Math.max(8, Math.round(th * 0.65)), scale * 0.65)
+  );
 }
 
 function fitWallPad(canvas, state, wipe) {
@@ -816,38 +867,6 @@ function bindWallPad(canvas, ctx, state) {
   canvas.addEventListener("mousemove", mouseMove);
   canvas.addEventListener("mouseup", up);
   canvas.addEventListener("mouseleave", up);
-}
-
-function exportWallPad(canvas) {
-  const w = canvas.width;
-  const h = canvas.height;
-  if (w < 4 || h < 4) return "";
-  let box;
-  try {
-    box = inkBounds(canvas.getContext("2d").getImageData(0, 0, w, h).data, w, h);
-  } catch {
-    box = null;
-  }
-  if (!box) return "";
-  const pad = Math.max(3, Math.round(Math.min(w, h) * 0.04));
-  const minX = Math.max(0, box.minX - pad);
-  const minY = Math.max(0, box.minY - pad);
-  const cw = Math.min(w - minX, box.maxX - minX + 1 + pad);
-  const ch = Math.min(h - minY, box.maxY - minY + 1 + pad);
-  const tryPng = (tw, th) => {
-    const tmp = document.createElement("canvas");
-    tmp.width = tw;
-    tmp.height = th;
-    const t = tmp.getContext("2d");
-    t.clearRect(0, 0, tw, th);
-    t.drawImage(canvas, minX, minY, cw, ch, 0, 0, tw, th);
-    const png = tmp.toDataURL("image/png");
-    return dataImageOk(png) ? png : "";
-  };
-  const scale = Math.min(1, 360 / Math.max(cw, 1));
-  const tw = Math.max(8, Math.round(cw * scale));
-  const th = Math.max(8, Math.round(ch * scale));
-  return tryPng(tw, th) || tryPng(Math.max(8, Math.round(tw * 0.7)), Math.max(8, Math.round(th * 0.7)));
 }
 
 function renderWall(cfg, guest) {
@@ -1084,7 +1103,7 @@ function renderWall(cfg, guest) {
       sheetHint.textContent = "请先手写签名";
       return;
     }
-    const img = exportWallPad(canvas);
+    const img = exportWallPad(pad.pts);
     if (!dataImageOk(img)) {
       sheetHint.textContent = "签名未能保存，请再写一次";
       return;

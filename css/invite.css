@@ -660,7 +660,7 @@ body::before {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: transparent;
+  background: none;
   -webkit-filter:
     drop-shadow(1px 0 0 #1A120C)
     drop-shadow(-1px 0 0 #1A120C)

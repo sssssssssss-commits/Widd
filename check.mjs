@@ -22,6 +22,7 @@ import {
   cssQuarterTurn,
   padMapTouch,
   inkBounds,
+  ptsBounds,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -141,5 +142,7 @@ const pix = new Uint8ClampedArray(4 * 4);
 pix[4 * 3 + 3] = 255;
 assert.deepEqual(inkBounds(pix, 2, 2), { minX: 1, minY: 1, maxX: 1, maxY: 1 });
 assert.equal(inkBounds(new Uint8ClampedArray(16), 2, 2), null);
+assert.deepEqual(ptsBounds([{ x: 10, y: 20, w: 4 }]), { minX: 6.8, minY: 16.8, maxX: 13.2, maxY: 23.2 });
+assert.equal(ptsBounds([]), null);
 
 console.log("ok");

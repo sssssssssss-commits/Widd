@@ -208,6 +208,26 @@ export function inkBounds(data, w, h) {
   return { minX, minY, maxX, maxY };
 }
 
+export function ptsBounds(pts) {
+  if (!pts || !pts.length) return null;
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    const r = (Number(p && p.w) || 0) / 2 + 1.2;
+    const x = Number(p && p.x) || 0;
+    const y = Number(p && p.y) || 0;
+    if (x - r < minX) minX = x - r;
+    if (y - r < minY) minY = y - r;
+    if (x + r > maxX) maxX = x + r;
+    if (y + r > maxY) maxY = y + r;
+  }
+  if (!Number.isFinite(minX)) return null;
+  return { minX, minY, maxX, maxY };
+}
+
 export function strokeWidthFromTouch(input, minW = 2.2, maxW = 11) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;
