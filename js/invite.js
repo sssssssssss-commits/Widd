@@ -516,23 +516,18 @@ function drawKeepContained(ctx, im, dx, dy, dw, dh) {
   ctx.drawImage(im, x, y, w, h);
 }
 
-async function drawKeepFrame(ctx, w, h) {
-  const cloud = await loadKeepImg("assets/wall-cloud.svg");
-  if (cloud) ctx.drawImage(cloud, 0, 0, w, h);
-}
-
 async function snapshotWall(items) {
   const yard = document.querySelector(".wall-yard");
   const cssW = (yard && yard.clientWidth) || 360;
-  const W = Math.min(1600, Math.max(800, Math.round(cssW * 2.4)));
-  const H = Math.round((W * 3) / 4);
+  const W = Math.min(1200, Math.max(720, Math.round(cssW * 2.4)));
+  const H = Math.round((W * 1005) / 738);
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#F6F1E6";
   ctx.fillRect(0, 0, W, H);
-  const paper = await loadKeepImg("assets/xuan.jpg");
+  const paper = await loadKeepImg("assets/wall.jpg?v=1");
   if (paper) {
     const ir = (paper.width || 1) / (paper.height || 1);
     const br = W / H;
@@ -541,21 +536,14 @@ async function snapshotWall(items) {
     let dx = 0;
     let dy = 0;
     if (ir > br) {
-      dw = H * ir;
-      dx = (W - dw) / 2;
-    } else {
       dh = W / ir;
       dy = (H - dh) / 2;
+    } else {
+      dw = H * ir;
+      dx = (W - dw) / 2;
     }
     ctx.drawImage(paper, dx, dy, dw, dh);
   }
-  ctx.save();
-  ctx.fillStyle = "rgba(139,36,28,0.6)";
-  ctx.font = `700 ${Math.round(H * 0.78)}px "KaiTi","KaiTi_GB2312","STKaiti","Kaiti SC","华文楷体",serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("囍", W / 2, H / 2);
-  ctx.restore();
   const bx = W * 0.075;
   const by = H * 0.075;
   const bw = W * 0.85;
@@ -576,7 +564,6 @@ async function snapshotWall(items) {
     drawKeepContained(ctx, im, -cw / 2, -ch / 2, cw, ch);
     ctx.restore();
   }
-  await drawKeepFrame(ctx, W, H);
   const png = canvas.toDataURL("image/png");
   if (!png || png.length < 80) throw new Error("empty");
   return png;
@@ -887,7 +874,6 @@ function renderWall(cfg, guest) {
   wall.innerHTML = `<div class="wall-box">
       <h2>签名墙</h2>
       <div class="wall-yard">
-        <div class="wall-xi" aria-hidden="true">囍</div>
         <div class="wall-frame">
           <div class="wall-board" id="wallBoard"></div>
         </div>
