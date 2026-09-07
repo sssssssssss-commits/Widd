@@ -972,7 +972,7 @@ body.is-signing .bless {
 
 .bless-line.is-now {
   height: 2.22rem;
-  font-family: "PingFang SC", "Hiragino Sans GB", "Heiti SC", "STHeiti", "Microsoft YaHei", "微软雅黑", "Noto Sans SC", sans-serif;
+  font-family: "STXingkai", "华文行楷", "Xingkai SC", "STKaiti", "Kaiti SC", "KaiTi", "KaiTi_GB2312", "华文楷体", "楷体", serif;
   font-size: 1.28rem;
   font-weight: 700;
   line-height: 2.22rem;
