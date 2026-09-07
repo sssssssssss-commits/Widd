@@ -57,12 +57,20 @@ async function saveWall(env, body) {
 
 async function clearMine(env, body) {
   const by = clip(body.by, 80);
-  if (!by) return json({ ok: false }, 400);
+  const ids = (Array.isArray(body.ids) ? body.ids : [])
+    .map((id) => clip(id, 80))
+    .filter(Boolean)
+    .slice(0, 20);
+  if (!by && !ids.length) return json({ ok: false }, 400);
+  await Promise.all(ids.map((id) => env.RSVP.delete(`sig:${id}`)));
+  if (!by) return json({ ok: true });
   const listed = await env.RSVP.list({ prefix: "sig:" });
-  for (const k of listed.keys) {
-    const row = await env.RSVP.get(k.name, "json");
-    if (row && String(row.by || "") === by) await env.RSVP.delete(k.name);
-  }
+  await Promise.all(
+    listed.keys.map(async (k) => {
+      const row = await env.RSVP.get(k.name, "json");
+      if (row && String(row.by || "") === by) await env.RSVP.delete(k.name);
+    }),
+  );
   return json({ ok: true });
 }
 

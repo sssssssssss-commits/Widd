@@ -152,6 +152,19 @@ function wallWithoutMine(items, by, dropUntagged) {
   });
 }
 
+function wallExceptHidden(items, hidden) {
+  const ids = hidden && hidden.ids;
+  const imgs = hidden && hidden.imgs;
+  const idSet = ids instanceof Set ? ids : new Set(ids || []);
+  const imgSet = imgs instanceof Set ? imgs : new Set(imgs || []);
+  if (!idSet.size && !imgSet.size) return Array.isArray(items) ? items.slice() : [];
+  return (Array.isArray(items) ? items : []).filter((row) => {
+    if (row && row.id && idSet.has(row.id)) return false;
+    if (row && row.img && imgSet.has(row.img)) return false;
+    return true;
+  });
+}
+
 const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
@@ -815,12 +828,23 @@ function renderWall(cfg, guest) {
   bindWallPad(canvas, ctx, pad);
   let epochCache = 0;
   const pending = [];
+  const hidden = { ids: new Set(), imgs: new Set() };
+  let writeGen = 0;
+
+  const hideRows = (rows) => {
+    for (let i = 0; i < (rows || []).length; i++) {
+      const row = rows[i];
+      if (row && row.id) hidden.ids.add(row.id);
+      if (row && row.img) hidden.imgs.add(row.img);
+    }
+  };
 
   const mergePending = (items) => {
-    const rows = (items || []).slice();
+    const rows = wallExceptHidden(items || [], hidden);
     const keep = [];
     for (let i = 0; i < pending.length; i++) {
       const p = pending[i];
+      if (hidden.ids.has(p.id) || hidden.imgs.has(p.img)) continue;
       if (rows.some((row) => row.id === p.id || row.img === p.img)) continue;
       rows.push(p);
       keep.push(p);
@@ -889,13 +913,22 @@ function renderWall(cfg, guest) {
   refresh();
   setInterval(refresh, 20000);
 
-  $("wallMine").addEventListener("click", async () => {
+  $("wallMine").addEventListener("click", () => {
     if (!window.confirm("确定撤下你留下的签名？")) return;
-    const hint = $("wallHint");
-    writeLocalWall(wallWithoutMine(readLocalWall(), by, !url));
-    await postWall(url, { kind: "wall-mine", by });
-    await refresh();
-    hint.textContent = "已撤下你的签名";
+    writeGen += 1;
+    const mine = readLocalWall().filter((row) => String(row.by || "") === by || !row.by);
+    for (let i = 0; i < pending.length; i++) {
+      const p = pending[i];
+      if (!mine.some((row) => row.id === p.id || row.img === p.img)) mine.push(p);
+    }
+    hideRows(mine);
+    pending.length = 0;
+    const next = wallExceptHidden(wallWithoutMine(readLocalWall(), by, true), hidden);
+    writeLocalWall(next);
+    paintWallBoard(next);
+    $("wallHint").textContent = "已撤下你的签名";
+    const ids = mine.map((row) => row.id).filter(Boolean);
+    postWall(url, { kind: "wall-mine", by, ids });
   });
 
   const saveBtn = $("wallSave");
@@ -967,6 +1000,7 @@ function renderWall(cfg, guest) {
       by,
       epoch: epochCache,
     };
+    const g = writeGen;
     pending.push(item);
     writeLocalWall(mergePending(readLocalWall()));
     paintWallBoard(readLocalWall(), item.id);
@@ -984,6 +1018,12 @@ function renderWall(cfg, guest) {
       8000,
     )
       .then(async (res) => {
+        if (g !== writeGen) {
+          const data = res.ok ? await res.json().catch(() => ({})) : {};
+          const extra = data.id ? [data.id] : [];
+          postWall(url, { kind: "wall-mine", by, ids: [item.id].concat(extra) });
+          return;
+        }
         if (res.status === 409) {
           for (let i = pending.length - 1; i >= 0; i--) {
             if (pending[i].id === item.id) pending.splice(i, 1);
@@ -1002,6 +1042,7 @@ function renderWall(cfg, guest) {
         refresh(item.id);
       })
       .catch(() => {
+        if (g !== writeGen) return;
         hint.textContent = "已留在本机，未能同步到网上";
       });
   });

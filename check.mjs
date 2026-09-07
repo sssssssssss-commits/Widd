@@ -17,6 +17,7 @@ import {
   wallMineCount,
   wallRot,
   wallWithoutMine,
+  wallExceptHidden,
   strokeWidthFromTouch,
   cssQuarterTurn,
   padMapTouch,
@@ -74,6 +75,14 @@ assert.deepEqual(
   ["b"],
 );
 assert.equal(wallWithoutMine([{ by: "a" }, {}], "a", false).length, 1);
+assert.deepEqual(
+  wallExceptHidden(
+    [{ id: "1", img: "a" }, { id: "2", img: "b" }],
+    { ids: ["1"], imgs: ["b"] },
+  ).map((r) => r.id),
+  [],
+);
+assert.equal(wallExceptHidden([{ id: "3" }], { ids: ["1"], imgs: [] }).length, 1);
 
 assert.ok(strokeWidthFromTouch({ force: 0.9, radius: 0, speed: 0 }) > strokeWidthFromTouch({ force: 0.2, radius: 0, speed: 0 }));
 assert.ok(strokeWidthFromTouch({ force: 0, radius: 24, speed: 0.12 }) > strokeWidthFromTouch({ force: 0, radius: 8, speed: 0.12 }));

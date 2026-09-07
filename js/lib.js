@@ -113,6 +113,19 @@ export function wallWithoutMine(items, by, dropUntagged) {
   });
 }
 
+export function wallExceptHidden(items, hidden) {
+  const ids = hidden && hidden.ids;
+  const imgs = hidden && hidden.imgs;
+  const idSet = ids instanceof Set ? ids : new Set(ids || []);
+  const imgSet = imgs instanceof Set ? imgs : new Set(imgs || []);
+  if (!idSet.size && !imgSet.size) return Array.isArray(items) ? items.slice() : [];
+  return (Array.isArray(items) ? items : []).filter((row) => {
+    if (row && row.id && idSet.has(row.id)) return false;
+    if (row && row.img && imgSet.has(row.img)) return false;
+    return true;
+  });
+}
+
 export function wallSpreadSlot(i, n) {
   const count = Math.max(1, Number(n) || 1);
   const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
