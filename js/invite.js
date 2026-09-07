@@ -543,6 +543,11 @@ async function snapshotWall(items) {
       dx = (W - dw) / 2;
     }
     ctx.drawImage(paper, dx, dy, dw, dh);
+    ctx.save();
+    ctx.filter = `blur(${Math.max(8, Math.round(W * 0.05))}px)`;
+    ctx.globalAlpha = 0.6;
+    ctx.drawImage(paper, dx, dy, dw, dh);
+    ctx.restore();
   }
   const bx = W * 0.075;
   const by = H * 0.075;
@@ -564,6 +569,8 @@ async function snapshotWall(items) {
     drawKeepContained(ctx, im, -cw / 2, -ch / 2, cw, ch);
     ctx.restore();
   }
+  const cloud = await loadKeepImg("assets/wall-cloud.svg?v=2");
+  if (cloud) ctx.drawImage(cloud, 0, 0, W, H);
   const png = canvas.toDataURL("image/png");
   if (!png || png.length < 80) throw new Error("empty");
   return png;

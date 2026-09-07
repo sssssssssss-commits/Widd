@@ -592,10 +592,25 @@ body::before {
   background: url("../assets/wall.jpg?v=1") center / contain no-repeat #F6F1E6;
 }
 
+.wall-yard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("../assets/wall.jpg?v=1") center / contain no-repeat;
+  pointer-events: none;
+  -webkit-filter: blur(18px);
+  filter: blur(18px);
+  -webkit-transform: scale(1.12);
+  transform: scale(1.12);
+  opacity: .6;
+}
+
 .wall-frame {
   position: absolute;
   inset: 0;
   z-index: 2;
+  background: url("../assets/wall-cloud.svg?v=2") center / 100% 100% no-repeat;
   pointer-events: none;
 }
 
