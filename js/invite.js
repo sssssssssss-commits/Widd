@@ -1401,6 +1401,37 @@ function runFoil(canvas) {
   const PETAL = ["#C23B32", "#D4564A", "#C4453C", "#E07A6A"];
   const PETAL_HI = ["#E8A8A0", "#F2C4BC", "#E89088", "#F6D4CC"];
   const GOLD = ["#E8C85A", "#F4DC8A", "#D4A93A", "#F8E7A8", "#C9A24A"];
+  const PETAL_SHEET = [
+    [2, 2, 50, 56],
+    [54, 2, 56, 53],
+    [112, 2, 56, 46],
+    [170, 2, 56, 53],
+    [2, 60, 56, 47],
+    [60, 60, 49, 56],
+    [111, 60, 56, 49],
+    [169, 60, 56, 39],
+    [2, 118, 56, 46],
+    [60, 118, 56, 40],
+    [118, 118, 56, 40],
+    [176, 118, 55, 56],
+    [2, 176, 56, 44],
+    [60, 176, 56, 51],
+    [118, 176, 51, 56],
+    [171, 176, 56, 36],
+    [2, 234, 56, 50],
+    [60, 234, 52, 56],
+    [114, 234, 56, 53],
+    [172, 234, 45, 56],
+    [219, 234, 56, 37],
+    [2, 292, 55, 56],
+    [59, 292, 56, 56],
+  ];
+  const sheet = new Image();
+  let sheetOk = false;
+  sheet.onload = () => {
+    sheetOk = true;
+  };
+  sheet.src = "assets/petals.png?v=1";
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const fit = () => {
     const w = innerWidth || 320;
@@ -1425,6 +1456,7 @@ function runFoil(canvas) {
     a: 0.62 + Math.random() * 0.28,
     c: PETAL[i % PETAL.length],
     hi: PETAL_HI[i % PETAL_HI.length],
+    kind: i % PETAL_SHEET.length,
     rot: Math.random() * Math.PI * 2,
     ph: Math.random() * 1000,
   }));
@@ -1471,6 +1503,25 @@ function runFoil(canvas) {
     ctx.lineWidth = 0.4;
     ctx.globalAlpha = p.a * 0.75;
     ctx.stroke();
+    ctx.restore();
+  };
+
+  const drawPetal = (ctx, p) => {
+    const sp = PETAL_SHEET[p.kind];
+    if (!sheetOk || !sp) {
+      petalPath(ctx, p);
+      return;
+    }
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot);
+    ctx.scale(0.62 + 0.38 * Math.abs(Math.sin(p.ph)), 1);
+    ctx.globalAlpha = p.a;
+    const long = p.s * 1.85;
+    const k = long / Math.max(sp[2], sp[3]);
+    const dw = sp[2] * k;
+    const dh = sp[3] * k;
+    ctx.drawImage(sheet, sp[0], sp[1], sp[2], sp[3], -dw / 2, -dh / 2, dw, dh);
     ctx.restore();
   };
 
@@ -1527,7 +1578,7 @@ function runFoil(canvas) {
           p.x = Math.random() * innerWidth;
         }
       }
-      petalPath(ctx, p);
+      drawPetal(ctx, p);
     }
     for (let i = tapXi.length - 1; i >= 0; i--) {
       const x = tapXi[i];
