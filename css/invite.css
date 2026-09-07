@@ -955,7 +955,7 @@ body.is-signing .bless {
   font-weight: 700;
   line-height: 1.68rem;
   letter-spacing: .05em;
-  color: #E8C85A;
+  color: #C23B32;
   opacity: .1;
   text-shadow:
     -1px -1px 0 #1a0c08,
@@ -983,13 +983,8 @@ body.is-signing .bless {
   font-size: 1.28rem;
   line-height: 2.22rem;
   opacity: 1;
-  color: #E53935;
-  text-shadow:
-    0 0 1px #fff6e8,
-    0 0 4px #FF8AA8,
-    0 0 10px #FF4D7A,
-    0 0 18px #FF2D55,
-    0 0 28px #E8C85A99;
+  color: #E8C85A;
+  text-shadow: none;
 }
 
 .bless.is-still .bless-line {

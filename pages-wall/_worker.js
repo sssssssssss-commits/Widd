@@ -132,7 +132,7 @@ async function shareJpg(request) {
   if (!src.ok) return json({ ok: false }, 502);
   const headers = {
     "content-type": "image/jpeg",
-    "cache-control": "public, max-age=604800",
+    "cache-control": "public, max-age=3600",
     "access-control-allow-origin": "*",
   };
   if (request.method === "HEAD") return new Response(null, { status: 200, headers });
@@ -145,7 +145,10 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
     if (
       (request.method === "GET" || request.method === "HEAD") &&
-      (url.pathname === "/share.jpg" || url.pathname === "/share.jpg/")
+      (url.pathname === "/share.jpg" ||
+        url.pathname === "/share.jpg/" ||
+        url.pathname === "/wx.jpg" ||
+        url.pathname === "/wx.jpg/")
     ) {
       return shareJpg(request);
     }

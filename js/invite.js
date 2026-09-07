@@ -215,7 +215,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=17", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=18", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -1559,10 +1559,6 @@ function drawXi(ctx, p) {
   ctx.font = s + "px Songti SC, STSong, SimSun, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = "#1a0c08";
-  ctx.lineWidth = Math.max(1.4, s * 0.14);
-  ctx.strokeText("囍", 0, 0);
   ctx.fillStyle = "#C23B32";
   ctx.fillText("囍", 0, 0);
   ctx.restore();
