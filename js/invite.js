@@ -1187,19 +1187,15 @@ function boomBless(canvas, ms, done) {
     }
     done();
   };
-  if (!canvas || typeof requestAnimationFrame !== "function") {
-    setTimeout(finish, ms);
-    return;
-  }
+  setTimeout(finish, ms);
+  if (!canvas || typeof requestAnimationFrame !== "function") return;
   const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    setTimeout(finish, ms);
-    return;
-  }
+  if (!ctx) return;
   canvas.hidden = false;
+  void canvas.offsetWidth;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const w = canvas.clientWidth || 200;
-  const h = canvas.clientHeight || 140;
+  const w = canvas.clientWidth || 240;
+  const h = canvas.clientHeight || 180;
   canvas.width = Math.max(1, Math.floor(w * dpr));
   canvas.height = Math.max(1, Math.floor(h * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1207,59 +1203,55 @@ function boomBless(canvas, ms, done) {
   const sparks = [];
   const rockets = [];
   const burst = (x, y, c) => {
-    for (let i = 0; i < 28; i++) {
-      const a = (Math.PI * 2 * i) / 28 + Math.random() * 0.22;
-      const sp = 1.1 + Math.random() * 2.5;
+    for (let i = 0; i < 36; i++) {
+      const a = (Math.PI * 2 * i) / 36 + Math.random() * 0.2;
+      const sp = 1.4 + Math.random() * 3.2;
       sparks.push({
         x,
         y,
         vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp * 0.86 - 0.35,
+        vy: Math.sin(a) * sp * 0.86 - 0.4,
         life: 0,
-        max: 24 + Math.random() * 20,
-        r: 1.05 + Math.random() * 1.45,
+        max: 28 + Math.random() * 22,
+        r: 1.4 + Math.random() * 1.8,
         c: i % 5 === 0 ? "#fff6d0" : c,
       });
     }
   };
   const launch = () => {
     rockets.push({
-      x: 16 + Math.random() * Math.max(12, w * 0.52),
-      y: h - 2,
-      vx: 0.12 + Math.random() * 0.5,
-      vy: -(2.45 + Math.random() * 1.15),
+      x: 22 + Math.random() * Math.max(16, w * 0.62),
+      y: h - 4,
+      vx: 0.1 + Math.random() * 0.55,
+      vy: -(3.1 + Math.random() * 1.4),
       c: pal[(Math.random() * pal.length) | 0],
     });
   };
-  const t0 = performance.now();
+  const t0 = Date.now();
   let nextLaunch = 0;
-  const tick = (now) => {
+  const tick = () => {
     if (finish.done) return;
-    const t = now - t0;
-    if (t >= ms) {
-      finish();
-      return;
-    }
+    const t = Date.now() - t0;
     ctx.clearRect(0, 0, w, h);
-    if (t >= nextLaunch && t < ms - 620) {
+    if (t >= nextLaunch && t < ms - 500) {
       launch();
-      nextLaunch = t + 460 + Math.random() * 180;
+      nextLaunch = t + 380 + Math.random() * 160;
     }
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i];
       r.x += r.vx;
       r.y += r.vy;
-      r.vy += 0.03;
+      r.vy += 0.032;
       ctx.globalAlpha = 0.95;
       ctx.fillStyle = r.c;
       ctx.beginPath();
-      ctx.arc(r.x, r.y, 1.65, 0, Math.PI * 2);
+      ctx.arc(r.x, r.y, 2.1, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#fff6d0";
       ctx.beginPath();
-      ctx.arc(r.x, r.y + 2.6, 1.05, 0, Math.PI * 2);
+      ctx.arc(r.x, r.y + 3.2, 1.3, 0, Math.PI * 2);
       ctx.fill();
-      if (r.vy >= -0.12 || r.y < h * 0.2) {
+      if (r.vy >= -0.12 || r.y < h * 0.22) {
         burst(r.x, r.y, r.c);
         rockets.splice(i, 1);
       }
@@ -1269,7 +1261,7 @@ function boomBless(canvas, ms, done) {
       p.life += 1;
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.045;
+      p.vy += 0.048;
       p.vx *= 0.985;
       const a = 1 - p.life / p.max;
       if (a <= 0) {
@@ -1301,9 +1293,10 @@ function startBless(cfg) {
   const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   if (still) root.classList.add("is-still");
   if (fw) fw.hidden = true;
-  const row = 1.62;
+  const row = 1.7;
   const pad = 2;
-  const items = ["", ""].concat(lines, ["", ""]);
+  const gap = "\u00a0";
+  const items = [gap, gap].concat(lines, [gap, gap]);
   track.innerHTML = items
     .map((t) => `<p class="bless-line">${escAttr(t)}</p>`)
     .join("");
@@ -1348,9 +1341,7 @@ function startBless(cfg) {
     lane.hidden = true;
     cur = 0;
     paint(0, false);
-    const after = () => step();
-    if (still) setTimeout(after, 3000);
-    else boomBless(fw, 3000, after);
+    boomBless(fw, 3000, () => step());
   };
   paint(0, false);
   for (let k = 0; k < nodes.length; k++) nodes[k].className = "bless-line";
