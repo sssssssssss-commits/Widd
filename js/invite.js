@@ -1222,44 +1222,51 @@ function boomBless(canvas, ms, done) {
   canvas.width = Math.max(1, Math.floor(cssW * dpr));
   canvas.height = Math.max(1, Math.floor(cssH * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const pal = ["#E8C85A", "#F4DC8A", "#C23B32", "#F7E7C6", "#FF6B4A"];
+  const pal = ["#E8C85A", "#F4DC8A", "#C23B32", "#F7E7C6", "#FF6B4A", "#FFD36A", "#E4C36A"];
   const sparks = [];
   const rockets = [];
   const burst = (x, y, c) => {
-    for (let i = 0; i < 42; i++) {
-      const a = (Math.PI * 2 * i) / 42 + Math.random() * 0.2;
-      const sp = 1.4 + Math.random() * 3.2;
+    const n = 72 + ((Math.random() * 22) | 0);
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.28;
+      const sp = 1.15 + Math.random() * 4.2;
       sparks.push({
         x,
         y,
         vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp * 0.86 - 0.55,
+        vy: Math.sin(a) * sp * 0.88 - 0.75,
         life: 0,
-        max: 28 + Math.random() * 22,
-        r: 1.6 + Math.random() * 2.1,
-        c: i % 4 === 0 ? "#fff6d0" : c,
+        max: 32 + Math.random() * 28,
+        r: 1.4 + Math.random() * 2.6,
+        c: i % 5 === 0 ? "#fff6d0" : c,
       });
     }
   };
-  const launch = () => {
-    rockets.push({
-      x: 22 + Math.random() * Math.max(16, cssW * 0.62),
-      y: cssH - 4,
-      vx: (Math.random() - 0.35) * 0.9,
-      vy: -(3.1 + Math.random() * 1.4),
-      c: pal[(Math.random() * pal.length) | 0],
-    });
+  const launch = (n) => {
+    const count = n || 1;
+    for (let i = 0; i < count; i++) {
+      rockets.push({
+        x: 10 + Math.random() * Math.max(24, cssW - 20),
+        y: cssH - 2,
+        vx: (Math.random() - 0.5) * 1.55,
+        vy: -(2.6 + Math.random() * 2.4),
+        c: pal[(Math.random() * pal.length) | 0],
+      });
+    }
   };
   let t0 = 0;
   let nextLaunch = 0;
   const tick = (now) => {
     if (finish.done) return;
-    if (!t0) t0 = now;
+    if (!t0) {
+      t0 = now;
+      launch(4);
+    }
     const t = now - t0;
     ctx.clearRect(0, 0, cssW, cssH);
-    if (t >= nextLaunch && t < ms - 480) {
-      launch();
-      nextLaunch = t + 380 + Math.random() * 160;
+    if (t >= nextLaunch && t < ms - 320) {
+      launch(3 + (Math.random() < 0.65 ? 1 : 0));
+      nextLaunch = t + 70 + Math.random() * 80;
     }
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i];
@@ -1313,6 +1320,7 @@ function startBless(cfg) {
   if (!lines.length || !root || !lane) return;
   blessOn = true;
   root.hidden = false;
+  root.removeAttribute("aria-hidden");
   const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   if (still) root.classList.add("is-still");
   if (fw) fw.hidden = true;
@@ -1400,6 +1408,7 @@ function bindBgm() {
     tog.classList.toggle("is-off", !on);
     tog.setAttribute("aria-pressed", on ? "true" : "false");
     tog.setAttribute("aria-label", on ? "关闭音乐" : "打开音乐");
+    tog.classList.toggle("is-play", on && !audio.paused);
   };
   const play = () => {
     if (!on) {
@@ -1411,6 +1420,9 @@ function bindBgm() {
   };
   bgmPlay = play;
   paint();
+  audio.addEventListener("play", paint);
+  audio.addEventListener("playing", paint);
+  audio.addEventListener("pause", paint);
   tog.addEventListener("click", (e) => {
     e.stopPropagation();
     on = !on;

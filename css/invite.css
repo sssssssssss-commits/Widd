@@ -81,6 +81,32 @@ body::before {
   appearance: none;
 }
 
+.bgm-tog svg {
+  display: block;
+  transform-origin: 50% 50%;
+  -webkit-transform-origin: 50% 50%;
+}
+
+.bgm-tog.is-play svg {
+  -webkit-animation: bgm-spin 2.8s linear infinite;
+  animation: bgm-spin 2.8s linear infinite;
+}
+
+@-webkit-keyframes bgm-spin {
+  to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+
+@keyframes bgm-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgm-tog.is-play svg {
+    -webkit-animation: none;
+    animation: none;
+  }
+}
+
 .bgm-tog.is-off {
   color: #E4C36A66;
 }
@@ -304,6 +330,14 @@ body.is-signing .bgm-tog {
 
 .letter-inner > * + * { margin-top: 2.1rem; }
 
+.letter-inner > .bless:not([hidden]) {
+  margin-top: 1.15rem;
+}
+
+.letter-inner > .bless:not([hidden]) + * {
+  margin-top: 1.2rem;
+}
+
 .address {
   margin: 0;
   text-align: center;
@@ -363,7 +397,7 @@ body.is-signing .bgm-tog {
 }
 
 .when-text {
-  margin: 0 0 1.2rem;
+  margin: 0 0 1rem;
   text-align: center;
   letter-spacing: .06em;
   font-size: .78rem;
@@ -894,12 +928,11 @@ body.is-signing .bgm-tog {
 }
 
 .bless {
-  position: fixed;
-  left: max(.35rem, env(safe-area-inset-left, 0px));
-  bottom: max(.4rem, env(safe-area-inset-bottom, 0px));
-  z-index: 14;
-  width: min(86vw, 24rem);
-  height: 8.1em;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 10.6em;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -913,10 +946,13 @@ body.is-signing .bless {
 
 .bless-fw {
   position: absolute;
-  inset: 0;
+  left: -6%;
+  right: -6%;
+  top: -22%;
+  bottom: -12%;
   z-index: 1;
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
   display: block;
 }
 
@@ -928,10 +964,13 @@ body.is-signing .bless {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
+  top: 50%;
   z-index: 2;
   height: 8.1em;
   overflow: hidden;
+  text-align: center;
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
 }
 
 .bless-lane[hidden] {
@@ -944,40 +983,29 @@ body.is-signing .bless {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  text-align: center;
   font-family: "STLiti", "LiSu", "STFangsong", "SimLi", "华文隶书", "隶书", serif;
-  font-size: .82rem;
+  font-size: .86rem;
   line-height: 1.62em;
   letter-spacing: .06em;
-  color: #E8C85A;
-  opacity: .12;
-  text-shadow:
-    0 0 1px #3A1810,
-    1px 0 0 #3A1810,
-    -1px 0 0 #3A1810,
-    0 1px 0 #3A1810,
-    0 -1px 0 #3A1810;
+  color: var(--gold);
+  opacity: .2;
   -webkit-transition: opacity .7s ease;
   transition: opacity .7s ease;
 }
 
 .bless-line.is-edge {
-  opacity: .3;
+  opacity: .42;
 }
 
 .bless-line.is-near {
-  opacity: .55;
+  opacity: .72;
 }
 
 .bless-line.is-now {
   opacity: 1;
-  color: #F4DC8A;
-  text-shadow:
-    0 0 10px #E8C85A66,
-    0 0 1px #3A1810,
-    1px 0 0 #3A1810,
-    -1px 0 0 #3A1810,
-    0 1px 0 #3A1810,
-    0 -1px 0 #3A1810;
+  color: var(--cinnabar);
+  text-shadow: 0 0 10px #E4C36A55;
 }
 
 .bless.is-still .bless-line {
