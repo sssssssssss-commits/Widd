@@ -589,7 +589,17 @@ body::before {
   aspect-ratio: 738 / 1005;
   margin: 0 0 .6rem;
   overflow: hidden;
-  background: url("../assets/wall-blur.jpg?v=1") center / contain no-repeat #F6F1E6;
+  background: #F6F1E6;
+}
+
+.wall-yard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: url("../assets/wall.jpg?v=1") center / contain no-repeat;
+  opacity: .7;
 }
 
 .wall-frame {
@@ -597,51 +607,11 @@ body::before {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: url("../assets/wall-cloud.svg") center / 100% 100% no-repeat;
-}
-
-.wall-frame::before {
-  content: "";
-  position: absolute;
-  inset: 3.2%;
-  border: 1.2px solid rgba(201, 162, 74, 0.95);
-  box-shadow:
-    0 0 0 3px rgba(142, 106, 36, 0.22),
-    inset 0 0 0 1px rgba(232, 197, 106, 0.7);
-  pointer-events: none;
-}
-
-.wall-yun {
-  position: absolute;
-  width: 40%;
-  aspect-ratio: 502 / 263;
-  background: url("../assets/xiangyun.png") center / contain no-repeat;
-}
-
-.wall-yun-tl { top: .4%; left: -1.5%; }
-.wall-yun-tr {
-  top: .4%;
-  right: -1.5%;
-  -webkit-transform: scaleX(-1);
-  transform: scaleX(-1);
-}
-.wall-yun-bl {
-  bottom: .4%;
-  left: -1.5%;
-  -webkit-transform: scaleY(-1);
-  transform: scaleY(-1);
-}
-.wall-yun-br {
-  bottom: .4%;
-  right: -1.5%;
-  -webkit-transform: scale(-1);
-  transform: scale(-1);
 }
 
 .wall-board {
   position: absolute;
   inset: 7.5%;
-  z-index: 3;
   overflow: hidden;
   pointer-events: auto;
 }

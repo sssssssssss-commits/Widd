@@ -516,35 +516,6 @@ function drawKeepContained(ctx, im, dx, dy, dw, dh) {
   ctx.drawImage(im, x, y, w, h);
 }
 
-async function drawWallOrnament(ctx, W, H) {
-  const rim = await loadKeepImg("assets/wall-cloud.svg");
-  if (rim) ctx.drawImage(rim, 0, 0, W, H);
-  const m = W * 0.032;
-  ctx.save();
-  ctx.strokeStyle = "rgba(201,162,74,0.95)";
-  ctx.lineWidth = Math.max(1.2, W * 0.003);
-  ctx.strokeRect(m, m, W - 2 * m, H - 2 * m);
-  ctx.strokeStyle = "rgba(232,197,106,0.7)";
-  ctx.lineWidth = Math.max(1, W * 0.002);
-  ctx.strokeRect(m + 4, m + 4, W - 2 * m - 8, H - 2 * m - 8);
-  ctx.restore();
-  const yun = await loadKeepImg("assets/xiangyun.png");
-  if (!yun) return;
-  const yw = W * 0.4;
-  const yh = yw * ((yun.height || 1) / (yun.width || 1));
-  const put = (x, y, sx, sy) => {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(sx, sy);
-    ctx.drawImage(yun, 0, 0, yw, yh);
-    ctx.restore();
-  };
-  put(W * -0.015, H * 0.004, 1, 1);
-  put(W * 1.015, H * 0.004, -1, 1);
-  put(W * -0.015, H * 0.996, 1, -1);
-  put(W * 1.015, H * 0.996, -1, -1);
-}
-
 async function snapshotWall(items) {
   const yard = document.querySelector(".wall-yard");
   const cssW = (yard && yard.clientWidth) || 360;
@@ -556,7 +527,7 @@ async function snapshotWall(items) {
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#F6F1E6";
   ctx.fillRect(0, 0, W, H);
-  const paper = await loadKeepImg("assets/wall-blur.jpg?v=1");
+  const paper = await loadKeepImg("assets/wall.jpg?v=1");
   if (paper) {
     const ir = (paper.width || 1) / (paper.height || 1);
     const br = W / H;
@@ -571,9 +542,11 @@ async function snapshotWall(items) {
       dw = H * ir;
       dx = (W - dw) / 2;
     }
+    ctx.save();
+    ctx.globalAlpha = 0.7;
     ctx.drawImage(paper, dx, dy, dw, dh);
+    ctx.restore();
   }
-  await drawWallOrnament(ctx, W, H);
   const bx = W * 0.075;
   const by = H * 0.075;
   const bw = W * 0.85;
@@ -904,13 +877,9 @@ function renderWall(cfg, guest) {
   wall.innerHTML = `<div class="wall-box">
       <h2>签名墙</h2>
       <div class="wall-yard">
-        <div class="wall-frame" aria-hidden="true">
-          <span class="wall-yun wall-yun-tl"></span>
-          <span class="wall-yun wall-yun-tr"></span>
-          <span class="wall-yun wall-yun-bl"></span>
-          <span class="wall-yun wall-yun-br"></span>
+        <div class="wall-frame">
+          <div class="wall-board" id="wallBoard"></div>
         </div>
-        <div class="wall-board" id="wallBoard"></div>
       </div>
       <div class="wall-actions">
         <button type="button" id="wallOpen">签字</button>
