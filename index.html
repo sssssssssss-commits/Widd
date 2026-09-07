@@ -24,11 +24,17 @@
   <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/sssssssssss-commits/Widd@main/assets/share.jpg">
   <link rel="icon" href="https://cdn.jsdelivr.net/gh/sssssssssss-commits/Widd@main/assets/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/sssssssssss-commits/Widd@main/assets/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=37">
+  <link rel="stylesheet" href="css/invite.css?v=38">
 </head>
 <body>
   <img class="share-thumb" src="https://cdn.jsdelivr.net/gh/sssssssssss-commits/Widd@main/assets/share.jpg" width="500" height="500" alt="李某 与 王某 婚礼请柬">
   <canvas id="foil" class="foil" aria-hidden="true"></canvas>
+  <audio id="bgm" src="assets/bgm.mp3?v=1" loop preload="auto" playsinline webkit-playsinline></audio>
+  <button type="button" class="bgm-tog" id="bgmTog" aria-label="关闭音乐" aria-pressed="true">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+      <path fill="currentColor" d="M10 4v11.2A3.4 3.4 0 1 0 12 18V8h7V4h-9z"/>
+    </svg>
+  </button>
   <div class="bless" id="bless" hidden aria-hidden="true">
     <canvas class="bless-fw" id="blessFw"></canvas>
     <div class="bless-lane" id="blessLane"></div>
@@ -89,6 +95,6 @@
     </article>
   </main>
 
-  <script src="js/invite.js?v=42"></script>
+  <script src="js/invite.js?v=43"></script>
 </body>
 </html>

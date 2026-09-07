@@ -131,7 +131,6 @@ export function wallSpreadSlot(i, n) {
   const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
   const gap = 1.6;
   const cap = 50;
-  // ponytail: 0.82 leaves AABB room for ±10° tilt; bump slack if overlap returns
   const slack = 0.82;
   let best = null;
   for (let cols = 1; cols <= count; cols++) {
@@ -143,13 +142,37 @@ export function wallSpreadSlot(i, n) {
     if (!best || size > best.size) best = { cols, rows, cellW, cellH, size, gap };
   }
   const size = Math.min(cap, best.size);
-  const row = Math.floor(idx / best.cols);
-  const col = idx % best.cols;
-  const nThisRow = row === best.rows - 1 ? count - row * best.cols : best.cols;
-  const rowShift = ((best.cols - nThisRow) * (best.cellW + gap)) / 2;
-  const left = gap + rowShift + col * (best.cellW + gap) + (best.cellW - size) / 2;
-  const top = gap + row * (best.cellH + gap) + (best.cellH - size) / 2;
-  return { left, top, w: size, h: size };
+  const cells = [];
+  for (let k = 0; k < count; k++) {
+    const row = Math.floor(k / best.cols);
+    const col = k % best.cols;
+    const nThisRow = row === best.rows - 1 ? count - row * best.cols : best.cols;
+    const rowShift = ((best.cols - nThisRow) * (best.cellW + gap)) / 2;
+    const left = gap + rowShift + col * (best.cellW + gap) + (best.cellW - size) / 2;
+    const top = gap + row * (best.cellH + gap) + (best.cellH - size) / 2;
+    const cx = left + size / 2;
+    const cy = top + size / 2;
+    cells.push({
+      left: Math.max(0, Math.min(100 - size, left)),
+      top: Math.max(0, Math.min(100 - size, top)),
+      d: (cx - 50) * (cx - 50) + (cy - 50) * (cy - 50),
+      ang: Math.atan2(cy - 50, cx - 50),
+    });
+  }
+  cells.sort((a, b) => a.d - b.d || a.ang - b.ang);
+  const cell = cells[idx];
+  const h = wallHash(String(idx) + ":" + count);
+  const jig = count <= 1 ? 0 : 1;
+  const roomX = Math.max(0, (best.cellW - size) * 0.12);
+  const roomY = Math.max(0, (best.cellH - size) * 0.12);
+  const jx = jig * ((h % 1000) / 1000 - 0.5) * 2 * roomX;
+  const jy = jig * ((((h / 1000) | 0) % 1000) / 1000 - 0.5) * 2 * roomY;
+  return {
+    left: Math.max(0, Math.min(100 - size, cell.left + jx)),
+    top: Math.max(0, Math.min(100 - size, cell.top + jy)),
+    w: size,
+    h: size,
+  };
 }
 
 export function wallBoxesOverlap(a, b, pad = 0.5) {

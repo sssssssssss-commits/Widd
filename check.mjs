@@ -102,6 +102,16 @@ assert.ok(first.w * first.h >= 2300);
 assert.ok(wallSpreadSlot(0, 4).w < first.w);
 assert.ok(wallSpreadSlot(0, 9).w < wallSpreadSlot(0, 4).w);
 assert.ok(wallSpreadSlot(0, 16).w < wallSpreadSlot(0, 9).w);
+{
+  const near = wallSpreadSlot(0, 9);
+  const far = wallSpreadSlot(8, 9);
+  const dist = (s) => {
+    const x = s.left + s.w / 2 - 50;
+    const y = s.top + s.h / 2 - 50;
+    return x * x + y * y;
+  };
+  assert.ok(dist(near) < dist(far));
+}
 
 function rotBox(s, deg) {
   const r = (deg * Math.PI) / 180;

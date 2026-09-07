@@ -62,6 +62,45 @@ body::before {
   z-index: 12;
 }
 
+.bgm-tog {
+  position: fixed;
+  top: calc(.42rem + var(--safe-top));
+  right: max(.42rem, env(safe-area-inset-right, 0px));
+  z-index: 22;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border: 1px solid #E4C36A99;
+  border-radius: 50%;
+  background: #4a1820cc;
+  color: #F4DC8A;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.bgm-tog.is-off {
+  color: #E4C36A66;
+}
+
+.bgm-tog.is-off::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.35rem;
+  height: 1.5px;
+  margin: -.75px 0 0 -.67rem;
+  background: #F4DC8A;
+  transform: rotate(-32deg);
+}
+
+body.is-signing .bgm-tog {
+  visibility: hidden;
+}
+
 /* —— 拆信 —— */
 .gate {
   position: fixed;
