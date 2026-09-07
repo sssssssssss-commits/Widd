@@ -343,9 +343,26 @@ function wallBy() {
   }
 }
 
+async function fetchTimed(url, opts, ms) {
+  const wait = Number(ms) || 4000;
+  const ac = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = ac ? setTimeout(() => ac.abort(), wait) : null;
+  try {
+    if (!ac) {
+      return await Promise.race([
+        fetch(url, opts || {}),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), wait)),
+      ]);
+    }
+    return await fetch(url, Object.assign({}, opts || {}, { signal: ac.signal }));
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function fetchWallEpoch(getUrl) {
   try {
-    const res = await fetch(getUrl || WALL_EPOCH_GET, { cache: "no-store" });
+    const res = await fetchTimed(getUrl || WALL_EPOCH_GET, { cache: "no-store" });
     if (res.status === 404) return 0;
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -356,7 +373,7 @@ async function fetchWallEpoch(getUrl) {
 }
 
 async function bumpWallEpoch(getUrl) {
-  const res = await fetch(wallHitUrl(getUrl || WALL_EPOCH_GET), { cache: "no-store" });
+  const res = await fetchTimed(wallHitUrl(getUrl || WALL_EPOCH_GET), { cache: "no-store" });
   if (!res.ok) throw new Error();
   const data = await res.json();
   return Number(data.value) || 0;
@@ -506,7 +523,7 @@ async function loadWallItems(url) {
   const local = readLocalWall();
   if (!url) return local;
   try {
-    const res = await fetch(url, { cache: "no-cache" });
+    const res = await fetchTimed(url, { cache: "no-cache" });
     if (!res.ok) throw new Error();
     const data = await res.json();
     return Array.isArray(data.items) ? data.items : [];
@@ -536,24 +553,22 @@ function paintGoldInk(ctx, pts, w, h) {
   }
 }
 
-function fitWallPad(canvas, state) {
+function fitWallPad(canvas, state, wipe) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const w = canvas.clientWidth || 280;
   const h = canvas.clientHeight || Math.max(160, Math.round(w * 0.42));
-  if (state) {
-    state.pts = [];
-    state.dirty = false;
-  }
+  const pts = !wipe && state && state.pts ? state.pts.slice() : [];
+  const dirty = !wipe && state && state.dirty;
   if (w < 8 || h < 8) return canvas.getContext("2d");
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, w, h);
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.strokeStyle = GOLD_INK;
-  ctx.fillStyle = GOLD_INK;
+  if (state) {
+    state.pts = pts;
+    state.dirty = !!dirty;
+  }
+  paintGoldInk(ctx, pts, w, h);
   return ctx;
 }
 
@@ -561,12 +576,6 @@ function padPoint(canvas, e) {
   const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
   const r = canvas.getBoundingClientRect();
   if (r.width < 2 || r.height < 2) return { x: 0, y: 0 };
-  if (innerHeight > innerWidth + 8) {
-    return {
-      x: (t.clientY - r.top) * (canvas.clientWidth / r.height),
-      y: (r.right - t.clientX) * (canvas.clientHeight / r.width),
-    };
-  }
   return {
     x: (t.clientX - r.left) * (canvas.clientWidth / r.width),
     y: (t.clientY - r.top) * (canvas.clientHeight / r.height),
@@ -597,7 +606,7 @@ function bindWallPad(canvas, ctx, state) {
   });
   const paint = () => {
     const box = cssBox();
-    paintGoldInk(ctx, state.pts, box.w, box.h);
+    paintGoldInk(canvas.getContext("2d"), state.pts, box.w, box.h);
   };
   const widthOf = (e, p) => {
     const h = canvas.clientHeight || 280;
@@ -696,7 +705,7 @@ function exportWallPad(canvas) {
 async function postWall(url, body) {
   if (!url) return false;
   try {
-    const res = await fetch(url, {
+    const res = await fetchTimed(url, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
@@ -797,12 +806,23 @@ function renderWall(cfg, guest) {
       const ori = screen.orientation;
       if (ori && ori.lock) ori.lock("landscape").catch(() => {});
     } catch {}
+    const boot = (wipe) => {
+      ctx = fitWallPad(canvas, pad, wipe);
+    };
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        ctx = fitWallPad(canvas, pad);
-      });
+      requestAnimationFrame(() => boot(true));
     });
+    setTimeout(() => boot(!pad.dirty), 160);
   };
+
+  const refitPad = () => {
+    if (sheet.hidden) return;
+    ctx = fitWallPad(canvas, pad, false);
+  };
+  addEventListener("resize", refitPad, { passive: true });
+  try {
+    if (window.visualViewport) visualViewport.addEventListener("resize", refitPad, { passive: true });
+  } catch {}
 
   const refresh = async (flyId) => {
     const epoch = await fetchWallEpoch(epochUrl);
@@ -812,9 +832,8 @@ function renderWall(cfg, guest) {
     return items;
   };
 
-  $("wallOpen").addEventListener("click", async () => {
-    const items = await refresh();
-    if (wallMineCount(items, by) >= 3) {
+  $("wallOpen").addEventListener("click", () => {
+    if (wallMineCount(readLocalWall(), by) >= 3) {
       $("wallHint").textContent = "每人最多留下三幅";
       return;
     }
@@ -822,7 +841,7 @@ function renderWall(cfg, guest) {
   });
   $("wallCancel").addEventListener("click", closeSheet);
   $("wallClear").addEventListener("click", () => {
-    ctx = fitWallPad(canvas, pad);
+    ctx = fitWallPad(canvas, pad, true);
     $("wallSheetHint").textContent = "";
   });
 
@@ -897,8 +916,7 @@ function renderWall(cfg, guest) {
       return;
     }
     const epoch = await fetchWallEpoch(epochUrl);
-    const existing = wallAfterWipe(await loadWallItems(url), epoch);
-    if (wallMineCount(existing, by) >= 3) {
+    if (wallMineCount(readLocalWall(), by) >= 3) {
       sheetHint.textContent = "每人最多留下三幅";
       return;
     }
@@ -914,11 +932,11 @@ function renderWall(cfg, guest) {
     let shared = false;
     if (url) {
       try {
-        const res = await fetch(url, {
+        const res = await fetchTimed(url, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ kind: "wall", name, img, by, epoch }),
-        });
+        }, 8000);
         if (res.status === 409) {
           sheetHint.textContent = "每人最多留下三幅";
           btn.disabled = false;
@@ -1204,6 +1222,9 @@ function bindTapXi() {
   document.addEventListener(
     "touchstart",
     (e) => {
+      if (document.body.classList.contains("is-signing")) return;
+      const el = e.target;
+      if (el && el.closest && el.closest("button, a, input, textarea, canvas")) return;
       touchAt = Date.now();
       fromEvent(e);
     },

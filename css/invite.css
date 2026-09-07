@@ -675,7 +675,8 @@ body::before {
 
 .wall-sheet {
   position: fixed;
-  z-index: 30;
+  inset: 0;
+  z-index: 40;
   display: flex;
   background: #4a1820;
   overscroll-behavior: none;
@@ -685,43 +686,21 @@ body::before {
   display: none !important;
 }
 
-@media (orientation: landscape) {
-  .wall-sheet {
-    inset: 0;
-    width: auto;
-    height: auto;
-    transform: none;
-    left: 0;
-    top: 0;
-  }
-}
-
-@media (orientation: portrait) {
-  .wall-sheet {
-    width: 100vh;
-    height: 100vw;
-    top: 0;
-    left: 100%;
-    transform: rotate(90deg);
-    -webkit-transform: rotate(90deg);
-    transform-origin: 0 0;
-    -webkit-transform-origin: 0 0;
-  }
-}
-
 .wall-sheet-stage {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: 100%;
   height: 100%;
   min-height: 0;
+  padding: max(.35rem, env(safe-area-inset-top, 0px)) max(.35rem, env(safe-area-inset-right, 0px)) 0 max(.35rem, env(safe-area-inset-left, 0px));
 }
 
 .wall-sheet-pad {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  padding: .55rem;
+  height: 0;
+  padding: .35rem;
 }
 
 .wall-sheet canvas {
@@ -737,16 +716,36 @@ body::before {
 
 .wall-sheet-side {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: .55rem;
-  width: 5.4rem;
-  flex: 0 0 5.4rem;
-  padding: .7rem .55rem;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-around;
+  gap: .4rem;
+  width: 100%;
+  flex: 0 0 auto;
+  padding: .45rem .4rem max(.55rem, env(safe-area-inset-bottom, 0px));
+}
+
+@media (orientation: landscape) {
+  .wall-sheet-stage {
+    flex-direction: row;
+  }
+  .wall-sheet-pad {
+    height: auto;
+    width: 0;
+  }
+  .wall-sheet-side {
+    flex-direction: column;
+    justify-content: center;
+    width: 5.4rem;
+    flex: 0 0 5.4rem;
+    padding: .7rem .55rem;
+  }
 }
 
 .wall-sheet-title {
   margin: 0;
+  width: 100%;
   text-align: center;
   color: #E8C85A;
   letter-spacing: .35em;
@@ -756,6 +755,7 @@ body::before {
 
 .wall-sheet-hint {
   min-height: 1.1em;
+  width: 100%;
   margin: 0;
   text-align: center;
   color: #E8C85A;
@@ -765,12 +765,22 @@ body::before {
 
 .wall-sheet-side button {
   margin: 0;
+  flex: 1;
   background: transparent;
   color: #E8C85A;
   border: 1px solid #c9a24a;
-  padding: .7rem .2rem;
+  padding: .85rem .2rem;
   font: inherit;
   letter-spacing: .22em;
+  touch-action: manipulation;
+}
+
+@media (orientation: landscape) {
+  .wall-sheet-side button {
+    flex: 0 0 auto;
+    width: 100%;
+    padding: .7rem .2rem;
+  }
 }
 
 .wall-actions {
