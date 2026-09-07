@@ -127,9 +127,28 @@ async function wipeWall(env, body, host) {
   return json({ ok: true });
 }
 
+async function shareJpg(request) {
+  const src = await fetch("https://sssssssssss-commits.github.io/Widd/assets/share.jpg");
+  if (!src.ok) return json({ ok: false }, 502);
+  const headers = {
+    "content-type": "image/jpeg",
+    "cache-control": "public, max-age=604800",
+    "access-control-allow-origin": "*",
+  };
+  if (request.method === "HEAD") return new Response(null, { status: 200, headers });
+  return new Response(src.body, { status: 200, headers });
+}
+
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS });
+    if (
+      (request.method === "GET" || request.method === "HEAD") &&
+      (url.pathname === "/share.jpg" || url.pathname === "/share.jpg/")
+    ) {
+      return shareJpg(request);
+    }
     if (request.method === "GET") return json({ ok: true, items: await listWall(env) });
     if (request.method !== "POST") return json({ ok: false }, 405);
 
