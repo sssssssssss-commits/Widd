@@ -23,6 +23,9 @@
     "endpoint": "",
     "surveyUrl": ""
   },
+  "wall": {
+    "endpoint": "https://widd-rsvp.momentous-rowboat.workers.dev"
+  },
   "signatureWall": true,
   "wallHost": "xi8k2m",
   "share": {

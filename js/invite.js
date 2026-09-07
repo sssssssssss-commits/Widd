@@ -163,7 +163,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=11", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=12", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -509,12 +509,7 @@ async function loadWallItems(url) {
     const res = await fetch(url, { cache: "no-cache" });
     if (!res.ok) throw new Error();
     const data = await res.json();
-    const remote = Array.isArray(data.items) ? data.items : [];
-    const byId = new Map();
-    for (const row of remote.concat(local)) {
-      if (row && row.id) byId.set(row.id, row);
-    }
-    return [...byId.values()];
+    return Array.isArray(data.items) ? data.items : [];
   } catch {
     return local;
   }
@@ -951,7 +946,7 @@ function renderWall(cfg, guest) {
     const flyId = (items.find((row) => row.img === img) || item).id;
     paintWallBoard(items, flyId);
     pad.dirty = false;
-    hint.textContent = "已上墙";
+    hint.textContent = shared ? "已上墙" : url ? "已留在本机，未能同步到网上" : "已上墙";
     btn.disabled = false;
     closeSheet();
   });
