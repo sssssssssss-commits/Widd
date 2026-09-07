@@ -81,30 +81,16 @@ body::before {
   appearance: none;
 }
 
-.bgm-tog svg {
+.bgm-disc {
   display: block;
-  transform-origin: 50% 50%;
+  width: 20px;
+  height: 20px;
   -webkit-transform-origin: 50% 50%;
+  transform-origin: 50% 50%;
 }
 
-.bgm-tog.is-play svg {
-  -webkit-animation: bgm-spin 2.8s linear infinite;
-  animation: bgm-spin 2.8s linear infinite;
-}
-
-@-webkit-keyframes bgm-spin {
-  to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
-}
-
-@keyframes bgm-spin {
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bgm-tog.is-play svg {
-    -webkit-animation: none;
-    animation: none;
-  }
+.bgm-disc svg {
+  display: block;
 }
 
 .bgm-tog.is-off {
@@ -931,7 +917,7 @@ body.is-signing .bgm-tog {
   position: relative;
   z-index: 2;
   width: 100%;
-  height: 10.6em;
+  height: 11.4em;
   overflow: visible;
   pointer-events: none;
 }
@@ -966,7 +952,7 @@ body.is-signing .bless {
   right: 0;
   top: 50%;
   z-index: 2;
-  height: 8.1em;
+  height: 8.7em;
   overflow: hidden;
   text-align: center;
   -webkit-transform: translateY(-50%);
@@ -978,18 +964,20 @@ body.is-signing .bless {
 }
 
 .bless-line {
-  height: 1.62em;
+  height: 1.72em;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
-  font-family: "STLiti", "LiSu", "STFangsong", "SimLi", "华文隶书", "隶书", serif;
-  font-size: .86rem;
-  line-height: 1.62em;
-  letter-spacing: .06em;
+  font-family: "STXingkai", "华文行楷", "Xingkai SC", "STKaiti", "Kaiti SC", "KaiTi", "KaiTi_GB2312", "华文楷体", "楷体", "FZKai-Z03", serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.72em;
+  letter-spacing: .05em;
   color: var(--gold);
   opacity: .2;
+  -webkit-text-stroke: 0.018em currentColor;
   -webkit-transition: opacity .7s ease;
   transition: opacity .7s ease;
 }

@@ -1222,88 +1222,64 @@ function boomBless(canvas, ms, done) {
   canvas.width = Math.max(1, Math.floor(cssW * dpr));
   canvas.height = Math.max(1, Math.floor(cssH * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const pal = ["#E8C85A", "#F4DC8A", "#C23B32", "#F7E7C6", "#FF6B4A", "#FFD36A", "#E4C36A"];
-  const sparks = [];
-  const rockets = [];
-  const burst = (x, y, c) => {
-    const n = 72 + ((Math.random() * 22) | 0);
-    for (let i = 0; i < n; i++) {
-      const a = (Math.PI * 2 * i) / n + Math.random() * 0.28;
-      const sp = 1.15 + Math.random() * 4.2;
-      sparks.push({
-        x,
-        y,
-        vx: Math.cos(a) * sp,
-        vy: Math.sin(a) * sp * 0.88 - 0.75,
-        life: 0,
-        max: 32 + Math.random() * 28,
-        r: 1.4 + Math.random() * 2.6,
-        c: i % 5 === 0 ? "#fff6d0" : c,
-      });
-    }
+  const pal = ["#8B241C", "#C23B32", "#8E6A24", "#A33A32", "#6B1810"];
+  const face = '"STXingkai","华文行楷","KaiTi","STKaiti","楷体",serif';
+  const flakes = [];
+  const flake = (y) => ({
+    x: Math.random() * cssW,
+    y: y,
+    vy: 0.38 + Math.random() * 0.7,
+    vx: (Math.random() - 0.5) * 0.35,
+    rot: Math.random() * Math.PI * 2,
+    vr: (Math.random() - 0.5) * 0.035,
+    sz: 11 + Math.random() * 12,
+    a: 0.42 + Math.random() * 0.5,
+    c: pal[(Math.random() * pal.length) | 0],
+    wob: Math.random() * Math.PI * 2,
+    ws: 0.018 + Math.random() * 0.028,
+  });
+  const spawn = (n, y0) => {
+    for (let i = 0; i < n; i++) flakes.push(flake(y0));
   };
-  const launch = (n) => {
-    const count = n || 1;
-    for (let i = 0; i < count; i++) {
-      rockets.push({
-        x: 10 + Math.random() * Math.max(24, cssW - 20),
-        y: cssH - 2,
-        vx: (Math.random() - 0.5) * 1.55,
-        vy: -(2.6 + Math.random() * 2.4),
-        c: pal[(Math.random() * pal.length) | 0],
-      });
-    }
-  };
+  spawn(16, -18);
+  spawn(10, Math.random() * cssH * 0.45);
   let t0 = 0;
-  let nextLaunch = 0;
+  let next = 0;
   const tick = (now) => {
     if (finish.done) return;
-    if (!t0) {
-      t0 = now;
-      launch(4);
-    }
+    if (!t0) t0 = now;
     const t = now - t0;
+    const fade = t > ms - 420 ? Math.max(0, (ms - t) / 420) : 1;
     ctx.clearRect(0, 0, cssW, cssH);
-    if (t >= nextLaunch && t < ms - 320) {
-      launch(3 + (Math.random() < 0.65 ? 1 : 0));
-      nextLaunch = t + 70 + Math.random() * 80;
+    if (t >= next && t < ms - 380) {
+      spawn(2 + (Math.random() < 0.55 ? 1 : 0), -22);
+      next = t + 85 + Math.random() * 70;
     }
-    for (let i = rockets.length - 1; i >= 0; i--) {
-      const r = rockets[i];
-      r.x += r.vx;
-      r.y += r.vy;
-      r.vy += 0.038;
-      ctx.globalAlpha = 0.95;
-      ctx.fillStyle = r.c;
-      ctx.beginPath();
-      ctx.arc(r.x, r.y, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#fff6d0";
-      ctx.beginPath();
-      ctx.arc(r.x, r.y + 3.2, 1.3, 0, Math.PI * 2);
-      ctx.fill();
-      if (r.vy >= -0.08 || r.y < cssH * 0.22) {
-        burst(r.x, r.y, r.c);
-        rockets.splice(i, 1);
-      }
-    }
-    for (let i = sparks.length - 1; i >= 0; i--) {
-      const p = sparks[i];
-      p.life += 1;
-      p.x += p.vx;
+    for (let i = flakes.length - 1; i >= 0; i--) {
+      const p = flakes[i];
+      p.wob += p.ws;
+      p.x += p.vx + Math.sin(p.wob) * 0.32;
       p.y += p.vy;
-      p.vy += 0.05;
-      p.vx *= 0.985;
-      const a = 1 - p.life / p.max;
-      if (a <= 0) {
-        sparks.splice(i, 1);
-        continue;
+      p.rot += p.vr;
+      if (p.y > cssH + 26) {
+        if (t < ms - 400) {
+          p.y = -22;
+          p.x = Math.random() * cssW;
+        } else {
+          flakes.splice(i, 1);
+          continue;
+        }
       }
-      ctx.globalAlpha = a;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = p.a * fade;
       ctx.fillStyle = p.c;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.font = "700 " + p.sz + "px " + face;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("喜", 0, 0);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
     requestAnimationFrame(tick);
@@ -1399,45 +1375,99 @@ function bindBgm() {
   const tog = $("bgmTog");
   if (!audio || !tog) return;
   audio.volume = 0.72;
+  const disc = tog.querySelector(".bgm-disc") || tog;
   const key = "widd-bgm";
   let on = true;
   try {
     on = localStorage.getItem(key) !== "0";
   } catch (err) {}
+  let live = false;
+  let ang = 0;
+  let last = 0;
+  let raf = 0;
+  const spin = (now) => {
+    if (!on || !live) {
+      raf = 0;
+      last = 0;
+      return;
+    }
+    if (!last) last = now;
+    ang = (ang + ((now - last) * 360) / 2800) % 360;
+    last = now;
+    const t = "rotate(" + ang + "deg)";
+    disc.style.webkitTransform = t;
+    disc.style.transform = t;
+    raf = requestAnimationFrame(spin);
+  };
+  const stopSpin = () => {
+    live = false;
+    last = 0;
+    ang = 0;
+    disc.style.webkitTransform = "";
+    disc.style.transform = "";
+  };
+  const goSpin = () => {
+    if (!on) return;
+    const was = live;
+    live = true;
+    if (!raf) raf = requestAnimationFrame(spin);
+    if (!was) paint();
+  };
   const paint = () => {
     tog.classList.toggle("is-off", !on);
+    tog.classList.toggle("is-play", on && live);
     tog.setAttribute("aria-pressed", on ? "true" : "false");
     tog.setAttribute("aria-label", on ? "关闭音乐" : "打开音乐");
-    tog.classList.toggle("is-play", on && !audio.paused);
   };
   const play = () => {
     if (!on) {
       audio.pause();
+      stopSpin();
+      paint();
       return;
     }
     const p = audio.play();
-    if (p && p.catch) p.catch(() => {});
+    if (p && p.then) p.then(goSpin).catch(function () {});
+    else goSpin();
   };
-  bgmPlay = play;
+  const wxPlay = () => {
+    try {
+      if (window.WeixinJSBridge && window.WeixinJSBridge.invoke) {
+        window.WeixinJSBridge.invoke("getNetworkType", {}, play);
+        return;
+      }
+    } catch (err) {}
+    play();
+  };
+  bgmPlay = wxPlay;
   paint();
-  audio.addEventListener("play", paint);
-  audio.addEventListener("playing", paint);
-  audio.addEventListener("pause", paint);
+  audio.addEventListener("playing", goSpin);
+  audio.addEventListener("timeupdate", goSpin);
+  audio.addEventListener("pause", () => {
+    if (!on) {
+      stopSpin();
+      paint();
+    }
+  });
   tog.addEventListener("click", (e) => {
     e.stopPropagation();
     on = !on;
     try {
       localStorage.setItem(key, on ? "1" : "0");
     } catch (err) {}
+    if (on) wxPlay();
+    else {
+      audio.pause();
+      stopSpin();
+    }
     paint();
-    play();
   });
-  document.addEventListener("WeixinJSBridgeReady", play, false);
+  document.addEventListener("WeixinJSBridgeReady", wxPlay, false);
   document.addEventListener(
     "touchstart",
     function once() {
       document.removeEventListener("touchstart", once, false);
-      play();
+      wxPlay();
     },
     false,
   );
