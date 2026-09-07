@@ -1200,106 +1200,17 @@ function blessLines(cfg) {
   return rows.map((s) => String(s || "").trim()).filter(Boolean);
 }
 
-function boomBless(canvas, ms, done) {
-  const finish = () => {
-    if (finish.done) return;
-    finish.done = true;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.hidden = true;
-    }
-    if (typeof done === "function") done();
-  };
-  setTimeout(finish, ms);
-  if (!canvas || typeof requestAnimationFrame !== "function") return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  canvas.hidden = false;
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const cssW = Math.max(canvas.clientWidth || 0, 200);
-  const cssH = Math.max(canvas.clientHeight || 0, 140);
-  canvas.width = Math.max(1, Math.floor(cssW * dpr));
-  canvas.height = Math.max(1, Math.floor(cssH * dpr));
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const pal = ["#8B241C", "#C23B32", "#8E6A24", "#A33A32", "#6B1810"];
-  const face = '"STXingkai","华文行楷","KaiTi","STKaiti","楷体",serif';
-  const flakes = [];
-  const flake = (y) => ({
-    x: Math.random() * cssW,
-    y: y,
-    vy: 0.38 + Math.random() * 0.7,
-    vx: (Math.random() - 0.5) * 0.35,
-    rot: Math.random() * Math.PI * 2,
-    vr: (Math.random() - 0.5) * 0.035,
-    sz: 11 + Math.random() * 12,
-    a: 0.42 + Math.random() * 0.5,
-    c: pal[(Math.random() * pal.length) | 0],
-    wob: Math.random() * Math.PI * 2,
-    ws: 0.018 + Math.random() * 0.028,
-  });
-  const spawn = (n, y0) => {
-    for (let i = 0; i < n; i++) flakes.push(flake(y0));
-  };
-  spawn(16, -18);
-  spawn(10, Math.random() * cssH * 0.45);
-  let t0 = 0;
-  let next = 0;
-  const tick = (now) => {
-    if (finish.done) return;
-    if (!t0) t0 = now;
-    const t = now - t0;
-    const fade = t > ms - 420 ? Math.max(0, (ms - t) / 420) : 1;
-    ctx.clearRect(0, 0, cssW, cssH);
-    if (t >= next && t < ms - 380) {
-      spawn(2 + (Math.random() < 0.55 ? 1 : 0), -22);
-      next = t + 85 + Math.random() * 70;
-    }
-    for (let i = flakes.length - 1; i >= 0; i--) {
-      const p = flakes[i];
-      p.wob += p.ws;
-      p.x += p.vx + Math.sin(p.wob) * 0.32;
-      p.y += p.vy;
-      p.rot += p.vr;
-      if (p.y > cssH + 26) {
-        if (t < ms - 400) {
-          p.y = -22;
-          p.x = Math.random() * cssW;
-        } else {
-          flakes.splice(i, 1);
-          continue;
-        }
-      }
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.globalAlpha = p.a * fade;
-      ctx.fillStyle = p.c;
-      ctx.font = "700 " + p.sz + "px " + face;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("喜", 0, 0);
-      ctx.restore();
-    }
-    ctx.globalAlpha = 1;
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
-
 function startBless(cfg) {
   if (blessOn) return;
   const lines = blessLines(cfg);
   const root = $("bless");
   const lane = $("blessLane");
-  const fw = $("blessFw");
   if (!lines.length || !root || !lane) return;
   blessOn = true;
   root.hidden = false;
   root.removeAttribute("aria-hidden");
   const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   if (still) root.classList.add("is-still");
-  if (fw) fw.hidden = true;
   const kind = ["is-edge", "is-near", "is-now", "is-near", "is-edge"];
   lane.innerHTML = kind
     .map((k) => `<p class="bless-line ${k}">&nbsp;</p>`)
@@ -1318,7 +1229,6 @@ function startBless(cfg) {
     }
   };
   const step = () => {
-    if (fw) fw.hidden = true;
     lane.hidden = false;
     paint(cur);
     clearTimeout(watch);
@@ -1330,9 +1240,6 @@ function startBless(cfg) {
   const rest = () => {
     lock += 1;
     clearTimeout(watch);
-    lane.hidden = true;
-    paint(0);
-    boomBless(fw, 3000, null);
     watch = setTimeout(() => {
       cur = 0;
       step();

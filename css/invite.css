@@ -917,7 +917,7 @@ body.is-signing .bgm-tog {
   position: relative;
   z-index: 2;
   width: 100%;
-  height: 11.4em;
+  height: 10.2em;
   overflow: visible;
   pointer-events: none;
 }
@@ -930,29 +930,13 @@ body.is-signing .bless {
   visibility: hidden;
 }
 
-.bless-fw {
-  position: absolute;
-  left: -6%;
-  right: -6%;
-  top: -22%;
-  bottom: -12%;
-  z-index: 1;
-  width: auto;
-  height: auto;
-  display: block;
-}
-
-.bless-fw[hidden] {
-  display: none !important;
-}
-
 .bless-lane {
   position: absolute;
   left: 0;
   right: 0;
   top: 50%;
   z-index: 2;
-  height: 8.7em;
+  height: 9.1em;
   overflow: hidden;
   text-align: center;
   -webkit-transform: translateY(-50%);
@@ -964,36 +948,51 @@ body.is-signing .bless {
 }
 
 .bless-line {
-  height: 1.72em;
+  height: 1.62em;
   margin: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
   font-family: "STXingkai", "华文行楷", "Xingkai SC", "STKaiti", "Kaiti SC", "KaiTi", "KaiTi_GB2312", "华文楷体", "楷体", "FZKai-Z03", serif;
-  font-size: 1.02rem;
+  font-size: .98rem;
   font-weight: 700;
-  line-height: 1.72em;
+  line-height: 1.62em;
   letter-spacing: .05em;
-  color: var(--gold);
-  opacity: .2;
-  -webkit-text-stroke: 0.018em currentColor;
-  -webkit-transition: opacity .7s ease;
-  transition: opacity .7s ease;
+  color: #E8C85A;
+  opacity: .88;
+  -webkit-text-stroke: 0.05em #1a0c08;
+  paint-order: stroke fill;
+  text-shadow:
+    1px 0 0 #1a0c08,
+    -1px 0 0 #1a0c08,
+    0 1px 0 #1a0c08,
+    0 -1px 0 #1a0c08;
+  -webkit-transition: opacity .7s ease, font-size .35s ease;
+  transition: opacity .7s ease, font-size .35s ease;
 }
 
 .bless-line.is-edge {
-  opacity: .42;
+  opacity: .7;
 }
 
 .bless-line.is-near {
-  opacity: .72;
+  opacity: .88;
 }
 
 .bless-line.is-now {
+  height: 2.02em;
+  font-size: 1.22rem;
+  line-height: 2.02em;
   opacity: 1;
-  color: var(--cinnabar);
-  text-shadow: 0 0 10px #E4C36A55;
+  color: #C23B32;
+  -webkit-text-stroke: 0.055em #E4C36A;
+  text-shadow:
+    1px 0 0 #E4C36A,
+    -1px 0 0 #E4C36A,
+    0 1px 0 #E4C36A,
+    0 -1px 0 #E4C36A,
+    0 0 8px #E4C36A66;
 }
 
 .bless.is-still .bless-line {
