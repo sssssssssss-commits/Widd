@@ -6,7 +6,7 @@ compatibility_date = "2026-09-01"
 # 把返回的 id 填到下面
 [[kv_namespaces]]
 binding = "RSVP"
-id = "ae8d32a615ae4d56b23fc1a0cc70e42f"
+id = "7bf223e6526542e1a3e54ed9b51d6626"
 
 [vars]
 WALL_HOST = "xi8k2m"
