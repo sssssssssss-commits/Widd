@@ -14,6 +14,16 @@
 
 * { box-sizing: border-box; }
 
+/* Zhi Mang Xing, SIL OFL 1.1 — assets/fonts/LICENSE */
+@font-face {
+  font-family: "WiddXing";
+  src: url("../assets/fonts/xing.woff2") format("woff2"),
+       url("../assets/fonts/xing.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   margin: 0;
   min-height: 100%;
@@ -972,21 +982,21 @@ body.is-signing .bless {
 
 .bless-line.is-now {
   height: 2.22rem;
-  font-family: "STXingkai", "华文行楷", "Xingkai SC", "STKaiti", "Kaiti SC", "KaiTi", "KaiTi_GB2312", "华文楷体", "楷体", serif;
+  font-family: "WiddXing", "STXingkai", "华文行楷", "Xingkai SC", serif;
   font-size: 1.28rem;
   font-weight: 700;
   line-height: 2.22rem;
   opacity: 1;
   color: #C23B32;
   text-shadow:
-    -1px -1px 0 #E8C85A,
-     1px -1px 0 #E8C85A,
-    -1px  1px 0 #E8C85A,
-     1px  1px 0 #E8C85A,
-     0   -1px 0 #E8C85A,
-     0    1px 0 #E8C85A,
-    -1px  0   0 #E8C85A,
-     1px  0   0 #E8C85A;
+    -1px -1px 0 #1a0c08,
+     1px -1px 0 #1a0c08,
+    -1px  1px 0 #1a0c08,
+     1px  1px 0 #1a0c08,
+     0   -1px 0 #1a0c08,
+     0    1px 0 #1a0c08,
+    -1px  0   0 #1a0c08,
+     1px  0   0 #1a0c08;
 }
 
 .bless.is-still .bless-line {
