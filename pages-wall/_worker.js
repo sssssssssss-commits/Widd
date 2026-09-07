@@ -148,7 +148,9 @@ export default {
       (url.pathname === "/share.jpg" ||
         url.pathname === "/share.jpg/" ||
         url.pathname === "/wx.jpg" ||
-        url.pathname === "/wx.jpg/")
+        url.pathname === "/wx.jpg/" ||
+        url.pathname === "/wx2.jpg" ||
+        url.pathname === "/wx2.jpg/")
     ) {
       return shareJpg(request);
     }

@@ -950,22 +950,14 @@ body.is-signing .bless {
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
-  font-family: "STXingkai", "华文行楷", "Xingkai SC", "STKaiti", "Kaiti SC", "KaiTi", "KaiTi_GB2312", "华文楷体", "楷体", "FZKai-Z03", serif;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Heiti SC", "STHeiti", "Microsoft YaHei", "微软雅黑", "Noto Sans SC", sans-serif;
   font-size: .98rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.68rem;
   letter-spacing: .05em;
   color: #C23B32;
   opacity: .1;
-  text-shadow:
-    -1px -1px 0 #1a0c08,
-     1px -1px 0 #1a0c08,
-    -1px  1px 0 #1a0c08,
-     1px  1px 0 #1a0c08,
-     0   -1px 0 #1a0c08,
-     0    1px 0 #1a0c08,
-    -1px  0   0 #1a0c08,
-     1px  0   0 #1a0c08;
+  text-shadow: none;
   -webkit-transition: opacity .7s ease, font-size .35s ease;
   transition: opacity .7s ease, font-size .35s ease;
 }
@@ -980,11 +972,21 @@ body.is-signing .bless {
 
 .bless-line.is-now {
   height: 2.22rem;
+  font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "华文楷体", "楷体", serif;
   font-size: 1.28rem;
+  font-weight: 700;
   line-height: 2.22rem;
   opacity: 1;
-  color: #E8C85A;
-  text-shadow: none;
+  color: #C23B32;
+  text-shadow:
+    -1px -1px 0 #E8C85A,
+     1px -1px 0 #E8C85A,
+    -1px  1px 0 #E8C85A,
+     1px  1px 0 #E8C85A,
+     0   -1px 0 #E8C85A,
+     0    1px 0 #E8C85A,
+    -1px  0   0 #E8C85A,
+     1px  0   0 #E8C85A;
 }
 
 .bless.is-still .bless-line {
