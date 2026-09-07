@@ -1,0 +1,10 @@
+name = "widd-wall"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "."
+
+[[kv_namespaces]]
+binding = "RSVP"
+id = "7bf223e6526542e1a3e54ed9b51d6626"
+
+[vars]
+WALL_HOST = "xi8k2m"
