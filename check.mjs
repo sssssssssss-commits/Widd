@@ -18,6 +18,8 @@ import {
   wallRot,
   wallWithoutMine,
   strokeWidthFromTouch,
+  cssQuarterTurn,
+  padMapTouch,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -117,5 +119,12 @@ for (const n of [1, 2, 3, 4, 5, 9, 16, 30]) {
 
 const ink = new Uint8ClampedArray([10, 10, 10, 255, 250, 248, 239, 255]);
 assert.equal(darkPixelCount(ink), 1);
+
+assert.equal(cssQuarterTurn("none"), false);
+assert.equal(cssQuarterTurn("matrix(0, 1, -1, 0, 12, 8)"), true);
+assert.equal(cssQuarterTurn("matrix(1, 0, 0, 1, 0, 0)"), false);
+const box = { left: 0, top: 0, right: 100, width: 100, height: 200 };
+assert.deepEqual(padMapTouch(box, 50, 0, 200, 100, true), { x: 0, y: 50 });
+assert.deepEqual(padMapTouch(box, 0, 0, 200, 100, false), { x: 0, y: 0 });
 
 console.log("ok");

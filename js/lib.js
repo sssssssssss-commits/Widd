@@ -148,6 +148,32 @@ export function wallBoxesOverlap(a, b, pad = 0.5) {
   );
 }
 
+export function cssQuarterTurn(transform) {
+  const t = String(transform || "");
+  if (!t || t === "none") return false;
+  const m = /^matrix\((.+)\)$/.exec(t);
+  if (!m) return /rotate\(\s*90deg\s*\)/i.test(t);
+  const p = m[1].split(",").map((s) => Number(s.trim()));
+  if (p.length < 4) return false;
+  return Math.abs(p[0]) < 0.35 && Math.abs(p[3]) < 0.35 && Math.abs(p[1]) > 0.65;
+}
+
+export function padMapTouch(rect, clientX, clientY, cw, ch, rotated) {
+  if (!rect || rect.width < 2 || rect.height < 2) return { x: 0, y: 0 };
+  const w = Number(cw) || 0;
+  const h = Number(ch) || 0;
+  if (rotated) {
+    return {
+      x: (clientY - rect.top) * (w / rect.height),
+      y: (rect.right - clientX) * (h / rect.width),
+    };
+  }
+  return {
+    x: (clientX - rect.left) * (w / rect.width),
+    y: (clientY - rect.top) * (h / rect.height),
+  };
+}
+
 export function strokeWidthFromTouch(input, minW = 2.2, maxW = 11) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;

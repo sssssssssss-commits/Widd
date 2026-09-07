@@ -675,7 +675,6 @@ body::before {
 
 .wall-sheet {
   position: fixed;
-  inset: 0;
   z-index: 40;
   display: flex;
   background: #4a1820;
@@ -686,21 +685,46 @@ body::before {
   display: none !important;
 }
 
+/* ponytail: WeChat rarely locks orientation; fake landscape via rotate. 100dvh if supported. */
+@media (orientation: landscape) {
+  .wall-sheet {
+    inset: 0;
+    width: auto;
+    height: auto;
+    transform: none;
+    -webkit-transform: none;
+  }
+}
+
+@media (orientation: portrait) {
+  .wall-sheet {
+    top: 50%;
+    left: 50%;
+    width: 100vh;
+    width: 100dvh;
+    height: 100vw;
+    height: 100dvw;
+    transform: translate(-50%, -50%) rotate(90deg);
+    -webkit-transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+    -webkit-transform-origin: center center;
+  }
+}
+
 .wall-sheet-stage {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: max(.35rem, env(safe-area-inset-top, 0px)) max(.35rem, env(safe-area-inset-right, 0px)) 0 max(.35rem, env(safe-area-inset-left, 0px));
 }
 
 .wall-sheet-pad {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  height: 0;
-  padding: .35rem;
+  width: 0;
+  padding: .45rem;
 }
 
 .wall-sheet canvas {
@@ -716,36 +740,16 @@ body::before {
 
 .wall-sheet-side {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-around;
-  gap: .4rem;
-  width: 100%;
-  flex: 0 0 auto;
-  padding: .45rem .4rem max(.55rem, env(safe-area-inset-bottom, 0px));
-}
-
-@media (orientation: landscape) {
-  .wall-sheet-stage {
-    flex-direction: row;
-  }
-  .wall-sheet-pad {
-    height: auto;
-    width: 0;
-  }
-  .wall-sheet-side {
-    flex-direction: column;
-    justify-content: center;
-    width: 5.4rem;
-    flex: 0 0 5.4rem;
-    padding: .7rem .55rem;
-  }
+  flex-direction: column;
+  justify-content: center;
+  gap: .45rem;
+  width: 5.4rem;
+  flex: 0 0 5.4rem;
+  padding: .55rem .45rem;
 }
 
 .wall-sheet-title {
   margin: 0;
-  width: 100%;
   text-align: center;
   color: #E8C85A;
   letter-spacing: .35em;
@@ -755,7 +759,6 @@ body::before {
 
 .wall-sheet-hint {
   min-height: 1.1em;
-  width: 100%;
   margin: 0;
   text-align: center;
   color: #E8C85A;
@@ -765,22 +768,14 @@ body::before {
 
 .wall-sheet-side button {
   margin: 0;
-  flex: 1;
+  width: 100%;
   background: transparent;
   color: #E8C85A;
   border: 1px solid #c9a24a;
-  padding: .85rem .2rem;
+  padding: .7rem .2rem;
   font: inherit;
   letter-spacing: .22em;
   touch-action: manipulation;
-}
-
-@media (orientation: landscape) {
-  .wall-sheet-side button {
-    flex: 0 0 auto;
-    width: 100%;
-    padding: .7rem .2rem;
-  }
 }
 
 .wall-actions {

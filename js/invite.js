@@ -572,14 +572,38 @@ function fitWallPad(canvas, state, wipe) {
   return ctx;
 }
 
+function cssQuarterTurn(transform) {
+  const t = String(transform || "");
+  if (!t || t === "none") return false;
+  const m = /^matrix\((.+)\)$/.exec(t);
+  if (!m) return /rotate\(\s*90deg\s*\)/i.test(t);
+  const p = m[1].split(",").map((s) => Number(s.trim()));
+  if (p.length < 4) return false;
+  return Math.abs(p[0]) < 0.35 && Math.abs(p[3]) < 0.35 && Math.abs(p[1]) > 0.65;
+}
+
+function padMapTouch(rect, clientX, clientY, cw, ch, rotated) {
+  if (!rect || rect.width < 2 || rect.height < 2) return { x: 0, y: 0 };
+  const w = Number(cw) || 0;
+  const h = Number(ch) || 0;
+  if (rotated) {
+    return {
+      x: (clientY - rect.top) * (w / rect.height),
+      y: (rect.right - clientX) * (h / rect.width),
+    };
+  }
+  return {
+    x: (clientX - rect.left) * (w / rect.width),
+    y: (clientY - rect.top) * (h / rect.height),
+  };
+}
+
 function padPoint(canvas, e) {
   const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
   const r = canvas.getBoundingClientRect();
-  if (r.width < 2 || r.height < 2) return { x: 0, y: 0 };
-  return {
-    x: (t.clientX - r.left) * (canvas.clientWidth / r.width),
-    y: (t.clientY - r.top) * (canvas.clientHeight / r.height),
-  };
+  const sheet = canvas.closest ? canvas.closest(".wall-sheet") : null;
+  const rotated = cssQuarterTurn(sheet && getComputedStyle(sheet).transform);
+  return padMapTouch(r, t.clientX, t.clientY, canvas.clientWidth, canvas.clientHeight, rotated);
 }
 
 function touchSample(e) {
@@ -789,6 +813,22 @@ function renderWall(cfg, guest) {
   const pad = { dirty: false };
   let ctx = canvas.getContext("2d");
   bindWallPad(canvas, ctx, pad);
+  let epochCache = 0;
+  const pending = [];
+
+  const mergePending = (items) => {
+    const rows = (items || []).slice();
+    const keep = [];
+    for (let i = 0; i < pending.length; i++) {
+      const p = pending[i];
+      if (rows.some((row) => row.id === p.id || row.img === p.img)) continue;
+      rows.push(p);
+      keep.push(p);
+    }
+    pending.length = 0;
+    for (let i = 0; i < keep.length; i++) pending.push(keep[i]);
+    return rows;
+  };
 
   const closeSheet = () => {
     sheet.hidden = true;
@@ -825,8 +865,9 @@ function renderWall(cfg, guest) {
   } catch {}
 
   const refresh = async (flyId) => {
-    const epoch = await fetchWallEpoch(epochUrl);
-    let items = wallAfterWipe(await loadWallItems(url), epoch);
+    epochCache = await fetchWallEpoch(epochUrl);
+    let items = wallAfterWipe(await loadWallItems(url), epochCache);
+    items = mergePending(items);
     writeLocalWall(items);
     paintWallBoard(items, flyId);
     return items;
@@ -901,8 +942,7 @@ function renderWall(cfg, guest) {
     });
   }
 
-  $("wallPin").addEventListener("click", async () => {
-    const btn = $("wallPin");
+  $("wallPin").addEventListener("click", () => {
     const sheetHint = $("wallSheetHint");
     const hint = $("wallHint");
     const name = guest || "来宾";
@@ -915,7 +955,6 @@ function renderWall(cfg, guest) {
       sheetHint.textContent = "签名未能保存，请再写一次";
       return;
     }
-    const epoch = await fetchWallEpoch(epochUrl);
     if (wallMineCount(readLocalWall(), by) >= 3) {
       sheetHint.textContent = "每人最多留下三幅";
       return;
@@ -926,47 +965,45 @@ function renderWall(cfg, guest) {
       img,
       at: new Date().toISOString(),
       by,
-      epoch,
+      epoch: epochCache,
     };
-    btn.disabled = true;
-    let shared = false;
-    if (url) {
-      try {
-        const res = await fetchTimed(url, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ kind: "wall", name, img, by, epoch }),
-        }, 8000);
+    pending.push(item);
+    writeLocalWall(mergePending(readLocalWall()));
+    paintWallBoard(readLocalWall(), item.id);
+    pad.dirty = false;
+    hint.textContent = "已上墙";
+    closeSheet();
+    if (!url) return;
+    fetchTimed(
+      url,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: "wall", name, img, by, epoch: item.epoch }),
+      },
+      8000,
+    )
+      .then(async (res) => {
         if (res.status === 409) {
-          sheetHint.textContent = "每人最多留下三幅";
-          btn.disabled = false;
+          for (let i = pending.length - 1; i >= 0; i--) {
+            if (pending[i].id === item.id) pending.splice(i, 1);
+          }
+          writeLocalWall(readLocalWall().filter((row) => row.id !== item.id && row.img !== img));
+          paintWallBoard(readLocalWall());
+          hint.textContent = "每人最多留下三幅";
           return;
         }
         if (!res.ok) throw new Error();
         const data = await res.json().catch(() => ({}));
         if (data.id) item.id = data.id;
-        shared = true;
-      } catch {
-        shared = false;
-      }
-    }
-    try {
-      if (!shared) writeLocalWall(readLocalWall().concat(item));
-      else writeLocalWall(readLocalWall().filter((row) => row.img !== img));
-    } catch {}
-    let items = [];
-    try {
-      items = wallAfterWipe(await loadWallItems(url), epoch);
-    } catch {
-      items = readLocalWall();
-    }
-    if (!items.some((row) => row.img === img || row.id === item.id)) items.push(item);
-    const flyId = (items.find((row) => row.img === img) || item).id;
-    paintWallBoard(items, flyId);
-    pad.dirty = false;
-    hint.textContent = shared ? "已上墙" : url ? "已留在本机，未能同步到网上" : "已上墙";
-    btn.disabled = false;
-    closeSheet();
+        for (let i = pending.length - 1; i >= 0; i--) {
+          if (pending[i].img === img) pending.splice(i, 1);
+        }
+        refresh(item.id);
+      })
+      .catch(() => {
+        hint.textContent = "已留在本机，未能同步到网上";
+      });
   });
 }
 
