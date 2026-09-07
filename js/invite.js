@@ -1292,68 +1292,70 @@ function startBless(cfg) {
   if (blessOn) return;
   const lines = blessLines(cfg);
   const root = $("bless");
-  const line = $("blessLine");
+  const lane = $("blessLane");
+  const track = $("blessTrack");
   const fw = $("blessFw");
-  if (!lines.length || !root || !line) return;
+  if (!lines.length || !root || !lane || !track) return;
   blessOn = true;
   root.hidden = false;
   const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   if (still) root.classList.add("is-still");
   if (fw) fw.hidden = true;
-  let i = 0;
+  const row = 1.62;
+  const pad = 2;
+  const items = ["", ""].concat(lines, ["", ""]);
+  track.innerHTML = items
+    .map((t) => `<p class="bless-line">${escAttr(t)}</p>`)
+    .join("");
+  const nodes = track.children;
+  let cur = 0;
   let watch = 0;
   let lock = 0;
-  const flyMs = (text) => Math.round(4800 + String(text).length * 220);
-  const clearMove = () => {
-    line.style.transition = "none";
-    line.style.webkitTransition = "none";
-    line.style.opacity = "1";
-    line.style.left = still ? "0px" : "100%";
-    line.style.transform = "translateX(0)";
-    line.style.webkitTransform = "translateX(0)";
-  };
-  const play = () => {
-    if (fw) fw.hidden = true;
-    line.textContent = lines[i];
-    clearMove();
-    void line.offsetWidth;
-    const ms = still ? 3200 : flyMs(lines[i]);
-    if (still) {
-      line.style.transition = "opacity .55s linear";
-      setTimeout(() => {
-        line.style.opacity = "0";
-      }, 2600);
-    } else {
-      const tw = Math.max(line.scrollWidth, 8);
-      const move = `left ${ms}ms linear, transform ${ms}ms linear`;
-      line.style.transition = move;
-      line.style.webkitTransition = `left ${ms}ms linear, -webkit-transform ${ms}ms linear`;
-      line.style.left = "0px";
-      line.style.transform = `translateX(-${tw}px)`;
-      line.style.webkitTransform = `translateX(-${tw}px)`;
+  const holdMs = (text) => (still ? 2800 : Math.round(3600 + String(text).length * 140));
+  const moveMs = still ? 0 : 750;
+  const paint = (i, animate) => {
+    const dur = animate && !still ? moveMs / 1000 + "s" : "0s";
+    track.style.webkitTransition = "-webkit-transform " + dur + " ease";
+    track.style.transition = "transform " + dur + " ease";
+    const y = -(i * row);
+    track.style.webkitTransform = "translateY(" + y + "em)";
+    track.style.transform = "translateY(" + y + "em)";
+    const now = i + pad;
+    for (let k = 0; k < nodes.length; k++) {
+      const d = Math.abs(k - now);
+      nodes[k].className =
+        "bless-line" + (d === 0 ? " is-now" : d === 1 ? " is-near" : d === 2 ? " is-edge" : "");
     }
+  };
+  const step = () => {
+    if (fw) fw.hidden = true;
+    lane.hidden = false;
+    paint(cur, true);
     clearTimeout(watch);
     const mine = ++lock;
     watch = setTimeout(() => {
       if (mine === lock) advance();
-    }, ms + 80);
+    }, holdMs(lines[cur]) + moveMs);
   };
   const advance = () => {
     lock += 1;
     clearTimeout(watch);
-    i += 1;
-    if (i < lines.length) {
-      play();
+    cur += 1;
+    if (cur < lines.length) {
+      step();
       return;
     }
-    line.textContent = "";
-    clearMove();
-    i = 0;
-    const after = () => play();
+    lane.hidden = true;
+    cur = 0;
+    paint(0, false);
+    const after = () => step();
     if (still) setTimeout(after, 3000);
     else boomBless(fw, 3000, after);
   };
-  play();
+  paint(0, false);
+  for (let k = 0; k < nodes.length; k++) nodes[k].className = "bless-line";
+  void track.offsetWidth;
+  step();
 }
 
 function openLetter(cfg) {

@@ -859,8 +859,8 @@ body::before {
   left: max(.35rem, env(safe-area-inset-left, 0px));
   bottom: max(.4rem, env(safe-area-inset-bottom, 0px));
   z-index: 14;
-  width: min(78vw, 22rem);
-  height: 8.2rem;
+  width: min(86vw, 24rem);
+  height: 8.1em;
   pointer-events: none;
 }
 
@@ -889,28 +889,68 @@ body.is-signing .bless {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 1.7em;
+  height: 8.1em;
   overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+}
+
+.bless-lane[hidden] {
+  display: none !important;
+}
+
+.bless-track {
+  will-change: transform;
 }
 
 .bless-line {
-  position: absolute;
-  left: 100%;
-  top: 0;
+  height: 1.62em;
+  margin: 0;
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: "STKaiti", "KaiTi", "KaiTi_GB2312", "Kaiti SC", "华文楷体", "Songti SC", serif;
-  font-size: .84rem;
+  font-size: .8rem;
+  line-height: 1.62em;
   letter-spacing: .08em;
-  color: #F4DC8A;
+  color: #E8C85A;
+  opacity: .1;
   text-shadow:
     0 0 1px #3A1810,
     1px 0 0 #3A1810,
     -1px 0 0 #3A1810,
     0 1px 0 #3A1810,
     0 -1px 0 #3A1810;
-  will-change: left, transform, opacity;
+  -webkit-transition: opacity .75s ease;
+  transition: opacity .75s ease;
+}
+
+.bless-line.is-edge {
+  opacity: .28;
+}
+
+.bless-line.is-near {
+  opacity: .52;
+}
+
+.bless-line.is-now {
+  opacity: 1;
+  color: #F4DC8A;
+  text-shadow:
+    0 0 10px #E8C85A66,
+    0 0 1px #3A1810,
+    1px 0 0 #3A1810,
+    -1px 0 0 #3A1810,
+    0 1px 0 #3A1810,
+    0 -1px 0 #3A1810;
+}
+
+.bless.is-still .bless-track {
+  -webkit-transition: none;
+  transition: none;
 }
 
 .bless.is-still .bless-line {
-  left: 0;
+  -webkit-transition: none;
+  transition: none;
 }
