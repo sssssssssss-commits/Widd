@@ -43,12 +43,14 @@ body.is-signing {
 }
 
 .share-thumb {
-  /* ponytail: off-screen so WeChat still sees the first <img>; display:none / opacity:0 get skipped */
-  position: absolute;
-  left: -9999px;
+  /* ponytail: in-viewport under the cover so WeChat 右上角分享 can pick the first <img> */
+  position: fixed;
+  left: 0;
   top: 0;
-  width: 600px;
-  height: 600px;
+  width: 300px;
+  height: 300px;
+  z-index: 0;
+  pointer-events: none;
 }
 
 body::before {

@@ -1,7 +1,7 @@
 # 夜色墨金婚礼请柬
 
-宾客链接：**https://widd.pages.dev/**  
-（旧的 github.io 还能开，但不要再发那个。）
+微信转发（能出缩略图）：**https://sssssssssss-commits.github.io/Widd/**  
+更好看、但微信卡片经常没图：**https://widd.pages.dev/**
 
 手机竖信，微信里打开。点朱印拆开，金箔慢落。改 [data/wedding.json](data/wedding.json) 即可换姓名、日期、地点和照片。
 
@@ -41,7 +41,7 @@ npx --yes serve .
 
 ## 发到网上（微信要能开）
 
-宾客发 **https://widd.pages.dev/**，不要发 github.io。微信仍可能先出「继续访问」，点一次即可。
+宾客在微信里请发 **https://sssssssssss-commits.github.io/Widd/**。微信爬虫能抓 GitHub 的网页，封面图走 `https://widd-wall.pages.dev/wx4.jpg`。`widd.pages.dev` 更好看，但微信服务器经常抓不到 Cloudflare，卡片会没图。仍可能先出「继续访问」，点一次即可。
 
 重新部署请柬：把 `index.html`、`css/`、`js/`、`data/`、`assets/`、`_headers` 拷进 `dist/`，再把 `assets/share.jpg` 拷成 `dist/wx3.jpg`（不要带上 `tmp/`、`node_modules/`），然后：
 
@@ -51,7 +51,7 @@ npx wrangler pages deploy dist --project-name widd --commit-dirty=true
 
 有自己的短域名时，在 Cloudflare Pages 项目 `widd` 里绑自定义域即可，JSON 里的 `share.origin` 跟着改。有备案再迁腾讯云，微信里更稳。
 
-微信抓封面：图必须和请柬同域名。部署时把 `assets/share.jpg` 拷成 `dist/wx3.jpg`。发到微信后若仍是旧卡，把链接先发给「文件传输助手」。
+微信抓封面：网页用 github.io，图用 `widd-wall.pages.dev/wx4.jpg`（300×300、约 10KB）。发到微信后若仍是旧卡，把链接先发给「文件传输助手」。
 
 ## 回执
 
@@ -72,7 +72,7 @@ npx wrangler deploy
 
 ## 微信里怎么测
 
-用手机微信打开 **https://widd.pages.dev/**（不要只在电脑 Chrome 里看完就算）：
+用手机微信打开 **https://sssssssssss-commits.github.io/Widd/**（不要只在电脑 Chrome 里看完就算）：
 
 - 拆印、抽信、金箔
 - `?to=名字` 称谓
