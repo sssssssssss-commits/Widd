@@ -43,7 +43,7 @@ npx --yes serve .
 
 宾客发 **https://widd.pages.dev/**，不要发 github.io。微信仍可能先出「继续访问」，点一次即可。
 
-重新部署请柬：把 `index.html`、`css/`、`js/`、`data/`、`assets/` 拷进 `dist/`（不要带上 `tmp/`、`node_modules/`），然后：
+重新部署请柬：把 `index.html`、`css/`、`js/`、`data/`、`assets/`、`_headers` 拷进 `dist/`，再把 `assets/share.jpg` 拷成 `dist/wx3.jpg`（不要带上 `tmp/`、`node_modules/`），然后：
 
 ```bash
 npx wrangler pages deploy dist --project-name widd --commit-dirty=true
@@ -51,7 +51,7 @@ npx wrangler pages deploy dist --project-name widd --commit-dirty=true
 
 有自己的短域名时，在 Cloudflare Pages 项目 `widd` 里绑自定义域即可，JSON 里的 `share.origin` 跟着改。有备案再迁腾讯云，微信里更稳。
 
-微信抓封面：会拦 github.io 图床。请柬里的预览图走 jsDelivr（`cdn.jsdelivr.net/gh/.../share.jpg`），第一张 `<img>` 必须是至少 300×300 的 JPG 绝对地址。发到微信后若仍是旧卡，把链接先发给「文件传输助手」，或等几分钟再转。
+微信抓封面：图必须和请柬同域名。部署时把 `assets/share.jpg` 拷成 `dist/wx3.jpg`。发到微信后若仍是旧卡，把链接先发给「文件传输助手」。
 
 ## 回执
 

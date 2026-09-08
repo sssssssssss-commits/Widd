@@ -215,7 +215,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=21", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=22", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -238,11 +238,15 @@ function applyShare(cfg) {
   set('meta[property="og:title"]', "content", title);
   set('meta[property="og:description"]', "content", desc);
   if (origin) set('meta[property="og:url"]', "content", `${origin}/`);
-  set('meta[property="og:image"]', "content", abs(cfg.share?.ogImage || cfg.share?.image));
-  set('meta[name="twitter:image"]', "content", abs(cfg.share?.ogImage || cfg.share?.image));
+  const img = abs(cfg.share?.ogImage || cfg.share?.image);
+  set('meta[property="og:image"]', "content", img);
+  set('meta[property="og:image:secure_url"]', "content", img);
+  set('meta[itemprop="image"]', "content", img);
+  set('meta[name="twitter:image"]', "content", img);
+  set('link[rel="image_src"]', "href", img);
   const thumb = document.querySelector(".share-thumb");
-  if (thumb && cfg.share?.image) {
-    thumb.src = cfg.share.image;
+  if (thumb && img) {
+    thumb.src = img;
     thumb.alt = title;
   }
 }
