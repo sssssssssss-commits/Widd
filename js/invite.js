@@ -223,7 +223,7 @@ async function loadConfig() {
 function applyShare(cfg) {
   const title = cfg.share?.title || cfg.title || "婚礼请柬";
   const desc = cfg.share?.description || "锦书遥寄，待君亲启。";
-  const origin = (cfg.share?.origin || "").replace(/\/$/, "");
+  const origin = String(location.origin || cfg.share?.origin || "").replace(/\/$/, "");
   const abs = (p) => {
     if (!p) return p;
     if (/^https?:\/\//.test(p)) return p;
