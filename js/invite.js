@@ -215,7 +215,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=20", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=21", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -237,6 +237,7 @@ function applyShare(cfg) {
   set('meta[name="description"]', "content", desc);
   set('meta[property="og:title"]', "content", title);
   set('meta[property="og:description"]', "content", desc);
+  if (origin) set('meta[property="og:url"]', "content", `${origin}/`);
   set('meta[property="og:image"]', "content", abs(cfg.share?.ogImage || cfg.share?.image));
   set('meta[name="twitter:image"]', "content", abs(cfg.share?.ogImage || cfg.share?.image));
   const thumb = document.querySelector(".share-thumb");

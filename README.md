@@ -1,5 +1,8 @@
 # 夜色墨金婚礼请柬
 
+宾客链接：**https://widd.pages.dev/**  
+（旧的 github.io 还能开，但不要再发那个。）
+
 手机竖信，微信里打开。点朱印拆开，金箔慢落。改 [data/wedding.json](data/wedding.json) 即可换姓名、日期、地点和照片。
 
 签名墙：`signatureWall` 为 `true` 时，信末可手写落款。点「签字」进入横屏题字，金色笔迹，写完点「完成」即上墙。来宾点「撤下我的」只去掉自己写下的；新人用 `?host=` 加上 `wallHost` 打开，才出现「清空全部」。不要把带 `host` 的链接发给宾客。同一只 `rsvp.endpoint` Worker 负责收回执和签名；没配地址时签名只留在这台手机上，清空全部会通知其他手机丢掉旧签名。
@@ -38,14 +41,15 @@ npx --yes serve .
 
 ## 发到网上（微信要能开）
 
-不要用 GitHub Pages 当主链接，微信里经常打不开。
+宾客发 **https://widd.pages.dev/**，不要发 github.io。微信仍可能先出「继续访问」，点一次即可。
 
-1. 把本仓库推上去。
-2. [Cloudflare Pages](https://pages.cloudflare.com/) → Create → 接这个仓库。
-3. 构建命令留空，输出目录填 `/`。
-4. 用它给的 `*.pages.dev` 地址在**手机微信**里打开测。
+重新部署请柬：把 `index.html`、`css/`、`js/`、`data/`、`assets/` 拷进 `dist/`（不要带上 `tmp/`、`node_modules/`），然后：
 
-有备案再把域名迁到腾讯云静态网站托管，微信里更稳。
+```bash
+npx wrangler pages deploy dist --project-name widd --commit-dirty=true
+```
+
+有自己的短域名时，在 Cloudflare Pages 项目 `widd` 里绑自定义域即可，JSON 里的 `share.origin` 跟着改。有备案再迁腾讯云，微信里更稳。
 
 微信抓封面：会拦 github.io 图床。请柬里的预览图走 jsDelivr（`cdn.jsdelivr.net/gh/.../share.jpg`），第一张 `<img>` 必须是至少 300×300 的 JPG 绝对地址。发到微信后若仍是旧卡，把链接先发给「文件传输助手」，或等几分钟再转。
 
@@ -68,7 +72,7 @@ npx wrangler deploy
 
 ## 微信里怎么测
 
-用手机微信打开 `pages.dev` 链接（不要只在电脑 Chrome 里看完就算）：
+用手机微信打开 **https://widd.pages.dev/**（不要只在电脑 Chrome 里看完就算）：
 
 - 拆印、抽信、金箔
 - `?to=名字` 称谓

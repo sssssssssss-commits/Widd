@@ -1,0 +1,10 @@
+node_modules
+.git
+.wrangler
+tmp
+pages-wall
+worker
+dist
+check.mjs
+package.json
+package-lock.json
