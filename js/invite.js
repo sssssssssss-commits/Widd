@@ -215,7 +215,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=23", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=24", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -223,7 +223,7 @@ async function loadConfig() {
 function applyShare(cfg) {
   const title = cfg.share?.title || cfg.title || "婚礼请柬";
   const desc = cfg.share?.description || "锦书遥寄，待君亲启。";
-  const origin = String(location.origin || cfg.share?.origin || "").replace(/\/$/, "");
+  const origin = (location.origin || cfg.share?.origin || "").replace(/\/$/, "");
   const abs = (p) => {
     if (!p) return p;
     if (/^https?:\/\//.test(p)) return p;
