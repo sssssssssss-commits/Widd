@@ -327,11 +327,11 @@ body.is-signing .bgm-tog {
 .letter-inner > * + * { margin-top: 2.1rem; }
 
 .letter-inner > .bless:not([hidden]) {
-  margin-top: 1.15rem;
+  margin-top: 1.4rem;
 }
 
 .letter-inner > .bless:not([hidden]) + * {
-  margin-top: 1.2rem;
+  margin-top: 1.5rem;
 }
 
 .address {
@@ -1093,7 +1093,6 @@ body.is-signing .bgm-tog {
   position: relative;
   z-index: 2;
   width: 100%;
-  min-height: 13.5rem;
   overflow: visible;
   pointer-events: none;
 }
@@ -1107,20 +1106,14 @@ body.is-signing .bless {
 }
 
 .bless-lane {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
+  position: relative;
   z-index: 2;
-  min-height: 12.5rem;
-  overflow: visible;
+  width: 100%;
   text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  -webkit-transform: translateY(-50%);
-  transform: translateY(-50%);
 }
 
 .bless-line {
@@ -1151,15 +1144,15 @@ body.is-signing .bless {
 }
 
 .bless-line.is-now {
-  min-height: 3.4rem;
+  min-height: 2.2rem;
   height: auto;
   white-space: normal;
   word-break: break-word;
   font-family: "WiddXing", "STXingkai", "华文行楷", "Xingkai SC", serif;
-  font-size: 2.56rem;
+  font-size: clamp(1.6rem, 5.8vw, 2.3rem);
   font-weight: 700;
   line-height: 1.35;
-  padding: .2rem .4rem;
+  padding: .35rem .4rem;
   opacity: 1;
   color: #C23B32;
   text-shadow:

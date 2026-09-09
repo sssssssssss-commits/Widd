@@ -66,8 +66,8 @@ assert.equal(isWallHost("?host=no", "xi8k2m"), false);
 assert.equal(isWallHost("", "xi8k2m"), false);
 assert.equal(isWallHost("?host=xi8k2m", ""), false);
 assert.equal(
-  wallHitUrl("https://abacus.jasoncameron.dev/get/ns/key"),
-  "https://abacus.jasoncameron.dev/hit/ns/key",
+  wallHitUrl("https://example.test/get/ns/key"),
+  "https://example.test/hit/ns/key",
 );
 assert.deepEqual(
   wallAfterWipe([{ epoch: 0 }, { epoch: 2 }, { epoch: 3 }], 2).map((r) => r.epoch),

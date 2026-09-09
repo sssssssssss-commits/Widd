@@ -209,8 +209,6 @@ const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
 const GOLD_INK = "#F6D34A";
 const INK_EDGE = "#1A120C";
-// ponytail: public counter, 6-month TTL on GET; Worker KV epoch if rsvp.endpoint is live
-const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-io/widd-wall";
 
 const $ = (id) => document.getElementById(id);
 
@@ -309,40 +307,46 @@ function bindCalendarButton(cfg) {
   const btn = $("calBtn");
   if (!btn) return;
   btn.addEventListener("click", () => {
-    const couple = coupleLine(cfg.groom, cfg.bride) || "婚礼";
-    const title = `${couple} 婚礼`;
-    const venue = cfg.venues?.[0] || {};
-    const loc = `${venue.address || ""}${venue.name ? " (" + venue.name + ")" : ""}`.trim();
-    const ics = buildIcsCalendar({
-      title,
-      startIso: cfg.datetime || "2026-10-06T11:18:00+08:00",
-      endIso: "2026-10-06T14:30:00+08:00",
-      location: loc,
-      description: "良辰吉时，敬请光临！",
-      url: location.origin || "https://sumuyang.asia",
-    });
+    const ua = navigator.userAgent || "";
+    const isWx = /micromessenger/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const txt = $("calBtnText");
+    const orig = txt ? txt.textContent : "";
+    if (txt) txt.textContent = "正在唤起日历…";
 
-    const isWx = /micromessenger/i.test(navigator.userAgent);
-    try {
-      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "wedding.ics";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 400);
-    } catch (_) {
+    // ponytail: WeChat swallows blob: a.download with no error; static .ics is what iOS/WeChat actually open
+    if (isWx || isIOS) {
       window.location.href = "wedding.ics";
+    } else {
+      try {
+        const couple = coupleLine(cfg.groom, cfg.bride) || "婚礼";
+        const venue = cfg.venues?.[0] || {};
+        const loc = `${venue.address || ""}${venue.name ? " (" + venue.name + ")" : ""}`.trim();
+        const ics = buildIcsCalendar({
+          title: `${couple} 婚礼`,
+          startIso: cfg.datetime || "2026-10-06T11:18:00+08:00",
+          endIso: "2026-10-06T14:30:00+08:00",
+          location: loc,
+          description: "良辰吉时，敬请光临！",
+          url: location.origin || "https://sumuyang.asia",
+        });
+        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = href;
+        a.download = "wedding.ics";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(href);
+        }, 400);
+      } catch (_) {
+        window.location.href = "wedding.ics";
+      }
     }
 
-    const txt = $("calBtnText");
     if (txt) {
-      const orig = txt.textContent;
-      txt.textContent = isWx ? "已准备日程 · 请确认存入" : "已生成日程";
       setTimeout(() => {
         txt.textContent = orig;
       }, 3000);
@@ -580,8 +584,9 @@ async function fetchTimed(url, opts, ms) {
 }
 
 async function fetchWallEpoch(getUrl) {
+  if (!getUrl) return 0;
   try {
-    const res = await fetchTimed(bust(getUrl || WALL_EPOCH_GET), null, 2500);
+    const res = await fetchTimed(bust(getUrl), null, 2500);
     if (res.status === 404) return 0;
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -592,7 +597,8 @@ async function fetchWallEpoch(getUrl) {
 }
 
 async function bumpWallEpoch(getUrl) {
-  const res = await fetchTimed(bust(wallHitUrl(getUrl || WALL_EPOCH_GET)));
+  if (!getUrl) throw new Error("no epoch");
+  const res = await fetchTimed(bust(wallHitUrl(getUrl)));
   if (!res.ok) throw new Error();
   const data = await res.json();
   return Number(data.value) || 0;
@@ -1029,7 +1035,7 @@ function renderWall(cfg, guest) {
   const url = urls[0] || "";
   const host = isWallHost(location.search, cfg.wallHost);
   const by = wallBy();
-  const epochUrl = cfg.wallEpoch || WALL_EPOCH_GET;
+  const epochUrl = cfg.wallEpoch || "";
   wall.innerHTML = `<div class="wall-box">
       <h2>签名墙</h2>
       <div class="wall-yard">
@@ -1152,7 +1158,7 @@ function renderWall(cfg, guest) {
 
   const refresh = async (flyId) => {
     const gotP = loadWallItems(urls);
-    const epochP = fetchWallEpoch(epochUrl);
+    const epochP = epochUrl ? fetchWallEpoch(epochUrl) : Promise.resolve(0);
     const got = await gotP;
     epochCache = await epochP;
     let items = got.ok ? got.items : wallAfterWipe(got.items, epochCache);
