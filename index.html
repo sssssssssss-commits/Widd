@@ -24,7 +24,7 @@
   <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=54">
+  <link rel="stylesheet" href="css/invite.css?v=56">
   <link rel="preload" href="assets/fonts/xing.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
@@ -74,6 +74,21 @@
 
       <section class="when" aria-label="婚期">
         <p class="when-text" id="whenText"></p>
+        <div class="cal-wrap">
+          <div class="cal-card">
+            <img src="assets/calendar.png" alt="2026年10月6日 婚礼日历" class="cal-img" width="540" height="505" loading="lazy">
+          </div>
+          <button type="button" class="cal-btn" id="calBtn" aria-label="添加日程至系统日历">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+              <path d="M12 14v4M10 16h4"/>
+            </svg>
+            <span id="calBtnText">添加日程至系统日历</span>
+          </button>
+        </div>
         <div class="clepsydra" id="clepsydra" aria-live="polite">
           <div class="tick"><strong id="d">0</strong><i></i><span>日</span></div>
           <div class="tick"><strong id="h">00</strong><i></i><span>时</span></div>
@@ -83,7 +98,9 @@
         <p class="when-past" id="whenPast" hidden>良辰已至</p>
       </section>
 
-      <section class="scrolls-wrap" aria-label="照片">
+      <section class="itinerary" id="itinerary" aria-label="婚礼仪程" hidden></section>
+
+      <section class="scrolls-wrap" id="scrollsWrap" aria-label="照片" hidden>
         <div class="scrolls" id="scrolls"></div>
       </section>
 
@@ -98,6 +115,6 @@
     </article>
   </main>
 
-  <script src="js/invite.js?v=59"></script>
+  <script src="js/invite.js?v=61"></script>
 </body>
 </html>

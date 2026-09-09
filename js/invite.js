@@ -215,7 +215,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=26", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=27", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -254,8 +254,145 @@ function renderNames(cfg) {
     cell(cfg.groom, "新郎") + '<div class="amp" aria-hidden="true">囍</div>' + cell(cfg.bride, "新娘");
 }
 
+function buildIcsCalendar({
+  title = "婚礼",
+  startIso = "2026-10-06T11:18:00+08:00",
+  endIso = "2026-10-06T14:30:00+08:00",
+  location = "",
+  description = "",
+  url = "",
+}) {
+  const toIcsUtc = (iso) => {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "20261006T031800Z";
+    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  };
+
+  const dtstart = toIcsUtc(startIso);
+  const dtend = toIcsUtc(endIso);
+  const fullDesc = [description, location ? `地点：${location}` : "", url ? `请柬：${url}` : ""]
+    .filter(Boolean)
+    .join("\\n");
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Widd//Wedding Invite//CN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${title}`,
+    "BEGIN:VEVENT",
+    `UID:wedding-${dtstart}-widd@sumuyang.asia`,
+    `DTSTAMP:${toIcsUtc(new Date().toISOString())}`,
+    `DTSTART:${dtstart}`,
+    `DTEND:${dtend}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${fullDesc}`,
+    `LOCATION:${location}`,
+    "STATUS:CONFIRMED",
+    "BEGIN:VALARM",
+    "TRIGGER:-PT2H",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:【提醒】今日 ${title}`,
+    "END:VALARM",
+    "BEGIN:VALARM",
+    "TRIGGER:-P1D",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:【提醒】明日 ${title}`,
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+function bindCalendarButton(cfg) {
+  const btn = $("calBtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const couple = coupleLine(cfg.groom, cfg.bride) || "婚礼";
+    const title = `${couple} 婚礼`;
+    const venue = cfg.venues?.[0] || {};
+    const loc = `${venue.address || ""}${venue.name ? " (" + venue.name + ")" : ""}`.trim();
+    const ics = buildIcsCalendar({
+      title,
+      startIso: cfg.datetime || "2026-10-06T11:18:00+08:00",
+      endIso: "2026-10-06T14:30:00+08:00",
+      location: loc,
+      description: "良辰吉时，敬请光临！",
+      url: location.origin || "https://sumuyang.asia",
+    });
+
+    const isWx = /micromessenger/i.test(navigator.userAgent);
+    try {
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "wedding.ics";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 400);
+    } catch (_) {
+      window.location.href = "wedding.ics";
+    }
+
+    const txt = $("calBtnText");
+    if (txt) {
+      const orig = txt.textContent;
+      txt.textContent = isWx ? "已准备日程 · 请确认存入" : "已生成日程";
+      setTimeout(() => {
+        txt.textContent = orig;
+      }, 3000);
+    }
+  });
+}
+
+function renderItinerary(items) {
+  const sec = $("itinerary");
+  if (!sec) return;
+  if (!items || items.length === 0) {
+    sec.hidden = true;
+    return;
+  }
+  sec.hidden = false;
+  const listHtml = items
+    .map(
+      (item) => `
+      <article class="timeline-item">
+        <div class="time-col">
+          <time class="time-val">${escAttr(item.time || "")}</time>
+        </div>
+        <div class="spine-col" aria-hidden="true">
+          <span class="bead"></span>
+        </div>
+        <div class="content-col">
+          <h3 class="item-title">${escAttr(item.title || "")}</h3>
+          ${item.desc ? `<p class="item-desc">${escAttr(item.desc)}</p>` : ""}
+        </div>
+      </article>`,
+    )
+    .join("");
+
+  sec.innerHTML = `
+    <div class="label">良辰吉序</div>
+    <h2>婚礼仪程</h2>
+    <div class="timeline">
+      ${listHtml}
+    </div>
+  `;
+}
+
 function renderScrolls(photos) {
-  $("scrolls").innerHTML = (photos || [])
+  const wrap = $("scrollsWrap");
+  if (!photos || photos.length === 0) {
+    if (wrap) wrap.hidden = true;
+    return;
+  }
+  if (wrap) wrap.hidden = false;
+  $("scrolls").innerHTML = photos
     .map(
       (p) => `<article class="scroll">
         <figure>
@@ -1677,12 +1814,14 @@ async function main() {
   renderNames(cfg);
   $("opener").textContent = cfg.opener || "";
   $("whenText").textContent = cfg.datetimeText || "";
+  bindCalendarButton(cfg);
+  startClepsydra(cfg.datetime);
+  renderItinerary(cfg.itinerary);
   renderScrolls(cfg.photos);
   renderVenues(cfg.venues);
   renderRsvp(cfg, guest);
   renderWall(cfg, guest);
   $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
-  startClepsydra(cfg.datetime);
   bindBgm();
   bindGate(cfg);
   bindTapXi();

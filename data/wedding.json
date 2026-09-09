@@ -14,10 +14,12 @@
       "lng": 107.496293
     }
   ],
-  "photos": [
-    { "src": "assets/photos/01.svg", "caption": "月升" },
-    { "src": "assets/photos/02.svg", "caption": "梅开" },
-    { "src": "assets/photos/03.svg", "caption": "对酌" }
+  "photos": [],
+  "itinerary": [
+    { "time": "10:00", "title": "嘉宾莅临", "desc": "喜饮迎宾、签到入席" },
+    { "time": "11:18", "title": "拜堂成礼", "desc": "吉时开礼、佳偶天成" },
+    { "time": "12:00", "title": "敬备喜筵", "desc": "亲朋共饮、把酒言欢" },
+    { "time": "14:00", "title": "答谢礼成", "desc": "留影言欢、欢送宾朋" }
   ],
   "rsvp": {
     "endpoint": "",

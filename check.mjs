@@ -23,6 +23,7 @@ import {
   padMapTouch,
   inkBounds,
   ptsBounds,
+  buildIcsCalendar,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -156,5 +157,22 @@ assert.deepEqual(inkBounds(pix, 2, 2), { minX: 1, minY: 1, maxX: 1, maxY: 1 });
 assert.equal(inkBounds(new Uint8ClampedArray(16), 2, 2), null);
 assert.deepEqual(ptsBounds([{ x: 10, y: 20, w: 4 }]), { minX: 6.8, minY: 16.8, maxX: 13.2, maxY: 23.2 });
 assert.equal(ptsBounds([]), null);
+
+const icsSample = buildIcsCalendar({
+  title: "李某 与 王某 婚礼",
+  startIso: "2026-10-06T11:18:00+08:00",
+  endIso: "2026-10-06T14:30:00+08:00",
+  location: "陕西省宝鸡市东营村",
+  description: "良辰吉时，恭候光临！",
+  url: "https://sumuyang.asia",
+});
+assert.match(icsSample, /BEGIN:VCALENDAR/);
+assert.match(icsSample, /END:VCALENDAR/);
+assert.match(icsSample, /SUMMARY:李某 与 王某 婚礼/);
+assert.match(icsSample, /DTSTART:20261006T031800Z/);
+assert.match(icsSample, /DTEND:20261006T063000Z/);
+assert.match(icsSample, /TRIGGER:-PT2H/);
+assert.match(icsSample, /TRIGGER:-P1D/);
+assert.match(icsSample, /LOCATION:陕西省宝鸡市东营村/);
 
 console.log("ok");

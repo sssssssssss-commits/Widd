@@ -256,3 +256,55 @@ export function strokeWidthFromTouch(input, minW = 2.2, maxW = 11) {
   else if (radius > 1.2) t = t * 0.72 + Math.max(0, Math.min(1, (radius - 8) / 18)) * 0.28;
   return lo + (hi - lo) * t;
 }
+
+export function buildIcsCalendar({
+  title = "婚礼",
+  startIso = "2026-10-06T11:18:00+08:00",
+  endIso = "2026-10-06T14:30:00+08:00",
+  location = "",
+  description = "",
+  url = "",
+}) {
+  const toIcsUtc = (iso) => {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "20261006T031800Z";
+    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  };
+
+  const dtstart = toIcsUtc(startIso);
+  const dtend = toIcsUtc(endIso);
+  const fullDesc = [description, location ? `地点：${location}` : "", url ? `请柬：${url}` : ""]
+    .filter(Boolean)
+    .join("\\n");
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Widd//Wedding Invite//CN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${title}`,
+    "BEGIN:VEVENT",
+    `UID:wedding-${dtstart}-widd@sumuyang.asia`,
+    `DTSTAMP:${toIcsUtc(new Date().toISOString())}`,
+    `DTSTART:${dtstart}`,
+    `DTEND:${dtend}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${fullDesc}`,
+    `LOCATION:${location}`,
+    "STATUS:CONFIRMED",
+    "BEGIN:VALARM",
+    "TRIGGER:-PT2H",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:【提醒】今日 ${title}`,
+    "END:VALARM",
+    "BEGIN:VALARM",
+    "TRIGGER:-P1D",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:【提醒】明日 ${title}`,
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
