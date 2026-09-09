@@ -195,22 +195,30 @@ assert.match(openers.intent, /S\.title=/);
 assert.match(openers.intent, /browser_fallback_url=/);
 
 {
-  const tall = coverBox(390, 844, 682, 1024);
+  const tall = coverBox(390, 844, 625, 1024);
   assert.ok(Math.abs(tall.h - 844) < 1);
   assert.ok(tall.w > 390);
   assert.ok(tall.x < 0);
   assert.ok(Math.abs(tall.y) < 1);
-  const wide = coverBox(1024, 768, 682, 1024);
+  const wide = coverBox(1024, 768, 625, 1024);
   assert.ok(wide.w >= 1024 - 1);
   assert.ok(wide.y <= 0);
+  const right = coverBox(390, 844, 625, 1024, 1);
+  assert.ok(Math.abs(right.x + right.w - 390) < 1);
+  const xi = right.x + right.w * 0.9136;
+  assert.ok(xi > 40 && xi < 390);
 }
 
 {
   const html = readFileSync(new URL("./index.html", import.meta.url), "utf8");
   const css = readFileSync(new URL("./css/invite.css", import.meta.url), "utf8");
   const js = readFileSync(new URL("./js/invite.js", import.meta.url), "utf8");
-  assert.match(html, /assets\/cover\.jpg\?v=3/);
-  assert.match(html, /width="682"/);
+  assert.match(html, /assets\/cover\.jpg\?v=4/);
+  assert.match(html, /width="625"/);
+  assert.match(html, /id="flaps"/);
+  assert.match(html, /祝福墙 · 即将开启/);
+  assert.doesNotMatch(html, /seal-face/);
+  assert.doesNotMatch(html, /签名墙/);
   assert.match(html, /calendar\.jpg\?v=2/);
   assert.match(html, /cal-img/);
   assert.match(html, /gate-tap/);
@@ -226,6 +234,9 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.doesNotMatch(html, /id="address"/);
   assert.doesNotMatch(html, /id="opener"/);
   assert.match(css, /\.names \.name[\s\S]{0,160}font-family:\s*"WiddName"/);
+  assert.match(css, /\.names-row/);
+  assert.match(css, /WiddWall/);
+  assert.match(css, /flap-top/);
   assert.match(css, /\.names small[\s\S]{0,80}font-size:\s*1\.84rem/);
   assert.doesNotMatch(css, /\.names small[\s\S]{0,80}border:/);
   assert.match(css, /\.cal-img/);
@@ -238,14 +249,19 @@ assert.match(openers.intent, /browser_fallback_url=/);
     assert.equal(oct.cells[9], 6);
   }
   assert.match(css, /--seal-y/);
-  assert.match(js, /COVER_W = 682/);
+  assert.match(js, /COVER_W = 625/);
   assert.match(js, /COVER_H = 1024/);
+  assert.match(js, /SEAL_PX = 0\.9136/);
+  assert.match(js, /<h2>祝福墙<\/h2>/);
+  assert.match(js, /names-row/);
   assert.match(js, /is-burst/);
+  assert.match(js, /is-open/);
   assert.doesNotMatch(js, /is-spin/);
   assert.match(css, /seal-burst/);
   assert.doesNotMatch(css, /seal-spin/);
   assert.ok(readFileSync(new URL("./assets/fonts/jin.woff2", import.meta.url)).byteLength > 1000);
   assert.ok(readFileSync(new URL("./assets/fonts/name.woff2", import.meta.url)).byteLength > 1000);
+  assert.ok(readFileSync(new URL("./assets/fonts/wall.woff2", import.meta.url)).byteLength > 1000);
 }
 
 console.log("ok");

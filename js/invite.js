@@ -249,8 +249,8 @@ function renderNames(cfg) {
   const g = `${cfg.groom.family}${cfg.groom.name}`;
   const b = `${cfg.bride.family}${cfg.bride.name}`;
   $("names").innerHTML =
-    `<small>新 郎</small><i></i><small>新 娘</small>` +
-    `<span class="name">${g}</span><div class="amp" aria-hidden="true">囍</div><span class="name">${b}</span>`;
+    `<div class="names-roles"><small>新 郎</small><i></i><small>新 娘</small></div>` +
+    `<div class="names-row"><span class="name">${g}</span><div class="amp" aria-hidden="true">囍</div><span class="name">${b}</span></div>`;
 }
 
 function renderItinerary(items) {
@@ -936,7 +936,7 @@ function renderWall(cfg, guest) {
   const by = wallBy();
   const epochUrl = cfg.wallEpoch || "";
   wall.innerHTML = `<div class="wall-box">
-      <h2>签名墙</h2>
+      <h2>祝福墙</h2>
       <div class="wall-yard">
         <div class="wall-frame">
           <div class="wall-board" id="wallBoard"></div>
@@ -945,7 +945,7 @@ function renderWall(cfg, guest) {
       <div class="wall-actions">
         <button type="button" id="wallOpen">签字</button>
         <button type="button" id="wallMine">撤下我的</button>
-        ${host ? `<button type="button" id="wallSave">保存签名墙</button>` : ""}
+        ${host ? `<button type="button" id="wallSave">保存祝福墙</button>` : ""}
         ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
       </div>
       <p class="wall-hint" id="wallHint"></p>
@@ -979,7 +979,7 @@ function renderWall(cfg, guest) {
     keep.className = "wall-keep";
     keep.hidden = true;
     keep.innerHTML = `<p class="wall-keep-hint">长按图片保存到相册</p>
-      <img id="wallKeepImg" alt="签名墙">
+      <img id="wallKeepImg" alt="祝福墙">
       <button type="button" id="wallKeepClose">关闭</button>`;
     document.body.appendChild(keep);
     $("wallKeepClose").addEventListener("click", () => {
@@ -1260,38 +1260,50 @@ function startBless(cfg) {
   lane.innerHTML = lines.map((t) => `<p class="bless-line">${t}</p>`).join("");
 }
 
-function coverBox(elW, elH, imgW, imgH) {
+function coverBox(elW, elH, imgW, imgH, alignX) {
   const s = Math.max(elW / imgW, elH / imgH);
   const w = imgW * s;
   const h = imgH * s;
-  return { x: (elW - w) / 2, y: (elH - h) / 2, w, h };
+  const ax = Number(alignX);
+  return {
+    x: Number.isFinite(ax) ? (elW - w) * ax : (elW - w) / 2,
+    y: (elH - h) / 2,
+    w,
+    h,
+  };
 }
 
-const COVER_W = 682;
+const COVER_W = 625;
 const COVER_H = 1024;
+const SEAL_PX = 0.9136;
+const SEAL_PY = 0.5283;
+const SEAL_DW = 0.185;
 
 function layoutCover() {
   const gate = $("gate");
   const seal = $("seal");
-  const face = $("sealFace");
-  if (!gate || !seal || !face || gate.classList.contains("is-gone")) return;
-  const { x, y, w, h } = coverBox(gate.clientWidth, gate.clientHeight, COVER_W, COVER_H);
-  const size = w * 0.48;
-  const cx = x + w * 0.503;
-  const cy = y + h * 0.355;
+  if (!gate || !seal || gate.classList.contains("is-gone")) return;
+  const { x, y, w, h } = coverBox(gate.clientWidth, gate.clientHeight, COVER_W, COVER_H, 1);
+  const flaps = $("flaps");
+  if (flaps) {
+    flaps.style.left = `${x}px`;
+    flaps.style.top = `${y}px`;
+    flaps.style.right = "auto";
+    flaps.style.bottom = "auto";
+    flaps.style.width = `${w}px`;
+    flaps.style.height = `${h}px`;
+    flaps.classList.add("is-laid");
+  }
+  const size = w * SEAL_DW;
+  const cx = x + w * SEAL_PX;
+  const cy = y + h * SEAL_PY;
   seal.style.left = `${cx - size / 2}px`;
   seal.style.top = `${cy - size / 2}px`;
   seal.style.width = `${size}px`;
   seal.style.height = `${size}px`;
-  face.style.width = `${w}px`;
-  face.style.height = `${h}px`;
-  face.style.left = `${x - (cx - size / 2)}px`;
-  face.style.top = `${y - (cy - size / 2)}px`;
   gate.style.setProperty("--seal-x", `${cx}px`);
   gate.style.setProperty("--seal-y", `${cy}px`);
   gate.style.setProperty("--seal-r", `${size / 2}px`);
-  const tap = $("gateTap");
-  if (tap) tap.style.top = `${cy + size / 2 + 18}px`;
 }
 
 function openLetter(cfg) {
@@ -1304,15 +1316,24 @@ function openLetter(cfg) {
   }
   if (gate) gate.classList.add("is-burst");
   bgmPlay();
+  letter.hidden = false;
   const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const wait = still ? 80 : 820;
-  setTimeout(() => {
+  if (still) {
     gate.classList.add("is-gone");
-    letter.hidden = false;
     void letter.offsetWidth;
     letter.classList.add("is-in");
     startBless(cfg);
-  }, wait);
+    return;
+  }
+  setTimeout(() => {
+    gate.classList.add("is-open");
+    void letter.offsetWidth;
+    letter.classList.add("is-in");
+  }, 220);
+  setTimeout(() => {
+    gate.classList.add("is-gone");
+    startBless(cfg);
+  }, 1180);
 }
 
 let foilStarted = false;

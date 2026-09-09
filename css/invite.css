@@ -34,11 +34,21 @@
   font-display: block;
 }
 
+/* 狂派手书 subset — owner-supplied AaKuangPaiShouShu */
+@font-face {
+  font-family: "WiddWall";
+  src: url("../assets/fonts/wall.woff2?v=1") format("woff2"),
+       url("../assets/fonts/wall.woff?v=1") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   margin: 0;
   height: 100%;
   min-height: 100%;
-  background: #B01418;
+  background: #551110;
   color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
@@ -142,17 +152,38 @@ body.is-signing .bgm-tog {
   width: 100%;
   height: 100%;
   height: 100dvh;
-  background: #B01418;
+  background: #551110;
   padding: 0;
   overflow: hidden;
-  -webkit-transition: opacity .4s ease, visibility .4s ease;
-  transition: opacity .4s ease, visibility .4s ease;
+  -webkit-perspective: 1600px;
+  perspective: 1600px;
+  -webkit-transition: opacity .4s ease, visibility .4s ease, background .2s ease;
+  transition: opacity .4s ease, visibility .4s ease, background .2s ease;
 }
 
 .gate.is-gone {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+}
+
+.flaps {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.flap {
+  position: absolute;
+  inset: 0;
+  -webkit-transform-origin: 91.36% 52.83%;
+  transform-origin: 91.36% 52.83%;
+  -webkit-transition: -webkit-transform .9s ease-in, opacity .72s ease-in;
+  transition: transform .9s ease-in, opacity .72s ease-in;
 }
 
 .cover-img {
@@ -162,8 +193,52 @@ body.is-signing .bgm-tog {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: right center;
   pointer-events: none;
+}
+
+.flaps.is-laid .cover-img {
+  object-fit: fill;
+  object-position: center;
+}
+
+.flaps.is-laid .flap-top {
+  -webkit-clip-path: polygon(0 0, 100.2% 0, 100.2% 52.9%);
+  clip-path: polygon(0 0, 100.2% 0, 100.2% 52.9%);
+}
+
+.flaps.is-laid .flap-bot {
+  -webkit-clip-path: polygon(0 100%, 100.2% 100%, 100.2% 52.7%);
+  clip-path: polygon(0 100%, 100.2% 100%, 100.2% 52.7%);
+}
+
+.flaps.is-laid .flap-mid {
+  -webkit-clip-path: polygon(-1% -1%, 101% 52.83%, -1% 101%);
+  clip-path: polygon(-1% -1%, 101% 52.83%, -1% 101%);
+}
+
+.gate.is-open {
+  background: transparent;
+}
+
+.gate.is-open .flap-top {
+  -webkit-transform: rotate(-56deg) translate3d(10%, -30%, 0);
+  transform: rotate(-56deg) translate3d(10%, -30%, 0);
+  opacity: 0;
+}
+
+.gate.is-open .flap-bot {
+  -webkit-transform: rotate(56deg) translate3d(10%, 30%, 0);
+  transform: rotate(56deg) translate3d(10%, 30%, 0);
+  opacity: 0;
+}
+
+.gate.is-open .flap-mid {
+  -webkit-transform: rotateY(-78deg);
+  transform: rotateY(-78deg);
+  opacity: 0;
+  -webkit-transition-delay: .1s;
+  transition-delay: .1s;
 }
 
 .seal {
@@ -172,7 +247,7 @@ body.is-signing .bgm-tog {
   padding: 0;
   border: 0;
   border-radius: 50%;
-  overflow: hidden;
+  overflow: visible;
   background: transparent;
   cursor: pointer;
   -webkit-animation: seal-breathe 2.8s ease-in-out infinite;
@@ -180,15 +255,10 @@ body.is-signing .bgm-tog {
   touch-action: manipulation;
 }
 
-.seal-face {
-  position: absolute;
-  max-width: none;
-  pointer-events: none;
-}
-
 .seal.is-burst {
   -webkit-animation: none;
   animation: none;
+  opacity: 0;
 }
 
 .gate::before,
@@ -233,30 +303,30 @@ body.is-signing .bgm-tog {
 @-webkit-keyframes seal-burst {
   0% { opacity: .95; -webkit-transform: scale(.35); transform: scale(.35); }
   35% { opacity: .7; }
-  100% { opacity: 0; -webkit-transform: scale(14); transform: scale(14); }
+  100% { opacity: 0; -webkit-transform: scale(18); transform: scale(18); }
 }
 
 @keyframes seal-burst {
   0% { opacity: .95; transform: scale(.35); }
   35% { opacity: .7; }
-  100% { opacity: 0; transform: scale(14); }
+  100% { opacity: 0; transform: scale(18); }
 }
 
 .gate-tap {
   position: absolute;
-  left: 50%;
-  top: calc(var(--seal-y, 38%) + var(--seal-r, 80px) + 18px);
+  left: var(--seal-x, 91%);
+  top: calc(var(--seal-y, 53%) + var(--seal-r, 40px) + 12px);
   right: auto;
   bottom: auto;
   width: max-content;
   margin: 0;
   text-align: center;
-  letter-spacing: .46em;
+  letter-spacing: .28em;
   font-size: .78rem;
   color: #F7E7C6;
   pointer-events: none;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
+  -webkit-transform: translate(-100%, 0);
+  transform: translate(-100%, 0);
   -webkit-animation: tap-hint 1.8s ease-in-out infinite;
   animation: tap-hint 1.8s ease-in-out infinite;
 }
@@ -379,12 +449,27 @@ body.is-signing .bgm-tog {
 }
 
 .names {
+  --name: clamp(2.5rem, 10.5vw, 4.8rem);
+  --xi: var(--name);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .22rem;
+  width: calc(100% + .5rem);
+  margin-left: -.25rem;
+  margin-right: -.25rem;
+}
+
+.names-roles,
+.names-row {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr var(--xi) 1fr;
   align-items: center;
-  column-gap: .2rem;
-  row-gap: .2rem;
-  width: 100%;
+  column-gap: .12rem;
+}
+
+.names-row {
+  min-height: var(--xi);
 }
 
 .names small {
@@ -394,32 +479,35 @@ body.is-signing .bgm-tog {
   text-align: center;
 }
 
-.names i {
-  width: 2.6rem;
+.names-roles i {
+  width: var(--xi);
 }
 
 .names .name {
   font-family: "WiddName", serif;
-  font-size: clamp(3.6rem, 13vw, 5.2rem);
+  font-size: var(--name);
   font-weight: 400;
   font-synthesis: none;
   letter-spacing: 0;
   line-height: 1;
+  height: var(--xi);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #1a0c08;
   text-align: center;
   min-width: 0;
 }
 
 .names .amp {
-  width: 2.6rem;
-  height: 2.6rem;
+  width: var(--xi);
+  height: var(--xi);
   border: 1px solid #E4C36A;
   border-radius: 50%;
   color: #F4DC8A;
-  font-size: 1.25rem;
+  font-size: calc(var(--xi) * .48);
   display: grid;
   place-items: center;
-  align-self: center;
   background: #8B241C;
   box-shadow: 0 0 0 3px rgba(139, 36, 28, 0.12);
 }
@@ -833,9 +921,11 @@ body.is-signing .bgm-tog {
 .wall-box h2 {
   margin: 0 0 .7rem;
   text-align: center;
-  font-size: .8rem;
+  font-family: "WiddWall", serif;
+  font-size: 1.6rem;
   font-weight: 400;
-  letter-spacing: .5em;
+  font-synthesis: none;
+  letter-spacing: .28em;
   color: var(--ink);
 }
 
@@ -1104,8 +1194,11 @@ body.is-signing .bgm-tog {
 .wall-soon {
   margin: 0;
   text-align: center;
-  letter-spacing: .35em;
-  font-size: .75rem;
+  font-family: "WiddWall", serif;
+  letter-spacing: .18em;
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-synthesis: none;
   color: var(--ink-soft);
   opacity: .9;
 }
@@ -1166,6 +1259,10 @@ body.is-signing .bless {
   .letter.is-in .letter-inner > .reveal {
     -webkit-animation: none;
     animation: none;
+  }
+  .flap {
+    -webkit-transition: none;
+    transition: none;
   }
   .letter-inner > .reveal {
     opacity: 1;

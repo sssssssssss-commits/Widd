@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#B01418">
+  <meta name="theme-color" content="#551110">
   <meta name="format-detection" content="telephone=no">
   <title>苏超凡 与 杨雨洁 婚礼请柬</title>
   <meta name="description" content="锦书遥寄，待君亲启。">
@@ -24,8 +24,8 @@
   <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=70">
-  <link rel="preload" href="assets/cover.jpg?v=3" as="image">
+  <link rel="stylesheet" href="css/invite.css?v=71">
+  <link rel="preload" href="assets/cover.jpg?v=4" as="image">
   <link rel="preload" href="assets/calendar.jpg?v=2" as="image">
   <link rel="preload" href="assets/letter.jpg?v=2" as="image">
   <link rel="preload" href="assets/fonts/jin.woff2?v=5" as="font" type="font/woff2">
@@ -47,6 +47,14 @@
       font-style: normal;
       font-display: block;
     }
+    @font-face {
+      font-family: "WiddWall";
+      src: url("assets/fonts/wall.woff2?v=1") format("woff2"),
+           url("assets/fonts/wall.woff?v=1") format("woff");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
   </style>
 </head>
 <body>
@@ -62,10 +70,12 @@
   </button>
 
   <div id="gate" class="gate">
-    <img class="cover-img" id="coverImg" src="assets/cover.jpg?v=3" width="682" height="1024" alt="苏超凡 与 杨雨洁 婚礼请柬" fetchpriority="high" decoding="async">
-    <button type="button" class="seal" id="seal" aria-label="打开请柬">
-      <img class="seal-face" id="sealFace" src="assets/cover.jpg?v=3" alt="" decoding="async">
-    </button>
+    <div class="flaps" id="flaps" aria-hidden="true">
+      <div class="flap flap-top"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div>
+      <div class="flap flap-mid"><img class="cover-img" id="coverImg" src="assets/cover.jpg?v=4" width="625" height="1024" alt="苏超凡 与 杨雨洁 婚礼请柬" fetchpriority="high" decoding="async"></div>
+      <div class="flap flap-bot"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div>
+    </div>
+    <button type="button" class="seal" id="seal" aria-label="打开请柬"></button>
     <p class="gate-tap" id="gateTap">轻触打开</p>
     <p class="gate-hint" id="gateHint" hidden>信笺未至，请用本地服务打开</p>
   </div>
@@ -106,12 +116,12 @@
       <section class="rsvp" id="rsvp"></section>
 
       <section class="wall" id="wall" hidden></section>
-      <p class="wall-soon" id="wallSoon" hidden>签名墙 · 即将开启</p>
+      <p class="wall-soon" id="wallSoon" hidden>祝福墙 · 即将开启</p>
 
       <footer class="colophon reveal" id="colophon"></footer>
     </article>
   </main>
 
-  <script src="js/invite.js?v=75"></script>
+  <script src="js/invite.js?v=76"></script>
 </body>
 </html>

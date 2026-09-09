@@ -344,7 +344,7 @@ export function monthGrid(iso) {
   return { y, m, highlight, cells };
 }
 
-export function coverBox(elW, elH, imgW, imgH) {
+export function coverBox(elW, elH, imgW, imgH, alignX) {
   const ew = Number(elW) || 0;
   const eh = Number(elH) || 0;
   const iw = Number(imgW) || 1;
@@ -352,6 +352,12 @@ export function coverBox(elW, elH, imgW, imgH) {
   const s = Math.max(ew / iw, eh / ih);
   const w = iw * s;
   const h = ih * s;
-  return { x: (ew - w) / 2, y: (eh - h) / 2, w, h };
+  const ax = Number(alignX);
+  return {
+    x: Number.isFinite(ax) ? (ew - w) * ax : (ew - w) / 2,
+    y: (eh - h) / 2,
+    w,
+    h,
+  };
 }
 
