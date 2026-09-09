@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   clipText,
   coupleLine,
@@ -193,14 +194,30 @@ assert.match(openers.intent, /S\.title=/);
 assert.match(openers.intent, /browser_fallback_url=/);
 
 {
-  const tall = coverBox(390, 844, 540, 811);
+  const tall = coverBox(390, 844, 682, 1024);
   assert.ok(Math.abs(tall.h - 844) < 1);
   assert.ok(tall.w > 390);
   assert.ok(tall.x < 0);
   assert.ok(Math.abs(tall.y) < 1);
-  const wide = coverBox(1024, 768, 540, 811);
+  const wide = coverBox(1024, 768, 682, 1024);
   assert.ok(wide.w >= 1024 - 1);
   assert.ok(wide.y <= 0);
+}
+
+{
+  const html = readFileSync(new URL("./index.html", import.meta.url), "utf8");
+  const css = readFileSync(new URL("./css/invite.css", import.meta.url), "utf8");
+  const js = readFileSync(new URL("./js/invite.js", import.meta.url), "utf8");
+  assert.match(html, /assets\/cover\.jpg\?v=3/);
+  assert.match(html, /width="682"/);
+  assert.match(html, /preload[^>]+calendar\.jpg/);
+  assert.match(html, /cal-img[^>]+fetchpriority="high"/);
+  assert.doesNotMatch(html, /cal-img[^>]+loading="lazy"/);
+  assert.match(css, /\.bless-line\.is-now[\s\S]{0,280}font-family:\s*"WiddJin"/);
+  assert.match(js, /COVER_W = 682/);
+  assert.match(js, /COVER_H = 1024/);
+  assert.ok(readFileSync(new URL("./assets/fonts/jin.woff2", import.meta.url)).byteLength > 1000);
+  assert.ok(readFileSync(new URL("./assets/fonts/jin.woff", import.meta.url)).byteLength > 1000);
 }
 
 console.log("ok");

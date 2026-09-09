@@ -24,13 +24,22 @@
   font-display: swap;
 }
 
-/* 源界明朝 ExtraLight-like, hosted so WeChat can paint 瘦金细劲 */
+/* Noto Serif SC ExtraLight subset — SIL OFL 1.1; thin enough to read as 瘦金 on phones */
 @font-face {
   font-family: "WiddJin";
-  src: url("../assets/fonts/jin.woff2") format("woff2");
+  src: url("../assets/fonts/jin.woff2?v=3") format("woff2"),
+       url("../assets/fonts/jin.woff?v=3") format("woff");
   font-weight: 200;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
+}
+@font-face {
+  font-family: "WiddJin";
+  src: url("../assets/fonts/jin.woff2?v=3") format("woff2"),
+       url("../assets/fonts/jin.woff?v=3") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
 }
 
 html, body {
@@ -1048,22 +1057,15 @@ body.is-signing .bless {
   height: auto;
   white-space: normal;
   word-break: break-word;
-  font-family: "方正瘦金书简体", "方正瘦金书", "FZShouJinShu-S10S", "WiddJin", "Songti SC", "STSong", serif;
+  font-family: "WiddJin", serif;
   font-size: clamp(1.6rem, 5.8vw, 2.3rem);
   font-weight: 200;
+  font-synthesis: none;
   line-height: 1.4;
   padding: .35rem .4rem;
   opacity: 1;
   color: #C23B32;
-  text-shadow:
-    -1px -1px 0 #1a0c08,
-     1px -1px 0 #1a0c08,
-    -1px  1px 0 #1a0c08,
-     1px  1px 0 #1a0c08,
-     0   -1px 0 #1a0c08,
-     0    1px 0 #1a0c08,
-    -1px  0   0 #1a0c08,
-     1px  0   0 #1a0c08;
+  text-shadow: none;
 }
 
 .bless.is-still .bless-line {

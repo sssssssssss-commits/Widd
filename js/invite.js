@@ -1287,9 +1287,21 @@ function startBless(cfg) {
     if (cur < lines.length) step();
     else rest();
   };
-  paint(0);
-  void lane.offsetWidth;
-  step();
+  let kicked = 0;
+  const kick = () => {
+    if (kicked) return;
+    kicked = 1;
+    paint(0);
+    void lane.offsetWidth;
+    step();
+  };
+  setTimeout(kick, 700);
+  try {
+    if (document.fonts && document.fonts.load) document.fonts.load('200 2.2rem "WiddJin"').then(kick, kick);
+    else kick();
+  } catch (err) {
+    kick();
+  }
 }
 
 function coverBox(elW, elH, imgW, imgH) {
@@ -1299,8 +1311,8 @@ function coverBox(elW, elH, imgW, imgH) {
   return { x: (elW - w) / 2, y: (elH - h) / 2, w, h };
 }
 
-const COVER_W = 540;
-const COVER_H = 811;
+const COVER_W = 682;
+const COVER_H = 1024;
 
 function layoutCover() {
   const gate = $("gate");
@@ -1750,6 +1762,11 @@ function bindGate(cfg) {
 }
 
 async function main() {
+  ["assets/calendar.jpg?v=2", "assets/letter.jpg?v=2"].forEach((src) => {
+    const im = new Image();
+    im.decoding = "async";
+    im.src = src;
+  });
   const cfg = await loadConfig();
   const guest = guestFromSearch(location.search);
   applyShare(cfg);
