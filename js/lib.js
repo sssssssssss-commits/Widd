@@ -334,6 +334,16 @@ export function calendarOpeners({
   return { icsUrl, webcal, intent };
 }
 
+export function monthGrid(iso) {
+  const [y, m, highlight] = String(iso || "").slice(0, 10).split("-").map(Number);
+  if (!y || !m || !highlight) return null;
+  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const cells = Array(firstDow).fill(0).concat(Array.from({ length: days }, (_, i) => i + 1));
+  while (cells.length % 7) cells.push(0);
+  return { y, m, highlight, cells };
+}
+
 export function coverBox(elW, elH, imgW, imgH) {
   const ew = Number(elW) || 0;
   const eh = Number(elH) || 0;

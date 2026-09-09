@@ -27,6 +27,7 @@ import {
   buildIcsCalendar,
   calendarOpeners,
   coverBox,
+  monthGrid,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -210,8 +211,8 @@ assert.match(openers.intent, /browser_fallback_url=/);
   const js = readFileSync(new URL("./js/invite.js", import.meta.url), "utf8");
   assert.match(html, /assets\/cover\.jpg\?v=3/);
   assert.match(html, /width="682"/);
-  assert.match(html, /preload[^>]+calendar\.jpg/);
-  assert.match(html, /cal-img[^>]+fetchpriority="high"/);
+  assert.match(html, /id="calCard"/);
+  assert.doesNotMatch(html, /calendar\.jpg/);
   assert.match(html, /gate-tap/);
   assert.match(html, /轻触打开/);
   assert.match(css, /letter-rise/);
@@ -222,7 +223,18 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(css, /\.bless-line[\s\S]{0,280}font-family:\s*"WiddJin"/);
   assert.match(css, /\.bless-line\.is-now[\s\S]{0,280}font-family:\s*"WiddJin"/);
   assert.match(css, /\.address[\s\S]{0,220}font-family:\s*"WiddQing"/);
-  assert.match(css, /\.address[\s\S]{0,160}font-size:\s*2rem/);
+  assert.match(css, /\.address[\s\S]{0,160}font-size:\s*3rem/);
+  assert.match(css, /\.names \.person small[\s\S]{0,120}font-size:\s*\.92rem/);
+  assert.match(css, /\.bless-line\.is-now[\s\S]{0,420}text-shadow:/);
+  assert.match(css, /\.cal-grid/);
+  {
+    const oct = monthGrid("2026-10-06T11:18:00+08:00");
+    assert.equal(oct.y, 2026);
+    assert.equal(oct.m, 10);
+    assert.equal(oct.highlight, 6);
+    assert.equal(oct.cells[4], 1);
+    assert.equal(oct.cells[9], 6);
+  }
   assert.match(css, /--seal-y/);
   assert.match(css, /\.opener[\s\S]{0,240}font-family:\s*"WiddQing"/);
   assert.match(css, /\.opener[\s\S]{0,160}white-space:\s*nowrap/);

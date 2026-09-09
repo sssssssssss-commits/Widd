@@ -284,7 +284,32 @@ function renderNames(cfg) {
   const cell = (who, label) =>
     `<div class="person"><small>${label}</small><span class="name">${who.family}${who.name}</span></div>`;
   $("names").innerHTML =
-    cell(cfg.groom, "新郎") + '<div class="amp" aria-hidden="true">囍</div>' + cell(cfg.bride, "新娘");
+    cell(cfg.groom, "新 郎") + '<div class="amp" aria-hidden="true">囍</div>' + cell(cfg.bride, "新 娘");
+}
+
+// ponytail: invite.js is not a module; keep in sync with js/lib.js monthGrid
+function monthGrid(iso) {
+  const [y, m, highlight] = String(iso || "").slice(0, 10).split("-").map(Number);
+  if (!y || !m || !highlight) return null;
+  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const cells = Array(firstDow).fill(0).concat(Array.from({ length: days }, (_, i) => i + 1));
+  while (cells.length % 7) cells.push(0);
+  return { y, m, highlight, cells };
+}
+
+function renderCalendar(iso) {
+  const el = $("calCard");
+  const g = monthGrid(iso);
+  if (!el || !g) return;
+  const week = [..."日一二三四五六"].map((c) => `<span>${c}</span>`).join("");
+  const days = g.cells
+    .map((n) => {
+      if (!n) return "<span></span>";
+      return n === g.highlight ? `<span class="is-day">${n}</span>` : `<span>${n}</span>`;
+    })
+    .join("");
+  el.innerHTML = `<div class="cal-head"><em>${g.y}</em><strong>${g.m}月</strong></div><div class="cal-week">${week}</div><div class="cal-grid">${days}</div>`;
 }
 
 function renderItinerary(items) {
@@ -1816,7 +1841,7 @@ function bindGate(cfg) {
 }
 
 async function main() {
-  ["assets/calendar.jpg?v=2", "assets/letter.jpg?v=2"].forEach((src) => {
+  ["assets/letter.jpg?v=2"].forEach((src) => {
     const im = new Image();
     im.decoding = "async";
     im.src = src;
@@ -1828,6 +1853,7 @@ async function main() {
   renderNames(cfg);
   paintOpener(cfg.opener);
   paintWhen(cfg.datetimeText);
+  renderCalendar(cfg.datetime);
   startClepsydra(cfg.datetime);
   renderItinerary(cfg.itinerary);
   renderScrolls(cfg.photos);

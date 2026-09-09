@@ -383,12 +383,12 @@ body.is-signing .bgm-tog {
   text-align: center;
   letter-spacing: .32em;
   font-family: "WiddQing", serif;
-  font-size: 2rem;
+  font-size: 3rem;
   font-weight: 400;
   font-synthesis: none;
   line-height: 1.3;
   color: #C23B32;
-  -webkit-text-stroke: .7px #D4AF37;
+  -webkit-text-stroke: 1px #D4AF37;
   text-shadow:
     -1px -1px 0 #C9A24A,
      1px -1px 0 #C9A24A,
@@ -413,9 +413,12 @@ body.is-signing .bgm-tog {
 }
 
 .names .person small {
-  font-size: .62rem;
-  letter-spacing: .46em;
-  color: var(--gold);
+  font-size: .92rem;
+  letter-spacing: .42em;
+  color: #8B241C;
+  padding: .2rem .72rem .2rem .95rem;
+  border: 1px solid #c9a24a99;
+  background: #fff8efee;
 }
 
 .names .person .name {
@@ -456,11 +459,17 @@ body.is-signing .bgm-tog {
   color: var(--ink);
 }
 
+.when {
+  padding: 1.05rem .8rem 1.15rem;
+  background: rgba(255, 248, 239, 0.9);
+  border: 1px solid #c9a24a55;
+}
+
 .when-text {
   margin: .35rem 0 1rem;
   text-align: center;
   letter-spacing: .06em;
-  font-size: .78rem;
+  font-size: .95rem;
   line-height: 1.85;
   color: var(--ink-soft);
   word-break: break-word;
@@ -468,40 +477,104 @@ body.is-signing .bgm-tog {
 
 .when-solar {
   display: block;
-  font-size: 1.02rem;
-  letter-spacing: .18em;
+  font-size: 1.28rem;
+  letter-spacing: .2em;
   color: var(--ink);
 }
 
 .when-lunar {
   display: block;
-  margin-top: .2rem;
-  letter-spacing: .12em;
+  margin-top: .28rem;
+  font-size: .95rem;
+  letter-spacing: .14em;
 }
 
 .cal-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: .6rem auto 1.3rem;
-  max-width: 320px;
+  margin: .35rem auto 1.15rem;
+  max-width: 300px;
 }
 
 .cal-card {
-  position: relative;
   width: 100%;
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 4px 18px rgba(139, 36, 28, 0.08), 0 1px 4px rgba(142, 106, 36, 0.12);
-  border: 1px solid #c9a24a66;
-  background: #fbf6ee;
+  padding: .85rem .7rem 1rem;
+  border: 1px solid #c9a24a88;
+  background: #fffdf8;
+  box-shadow: 0 4px 18px rgba(139, 36, 28, 0.06);
 }
 
-.cal-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
+.cal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: .45rem;
+  margin-bottom: .7rem;
+  color: var(--cinnabar);
+}
+
+.cal-head em {
+  font-style: normal;
+  font-size: .82rem;
+  letter-spacing: .16em;
+}
+
+.cal-head strong {
+  font-weight: 400;
+  font-size: 1.35rem;
+  letter-spacing: .18em;
+}
+
+.cal-week,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  text-align: center;
+}
+
+.cal-week {
+  margin-bottom: .35rem;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--gold-dim);
+}
+
+.cal-grid {
+  gap: .22rem 0;
+}
+
+.cal-grid span {
+  position: relative;
+  min-height: 1.85rem;
+  display: grid;
+  place-items: center;
+  font-size: .92rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-grid .is-day {
+  color: #F7E7C6;
+  font-weight: 400;
+}
+
+.cal-grid .is-day::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin: -.85rem 0 0 -.85rem;
+  border-radius: 50%;
+  background: #8B241C;
+  box-shadow: 0 0 0 3px rgba(228, 195, 106, 0.35);
+  z-index: 0;
+}
+
+.cal-grid .is-day {
+  z-index: 1;
 }
 
 .clepsydra {
@@ -1212,10 +1285,31 @@ body.is-signing .bless {
   font-weight: 400;
   font-synthesis: none;
   line-height: 1.4;
+  position: relative;
+  isolation: isolate;
   padding: .35rem .4rem;
   opacity: 1;
-  color: #C23B32;
-  text-shadow: none;
+  color: #C43A32;
+  text-shadow:
+    0 -1px 0 rgba(255, 236, 220, 0.92),
+    0 1px 0 rgba(90, 18, 16, 0.3),
+    0 2px 3px rgba(90, 18, 16, 0.2),
+    0 0 12px rgba(255, 150, 130, 0.5),
+    0 0 26px rgba(255, 186, 150, 0.32);
+}
+
+.bless-line.is-now::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90%;
+  height: 150%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, rgba(255, 176, 148, 0.38) 0%, rgba(255, 200, 170, 0.1) 46%, transparent 72%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .bless.is-still .bless-line {
