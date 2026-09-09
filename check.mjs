@@ -39,7 +39,7 @@ assert.deepEqual(remaining(1000, 500), { days: 0, hours: 0, minutes: 0, seconds:
 assert.deepEqual(remaining(0, 90_061_000), { days: 1, hours: 1, minutes: 1, seconds: 1, past: false });
 
 assert.equal(pad2(3), "03");
-assert.equal(coupleLine({ family: "李", name: "某" }, { family: "王", name: "某" }), "李某 与 王某");
+assert.equal(coupleLine({ family: "苏", name: "超凡" }, { family: "杨", name: "雨洁" }), "苏超凡 与 杨雨洁");
 
 const links = mapLinks({ name: "锦绣厅", address: "某路", lat: 31.2, lng: 121.4 });
 assert.match(links.amap, /121\.4,31\.2/);
@@ -162,7 +162,7 @@ assert.deepEqual(ptsBounds([{ x: 10, y: 20, w: 4 }]), { minX: 6.8, minY: 16.8, m
 assert.equal(ptsBounds([]), null);
 
 const icsSample = buildIcsCalendar({
-  title: "李某 与 王某 婚礼",
+  title: "苏超凡 与 杨雨洁 婚礼",
   startIso: "2026-10-06T11:18:00+08:00",
   endIso: "2026-10-06T14:30:00+08:00",
   location: "陕西省宝鸡市东营村",
@@ -171,7 +171,7 @@ const icsSample = buildIcsCalendar({
 });
 assert.match(icsSample, /BEGIN:VCALENDAR/);
 assert.match(icsSample, /END:VCALENDAR/);
-assert.match(icsSample, /SUMMARY:李某 与 王某 婚礼/);
+assert.match(icsSample, /SUMMARY:苏超凡 与 杨雨洁 婚礼/);
 assert.match(icsSample, /DTSTART:20261006T031800Z/);
 assert.match(icsSample, /DTEND:20261006T063000Z/);
 assert.match(icsSample, /TRIGGER:-PT2H/);
@@ -180,7 +180,7 @@ assert.match(icsSample, /LOCATION:陕西省宝鸡市东营村/);
 
 const openers = calendarOpeners({
   icsUrl: "https://sumuyang.asia/wedding.ics",
-  title: "李某 与 王某 婚礼",
+  title: "苏超凡 与 杨雨洁 婚礼",
   startIso: "2026-10-06T11:18:00+08:00",
   endIso: "2026-10-06T14:30:00+08:00",
   location: "陕西省宝鸡市东营村",
@@ -218,7 +218,12 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(js, /letter\.classList\.add\("is-in"\)/);
   assert.match(js, /paintWhen/);
   assert.doesNotMatch(html, /cal-img[^>]+loading="lazy"/);
+  assert.match(html, /苏超凡 与 杨雨洁/);
+  assert.match(css, /\.bless-line[\s\S]{0,280}font-family:\s*"WiddJin"/);
   assert.match(css, /\.bless-line\.is-now[\s\S]{0,280}font-family:\s*"WiddJin"/);
+  assert.match(css, /\.address[\s\S]{0,220}font-family:\s*"WiddQing"/);
+  assert.match(css, /\.address[\s\S]{0,160}font-size:\s*2rem/);
+  assert.match(css, /--seal-y/);
   assert.match(css, /\.opener[\s\S]{0,240}font-family:\s*"WiddQing"/);
   assert.match(css, /\.opener[\s\S]{0,160}white-space:\s*nowrap/);
   assert.match(js, /COVER_W = 682/);

@@ -1380,6 +1380,8 @@ function layoutCover() {
   gate.style.setProperty("--seal-x", `${cx}px`);
   gate.style.setProperty("--seal-y", `${cy}px`);
   gate.style.setProperty("--seal-r", `${size / 2}px`);
+  const tap = $("gateTap");
+  if (tap) tap.style.top = `${cy + size / 2 + 18}px`;
 }
 
 function openLetter(cfg) {
@@ -1822,7 +1824,7 @@ async function main() {
   const cfg = await loadConfig();
   const guest = guestFromSearch(location.search);
   applyShare(cfg);
-  $("address").textContent = guest ? `恭请 ${guest}` : "恭请光临";
+  $("address").textContent = openerForQing(guest ? `恭请 ${guest}` : "恭请光临");
   renderNames(cfg);
   paintOpener(cfg.opener);
   paintWhen(cfg.datetimeText);
