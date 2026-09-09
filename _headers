@@ -1,4 +1,13 @@
-/wx5.jpg
+/share.jpg
   Content-Type: image/jpeg
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=86400
+
+/wx.jpg
+  Content-Type: image/jpeg
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=86400
+
+/assets/*
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=86400

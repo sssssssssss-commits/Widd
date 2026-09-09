@@ -43,7 +43,7 @@ body.is-signing {
 }
 
 .share-thumb {
-  /* ponytail: in-viewport under the cover so WeChat 右上角分享 can pick the first <img> */
+  /* ponytail: under the #gate envelope (z-index: 10) so humans never see it, but opacity 1 so WeChat extracts it */
   position: fixed;
   left: 0;
   top: 0;
