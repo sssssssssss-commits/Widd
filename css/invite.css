@@ -37,8 +37,8 @@
 /* 狂派手书 subset — owner-supplied AaKuangPaiShouShu */
 @font-face {
   font-family: "WiddWall";
-  src: url("../assets/fonts/wall.woff2?v=1") format("woff2"),
-       url("../assets/fonts/wall.woff?v=1") format("woff");
+  src: url("../assets/fonts/wall.woff2?v=2") format("woff2"),
+       url("../assets/fonts/wall.woff?v=2") format("woff");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -314,19 +314,20 @@ body.is-signing .bgm-tog {
 
 .gate-tap {
   position: absolute;
-  left: var(--seal-x, 91%);
-  top: calc(var(--seal-y, 53%) + var(--seal-r, 40px) + 12px);
+  left: calc(var(--seal-x, 91%) - var(--seal-r, 40px) * .35);
+  top: calc(var(--seal-y, 53%) + var(--seal-r, 40px) + 10px);
   right: auto;
   bottom: auto;
   width: max-content;
   margin: 0;
   text-align: center;
-  letter-spacing: .28em;
+  letter-spacing: .2em;
   font-size: .78rem;
-  color: #F7E7C6;
+  color: #F4DC8A;
+  text-shadow: 0 0 8px rgba(228, 195, 106, 0.45);
   pointer-events: none;
-  -webkit-transform: translate(-100%, 0);
-  transform: translate(-100%, 0);
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
   -webkit-animation: tap-hint 1.8s ease-in-out infinite;
   animation: tap-hint 1.8s ease-in-out infinite;
 }
@@ -473,10 +474,20 @@ body.is-signing .bgm-tog {
 }
 
 .names small {
-  font-size: 1.84rem;
-  letter-spacing: .28em;
-  color: #8B241C;
+  font-family: "WiddWall", serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: .22em;
+  color: #C23B32;
   text-align: center;
+  -webkit-text-stroke: .045em #1a0c08;
+  paint-order: stroke fill;
+  text-shadow:
+    -1px 0 0 #1a0c08,
+    1px 0 0 #1a0c08,
+    0 -1px 0 #1a0c08,
+    0 1px 0 #1a0c08;
 }
 
 .names-roles i {
@@ -922,7 +933,7 @@ body.is-signing .bgm-tog {
   margin: 0 0 .7rem;
   text-align: center;
   font-family: "WiddWall", serif;
-  font-size: 1.6rem;
+  font-size: 2.2rem;
   font-weight: 400;
   font-synthesis: none;
   letter-spacing: .28em;
@@ -1196,7 +1207,7 @@ body.is-signing .bgm-tog {
   text-align: center;
   font-family: "WiddWall", serif;
   letter-spacing: .18em;
-  font-size: 1.5rem;
+  font-size: 2.1rem;
   font-weight: 400;
   font-synthesis: none;
   color: var(--ink-soft);
@@ -1246,7 +1257,7 @@ body.is-signing .bless {
   margin: 0;
   text-align: center;
   font-family: "WiddJin", serif;
-  font-size: 1.05rem;
+  font-size: 1.3rem;
   font-weight: 400;
   font-synthesis: none;
   line-height: 1.85;
