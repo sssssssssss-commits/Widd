@@ -1366,6 +1366,9 @@ function layoutCover() {
   face.style.height = `${h}px`;
   face.style.left = `${x - (cx - size / 2)}px`;
   face.style.top = `${y - (cy - size / 2)}px`;
+  gate.style.setProperty("--seal-x", `${cx}px`);
+  gate.style.setProperty("--seal-y", `${cy}px`);
+  gate.style.setProperty("--seal-r", `${size / 2}px`);
 }
 
 function openLetter(cfg) {
@@ -1374,11 +1377,12 @@ function openLetter(cfg) {
   const letter = $("letter");
   if (seal) {
     seal.disabled = true;
-    seal.classList.add("is-spin");
+    seal.classList.add("is-burst");
   }
+  if (gate) gate.classList.add("is-burst");
   bgmPlay();
   const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const wait = still ? 80 : 780;
+  const wait = still ? 80 : 820;
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;

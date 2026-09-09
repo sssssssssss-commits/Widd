@@ -186,9 +186,38 @@ body.is-signing .bgm-tog {
   pointer-events: none;
 }
 
-.seal.is-spin {
-  -webkit-animation: seal-spin .75s ease-in-out;
-  animation: seal-spin .75s ease-in-out;
+.seal.is-burst {
+  -webkit-animation: none;
+  animation: none;
+}
+
+.gate::before,
+.gate::after {
+  content: "";
+  position: absolute;
+  left: var(--seal-x, 50%);
+  top: var(--seal-y, 35%);
+  width: calc(var(--seal-r, 80px) * 2);
+  height: calc(var(--seal-r, 80px) * 2);
+  margin: calc(var(--seal-r, 80px) * -1) 0 0 calc(var(--seal-r, 80px) * -1);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 6;
+  opacity: 0;
+  background: radial-gradient(circle, #fff4c4 0%, #f3d06a 26%, rgba(228, 195, 106, 0.38) 48%, rgba(228, 195, 106, 0) 70%);
+  box-shadow: 0 0 18px 6px rgba(255, 226, 140, 0.55);
+  -webkit-transform: scale(0.35);
+  transform: scale(0.35);
+}
+
+.gate.is-burst::before {
+  -webkit-animation: seal-burst .82s ease-out forwards;
+  animation: seal-burst .82s ease-out forwards;
+}
+
+.gate.is-burst::after {
+  -webkit-animation: seal-burst .82s .1s ease-out forwards;
+  animation: seal-burst .82s .1s ease-out forwards;
 }
 
 @-webkit-keyframes seal-breathe {
@@ -201,14 +230,16 @@ body.is-signing .bgm-tog {
   50% { box-shadow: 0 0 0 8px rgba(228, 195, 106, 0.28); }
 }
 
-@-webkit-keyframes seal-spin {
-  0% { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+@-webkit-keyframes seal-burst {
+  0% { opacity: .95; -webkit-transform: scale(.35); transform: scale(.35); }
+  35% { opacity: .7; }
+  100% { opacity: 0; -webkit-transform: scale(14); transform: scale(14); }
 }
 
-@keyframes seal-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes seal-burst {
+  0% { opacity: .95; transform: scale(.35); }
+  35% { opacity: .7; }
+  100% { opacity: 0; transform: scale(14); }
 }
 
 .gate-hint {
