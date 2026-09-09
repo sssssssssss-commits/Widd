@@ -1292,20 +1292,51 @@ function startBless(cfg) {
   step();
 }
 
+function coverBox(elW, elH, imgW, imgH) {
+  const s = Math.max(elW / imgW, elH / imgH);
+  const w = imgW * s;
+  const h = imgH * s;
+  return { x: (elW - w) / 2, y: (elH - h) / 2, w, h };
+}
+
+const COVER_W = 540;
+const COVER_H = 811;
+
+function layoutCover() {
+  const gate = $("gate");
+  const seal = $("seal");
+  const face = $("sealFace");
+  if (!gate || !seal || !face || gate.classList.contains("is-gone")) return;
+  const { x, y, w, h } = coverBox(gate.clientWidth, gate.clientHeight, COVER_W, COVER_H);
+  const size = w * 0.48;
+  const cx = x + w * 0.503;
+  const cy = y + h * 0.355;
+  seal.style.left = `${cx - size / 2}px`;
+  seal.style.top = `${cy - size / 2}px`;
+  seal.style.width = `${size}px`;
+  seal.style.height = `${size}px`;
+  face.style.width = `${w}px`;
+  face.style.height = `${h}px`;
+  face.style.left = `${x - (cx - size / 2)}px`;
+  face.style.top = `${y - (cy - size / 2)}px`;
+}
+
 function openLetter(cfg) {
   const gate = $("gate");
   const seal = $("seal");
   const letter = $("letter");
   if (seal) {
     seal.disabled = true;
-    seal.classList.add("is-bloom");
+    seal.classList.add("is-spin");
   }
   bgmPlay();
+  const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const wait = still ? 80 : 780;
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;
     startBless(cfg);
-  }, 420);
+  }, wait);
 }
 
 let foilStarted = false;
@@ -1701,6 +1732,13 @@ function bindTapXi() {
 }
 
 function bindGate(cfg) {
+  layoutCover();
+  const cover = $("coverImg");
+  if (cover && !cover.complete) cover.addEventListener("load", layoutCover);
+  addEventListener("resize", layoutCover, { passive: true });
+  try {
+    if (window.visualViewport) visualViewport.addEventListener("resize", layoutCover, { passive: true });
+  } catch {}
   const go = () => {
     const seal = $("seal");
     if (seal) seal.disabled = true;

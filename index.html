@@ -24,13 +24,14 @@
   <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=60">
-  <link rel="preload" href="assets/fonts/xing.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/invite.css?v=61">
+  <link rel="preload" href="assets/cover.jpg?v=2" as="image">
+  <link rel="preload" href="assets/fonts/jin.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
   <img class="share-thumb" src="https://sumuyang.asia/share.jpg" width="300" height="300" alt="李某 与 王某 婚礼请柬">
   <canvas id="foil" class="foil" aria-hidden="true"></canvas>
-  <audio id="bgm" src="assets/bgm.mp3?v=2" loop preload="auto" playsinline webkit-playsinline></audio>
+  <audio id="bgm" src="assets/bgm.mp3?v=2" loop preload="none" playsinline webkit-playsinline></audio>
   <button type="button" class="bgm-tog" id="bgmTog" aria-label="关闭音乐" aria-pressed="true">
     <span class="bgm-disc" aria-hidden="true">
       <svg viewBox="0 0 24 24" width="20" height="20">
@@ -40,10 +41,10 @@
   </button>
 
   <div id="gate" class="gate">
-    <div class="cover">
-      <img class="cover-img" src="assets/cover.jpg" width="682" height="1024" alt="苏超凡 与 杨雨洁 婚礼请柬">
-      <button type="button" class="seal" id="seal" aria-label="打开请柬"></button>
-    </div>
+    <img class="cover-img" id="coverImg" src="assets/cover.jpg?v=2" width="540" height="811" alt="苏超凡 与 杨雨洁 婚礼请柬" fetchpriority="high" decoding="async">
+    <button type="button" class="seal" id="seal" aria-label="打开请柬">
+      <img class="seal-face" id="sealFace" src="assets/cover.jpg?v=2" alt="" decoding="async">
+    </button>
     <p class="gate-hint" id="gateHint" hidden>信笺未至，请用本地服务打开</p>
   </div>
 
@@ -92,6 +93,6 @@
     </article>
   </main>
 
-  <script src="js/invite.js?v=65"></script>
+  <script src="js/invite.js?v=66"></script>
 </body>
 </html>

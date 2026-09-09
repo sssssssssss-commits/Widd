@@ -24,10 +24,20 @@
   font-display: swap;
 }
 
+/* 源界明朝 ExtraLight-like, hosted so WeChat can paint 瘦金细劲 */
+@font-face {
+  font-family: "WiddJin";
+  src: url("../assets/fonts/jin.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   margin: 0;
+  height: 100%;
   min-height: 100%;
-  background: var(--paper);
+  background: #B01418;
   color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
@@ -128,13 +138,14 @@ body.is-signing .bgm-tog {
   position: fixed;
   inset: 0;
   z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
   background: #B01418;
   padding: 0;
-  -webkit-transition: opacity .45s ease, visibility .45s ease;
-  transition: opacity .45s ease, visibility .45s ease;
+  overflow: hidden;
+  -webkit-transition: opacity .4s ease, visibility .4s ease;
+  transition: opacity .4s ease, visibility .4s ease;
 }
 
 .gate.is-gone {
@@ -143,74 +154,60 @@ body.is-signing .bgm-tog {
   pointer-events: none;
 }
 
-.cover {
-  position: relative;
-  width: min(100vw, calc(100dvh * 682 / 1024));
-  height: min(100dvh, calc(100vw * 1024 / 682));
-  max-width: 100%;
-  max-height: 100%;
-}
-
 .cover-img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   pointer-events: none;
 }
 
 .seal {
   position: absolute;
-  left: 50%;
-  top: 35.5%;
   z-index: 5;
-  width: 48%;
-  aspect-ratio: 1;
   padding: 0;
   border: 0;
   border-radius: 50%;
+  overflow: hidden;
   background: transparent;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
   cursor: pointer;
   -webkit-animation: seal-breathe 2.8s ease-in-out infinite;
   animation: seal-breathe 2.8s ease-in-out infinite;
   touch-action: manipulation;
 }
 
-.seal::after {
-  content: "";
+.seal-face {
   position: absolute;
-  inset: 6%;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(228, 195, 106, 0.0);
+  max-width: none;
   pointer-events: none;
 }
 
-.seal.is-bloom { -webkit-animation: none; animation: none; }
-
-.seal.is-bloom::after {
-  -webkit-animation: bloom .55s ease-out forwards;
-  animation: bloom .55s ease-out forwards;
+.seal.is-spin {
+  -webkit-animation: seal-spin .75s ease-in-out;
+  animation: seal-spin .75s ease-in-out;
 }
 
 @-webkit-keyframes seal-breathe {
   0%, 100% { box-shadow: 0 0 0 0 rgba(228, 195, 106, 0); }
-  50% { box-shadow: 0 0 0 8px rgba(228, 195, 106, 0.22); }
+  50% { box-shadow: 0 0 0 8px rgba(228, 195, 106, 0.28); }
 }
 
 @keyframes seal-breathe {
   0%, 100% { box-shadow: 0 0 0 0 rgba(228, 195, 106, 0); }
-  50% { box-shadow: 0 0 0 8px rgba(228, 195, 106, 0.22); }
+  50% { box-shadow: 0 0 0 8px rgba(228, 195, 106, 0.28); }
 }
 
-@-webkit-keyframes bloom {
-  to { box-shadow: 0 0 0 28px rgba(228, 195, 106, 0); opacity: 0; }
+@-webkit-keyframes seal-spin {
+  0% { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
 }
 
-@keyframes bloom {
-  to { box-shadow: 0 0 0 28px rgba(228, 195, 106, 0); opacity: 0; }
+@keyframes seal-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .gate-hint {
@@ -1051,10 +1048,10 @@ body.is-signing .bless {
   height: auto;
   white-space: normal;
   word-break: break-word;
-  font-family: "WiddXing", "STXingkai", "华文行楷", "Xingkai SC", serif;
+  font-family: "方正瘦金书简体", "方正瘦金书", "FZShouJinShu-S10S", "WiddJin", "Songti SC", "STSong", serif;
   font-size: clamp(1.6rem, 5.8vw, 2.3rem);
-  font-weight: 700;
-  line-height: 1.35;
+  font-weight: 200;
+  line-height: 1.4;
   padding: .35rem .4rem;
   opacity: 1;
   color: #C23B32;

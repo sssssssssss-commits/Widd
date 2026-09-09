@@ -25,6 +25,7 @@ import {
   ptsBounds,
   buildIcsCalendar,
   calendarOpeners,
+  coverBox,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -190,5 +191,16 @@ assert.match(openers.intent, /action=android\.intent\.action\.INSERT/);
 assert.match(openers.intent, new RegExp(`l\\.beginTime=${Date.parse("2026-10-06T11:18:00+08:00")}`));
 assert.match(openers.intent, /S\.title=/);
 assert.match(openers.intent, /browser_fallback_url=/);
+
+{
+  const tall = coverBox(390, 844, 540, 811);
+  assert.ok(Math.abs(tall.h - 844) < 1);
+  assert.ok(tall.w > 390);
+  assert.ok(tall.x < 0);
+  assert.ok(Math.abs(tall.y) < 1);
+  const wide = coverBox(1024, 768, 540, 811);
+  assert.ok(wide.w >= 1024 - 1);
+  assert.ok(wide.y <= 0);
+}
 
 console.log("ok");

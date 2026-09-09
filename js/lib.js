@@ -334,3 +334,14 @@ export function calendarOpeners({
   return { icsUrl, webcal, intent };
 }
 
+export function coverBox(elW, elH, imgW, imgH) {
+  const ew = Number(elW) || 0;
+  const eh = Number(elH) || 0;
+  const iw = Number(imgW) || 1;
+  const ih = Number(imgH) || 1;
+  const s = Math.max(ew / iw, eh / ih);
+  const w = iw * s;
+  const h = ih * s;
+  return { x: (ew - w) / 2, y: (eh - h) / 2, w, h };
+}
+
