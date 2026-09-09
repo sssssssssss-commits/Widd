@@ -25,41 +25,6 @@ function coupleLine(groom, bride) {
   return [a, b].filter(Boolean).join(" 与 ");
 }
 
-// ponytail: 青柳隷書缺这 6 个简体，换成它有的繁体才能上色
-const QING_SIMP = { 归: "歸", 亲: "親", 谨: "謹", 设: "設", 请: "請", 临: "臨" };
-
-function openerForQing(text) {
-  return String(text || "").replace(/[归亲谨设请临]/g, (c) => QING_SIMP[c] || c);
-}
-
-function fitOneLine(el) {
-  if (!el) return;
-  el.style.fontSize = "";
-  let px = 17;
-  el.style.fontSize = `${px}px`;
-  while (px > 10 && el.scrollWidth > el.clientWidth + 1) {
-    px -= 0.4;
-    el.style.fontSize = `${px}px`;
-  }
-}
-
-function paintOpener(text) {
-  const el = $("opener");
-  if (!el) return;
-  el.textContent = openerForQing(text);
-  const run = () => fitOneLine(el);
-  try {
-    if (document.fonts && document.fonts.load) document.fonts.load('400 16px "WiddQing"').then(run, run);
-    else run();
-  } catch (err) {
-    run();
-  }
-  if (!paintOpener.bound) {
-    paintOpener.bound = 1;
-    addEventListener("resize", run, { passive: true });
-  }
-}
-
 function mapLinks({ name, address, lat, lng }) {
   const n = encodeURIComponent(name || "婚礼");
   const a = encodeURIComponent(address || "");
@@ -1849,9 +1814,7 @@ async function main() {
   const cfg = await loadConfig();
   const guest = guestFromSearch(location.search);
   applyShare(cfg);
-  $("address").textContent = openerForQing(guest ? `恭请 ${guest}` : "恭请光临");
   renderNames(cfg);
-  paintOpener(cfg.opener);
   paintWhen(cfg.datetimeText);
   renderCalendar(cfg.datetime);
   startClepsydra(cfg.datetime);

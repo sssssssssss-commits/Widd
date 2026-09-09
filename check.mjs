@@ -222,8 +222,9 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(html, /苏超凡 与 杨雨洁/);
   assert.match(css, /\.bless-line[\s\S]{0,280}font-family:\s*"WiddJin"/);
   assert.match(css, /\.bless-line\.is-now[\s\S]{0,280}font-family:\s*"WiddJin"/);
-  assert.match(css, /\.address[\s\S]{0,220}font-family:\s*"WiddQing"/);
-  assert.match(css, /\.address[\s\S]{0,160}font-size:\s*3rem/);
+  assert.doesNotMatch(html, /id="address"/);
+  assert.doesNotMatch(html, /id="opener"/);
+  assert.match(css, /\.names \.person \.name[\s\S]{0,160}font-family:\s*"WiddName"/);
   assert.match(css, /\.names \.person small[\s\S]{0,120}font-size:\s*\.92rem/);
   assert.match(css, /\.bless-line\.is-now[\s\S]{0,420}text-shadow:/);
   assert.match(css, /\.cal-grid/);
@@ -236,18 +237,14 @@ assert.match(openers.intent, /browser_fallback_url=/);
     assert.equal(oct.cells[9], 6);
   }
   assert.match(css, /--seal-y/);
-  assert.match(css, /\.opener[\s\S]{0,240}font-family:\s*"WiddQing"/);
-  assert.match(css, /\.opener[\s\S]{0,160}white-space:\s*nowrap/);
   assert.match(js, /COVER_W = 682/);
   assert.match(js, /COVER_H = 1024/);
   assert.match(js, /is-burst/);
   assert.doesNotMatch(js, /is-spin/);
   assert.match(css, /seal-burst/);
   assert.doesNotMatch(css, /seal-spin/);
-  assert.match(js, /openerForQing/);
-  assert.match(js, /归: "歸"/);
   assert.ok(readFileSync(new URL("./assets/fonts/jin.woff2", import.meta.url)).byteLength > 1000);
-  assert.ok(readFileSync(new URL("./assets/fonts/qing.woff2", import.meta.url)).byteLength > 1000);
+  assert.ok(readFileSync(new URL("./assets/fonts/name.woff2", import.meta.url)).byteLength > 1000);
 }
 
 console.log("ok");
