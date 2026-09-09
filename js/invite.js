@@ -215,7 +215,7 @@ const WALL_EPOCH_GET = "https://abacus.jasoncameron.dev/get/sssssssssss-github-i
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=25", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=26", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }

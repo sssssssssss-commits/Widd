@@ -1,7 +1,7 @@
 # 夜色墨金婚礼请柬
 
-宾客链接：**https://sumuyang.asia/**  
-（`widd.pages.dev` 和 github.io 还能开，但不要再发那些。）
+微信转发（保证有金色囍缩略图）：**https://sssssssssss-commits.github.io/Widd/?wx=6**  
+自定义域名（好看，点一次继续访问）：**https://sumuyang.asia/**  
 
 手机竖信，微信里打开。点朱印拆开，金箔慢落。改 [data/wedding.json](data/wedding.json) 即可换姓名、日期、地点和照片。
 
