@@ -24,6 +24,7 @@ import {
   inkBounds,
   ptsBounds,
   buildIcsCalendar,
+  calendarOpeners,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -174,5 +175,20 @@ assert.match(icsSample, /DTEND:20261006T063000Z/);
 assert.match(icsSample, /TRIGGER:-PT2H/);
 assert.match(icsSample, /TRIGGER:-P1D/);
 assert.match(icsSample, /LOCATION:陕西省宝鸡市东营村/);
+
+const openers = calendarOpeners({
+  icsUrl: "https://sumuyang.asia/wedding.ics",
+  title: "李某 与 王某 婚礼",
+  startIso: "2026-10-06T11:18:00+08:00",
+  endIso: "2026-10-06T14:30:00+08:00",
+  location: "陕西省宝鸡市东营村",
+  description: "良辰吉时，敬请光临！",
+});
+assert.equal(openers.webcal, "webcal://sumuyang.asia/wedding.ics");
+assert.match(openers.intent, /^intent:\/\//);
+assert.match(openers.intent, /action=android\.intent\.action\.INSERT/);
+assert.match(openers.intent, new RegExp(`l\\.beginTime=${Date.parse("2026-10-06T11:18:00+08:00")}`));
+assert.match(openers.intent, /S\.title=/);
+assert.match(openers.intent, /browser_fallback_url=/);
 
 console.log("ok");

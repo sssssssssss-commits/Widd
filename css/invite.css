@@ -438,6 +438,7 @@ body.is-signing .bgm-tog {
   font-size: .8rem;
   letter-spacing: .15em;
   color: #fff;
+  text-decoration: none;
   background: linear-gradient(135deg, #B53228 0%, #902018 100%);
   border: 1px solid #c9a24acc;
   border-radius: 3px;
@@ -445,6 +446,7 @@ body.is-signing .bgm-tog {
   box-shadow: 0 2px 8px rgba(139, 36, 28, 0.22);
   transition: transform .15s ease, opacity .15s ease, background .2s ease;
   -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
 }
 
 .cal-btn:active {
@@ -454,6 +456,16 @@ body.is-signing .bgm-tog {
 
 .cal-btn svg {
   flex-shrink: 0;
+}
+
+.cal-wx-hint {
+  margin: .55rem 0 0;
+  max-width: 16rem;
+  font-size: .68rem;
+  letter-spacing: .06em;
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.65;
 }
 
 .clepsydra {

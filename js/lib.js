@@ -308,3 +308,29 @@ export function buildIcsCalendar({
   ].join("\r\n");
 }
 
+export function calendarOpeners({
+  icsUrl = "https://sumuyang.asia/wedding.ics",
+  title = "婚礼",
+  startIso = "2026-10-06T11:18:00+08:00",
+  endIso = "2026-10-06T14:30:00+08:00",
+  location = "",
+  description = "",
+} = {}) {
+  const startMs = Date.parse(startIso);
+  const endMs = Date.parse(endIso);
+  const webcal = String(icsUrl).replace(/^https:/i, "webcal:").replace(/^http:/i, "webcal:");
+  const intent = [
+    "intent://vnd.android.cursor.dir/event#Intent",
+    "action=android.intent.action.INSERT",
+    "type=vnd.android.cursor.item/event",
+    `S.title=${encodeURIComponent(title)}`,
+    `l.beginTime=${Number.isFinite(startMs) ? startMs : 0}`,
+    `l.endTime=${Number.isFinite(endMs) ? endMs : 0}`,
+    `S.eventLocation=${encodeURIComponent(location)}`,
+    `S.description=${encodeURIComponent(description)}`,
+    `S.browser_fallback_url=${encodeURIComponent(icsUrl)}`,
+    "end",
+  ].join(";");
+  return { icsUrl, webcal, intent };
+}
+

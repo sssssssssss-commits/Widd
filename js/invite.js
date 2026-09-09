@@ -303,54 +303,76 @@ function buildIcsCalendar({
   ].join("\r\n");
 }
 
+function calendarOpeners({
+  icsUrl = "https://sumuyang.asia/wedding.ics",
+  title = "婚礼",
+  startIso = "2026-10-06T11:18:00+08:00",
+  endIso = "2026-10-06T14:30:00+08:00",
+  location = "",
+  description = "",
+} = {}) {
+  const startMs = Date.parse(startIso);
+  const endMs = Date.parse(endIso);
+  const webcal = String(icsUrl).replace(/^https:/i, "webcal:").replace(/^http:/i, "webcal:");
+  const intent = [
+    "intent://vnd.android.cursor.dir/event#Intent",
+    "action=android.intent.action.INSERT",
+    "type=vnd.android.cursor.item/event",
+    `S.title=${encodeURIComponent(title)}`,
+    `l.beginTime=${Number.isFinite(startMs) ? startMs : 0}`,
+    `l.endTime=${Number.isFinite(endMs) ? endMs : 0}`,
+    `S.eventLocation=${encodeURIComponent(location)}`,
+    `S.description=${encodeURIComponent(description)}`,
+    `S.browser_fallback_url=${encodeURIComponent(icsUrl)}`,
+    "end",
+  ].join(";");
+  return { icsUrl, webcal, intent };
+}
+
 function bindCalendarButton(cfg) {
   const btn = $("calBtn");
   if (!btn) return;
-  btn.addEventListener("click", () => {
-    const ua = navigator.userAgent || "";
-    const isWx = /micromessenger/i.test(ua);
-    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const ua = navigator.userAgent || "";
+  const isWx = /micromessenger/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isAndroid = /Android/i.test(ua);
+  const couple = coupleLine(cfg.groom, cfg.bride) || "婚礼";
+  const title = `${couple} 婚礼`;
+  const venue = cfg.venues?.[0] || {};
+  const loc = `${venue.address || ""}${venue.name ? " (" + venue.name + ")" : ""}`.trim();
+  const icsUrl = new URL("wedding.ics", location.href).href;
+  const links = calendarOpeners({
+    icsUrl,
+    title,
+    startIso: cfg.datetime || "2026-10-06T11:18:00+08:00",
+    endIso: "2026-10-06T14:30:00+08:00",
+    location: loc,
+    description: "良辰吉时，敬请光临！",
+  });
+
+  // ponytail: WeChat blocks script/blob .ics; a real tap on webcal/intent is what the OS calendar accepts
+  if (isIOS && isWx) btn.href = links.webcal;
+  else if (isIOS) btn.href = links.icsUrl;
+  else if (isAndroid) btn.href = links.intent;
+  else {
+    btn.href = links.icsUrl;
+    btn.setAttribute("download", "wedding.ics");
+  }
+
+  const hint = $("calWxHint");
+  if (hint && isWx) hint.hidden = false;
+
+  btn.addEventListener("click", (e) => {
     const txt = $("calBtnText");
     const orig = txt ? txt.textContent : "";
     if (txt) txt.textContent = "正在唤起日历…";
-
-    // ponytail: WeChat swallows blob: a.download with no error; static .ics is what iOS/WeChat actually open
-    if (isWx || isIOS) {
-      window.location.href = "wedding.ics";
-    } else {
-      try {
-        const couple = coupleLine(cfg.groom, cfg.bride) || "婚礼";
-        const venue = cfg.venues?.[0] || {};
-        const loc = `${venue.address || ""}${venue.name ? " (" + venue.name + ")" : ""}`.trim();
-        const ics = buildIcsCalendar({
-          title: `${couple} 婚礼`,
-          startIso: cfg.datetime || "2026-10-06T11:18:00+08:00",
-          endIso: "2026-10-06T14:30:00+08:00",
-          location: loc,
-          description: "良辰吉时，敬请光临！",
-          url: location.origin || "https://sumuyang.asia",
-        });
-        const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-        const href = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = href;
-        a.download = "wedding.ics";
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(href);
-        }, 400);
-      } catch (_) {
-        window.location.href = "wedding.ics";
-      }
+    if (isWx) {
+      e.preventDefault();
+      window.location.href = isAndroid ? links.intent : links.webcal;
     }
-
-    if (txt) {
-      setTimeout(() => {
-        txt.textContent = orig;
-      }, 3000);
-    }
+    setTimeout(() => {
+      if (txt) txt.textContent = orig;
+    }, 3000);
   });
 }
 
