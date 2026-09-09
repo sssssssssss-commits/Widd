@@ -1297,7 +1297,7 @@ function startBless(cfg) {
   };
   setTimeout(kick, 700);
   try {
-    if (document.fonts && document.fonts.load) document.fonts.load('200 2.2rem "WiddJin"').then(kick, kick);
+    if (document.fonts && document.fonts.load) document.fonts.load('400 2.2rem "WiddJin"').then(kick, kick);
     else kick();
   } catch (err) {
     kick();
