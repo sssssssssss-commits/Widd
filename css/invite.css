@@ -314,20 +314,21 @@ body.is-signing .bgm-tog {
 
 .gate-tap {
   position: absolute;
-  left: calc(var(--seal-x, 91%) - var(--seal-r, 40px) * .35);
-  top: calc(var(--seal-y, 53%) + var(--seal-r, 40px) + 10px);
-  right: auto;
+  z-index: 7;
+  left: auto;
+  right: .28rem;
+  top: calc(var(--seal-y, 53%) + var(--seal-r, 40px) + 8px);
   bottom: auto;
   width: max-content;
   margin: 0;
-  text-align: center;
+  text-align: right;
   letter-spacing: .2em;
-  font-size: .78rem;
+  font-size: .82rem;
   color: #F4DC8A;
-  text-shadow: 0 0 8px rgba(228, 195, 106, 0.45);
+  text-shadow: 0 0 8px rgba(228, 195, 106, 0.55);
   pointer-events: none;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
   -webkit-animation: tap-hint 1.8s ease-in-out infinite;
   animation: tap-hint 1.8s ease-in-out infinite;
 }
@@ -475,19 +476,12 @@ body.is-signing .bgm-tog {
 
 .names small {
   font-family: "WiddWall", serif;
-  font-size: 1.5rem;
+  font-size: 1.84rem;
   font-weight: 400;
   font-synthesis: none;
   letter-spacing: .22em;
   color: #C23B32;
   text-align: center;
-  -webkit-text-stroke: .045em #1a0c08;
-  paint-order: stroke fill;
-  text-shadow:
-    -1px 0 0 #1a0c08,
-    1px 0 0 #1a0c08,
-    0 -1px 0 #1a0c08,
-    0 1px 0 #1a0c08;
 }
 
 .names-roles i {

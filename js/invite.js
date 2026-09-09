@@ -1304,6 +1304,8 @@ function layoutCover() {
   gate.style.setProperty("--seal-x", `${cx}px`);
   gate.style.setProperty("--seal-y", `${cy}px`);
   gate.style.setProperty("--seal-r", `${size / 2}px`);
+  const tap = $("gateTap");
+  if (tap) tap.style.top = `${cy + size / 2 + 8}px`;
 }
 
 function openLetter(cfg) {
@@ -1747,7 +1749,7 @@ function bindGate(cfg) {
 }
 
 async function main() {
-  ["assets/calendar.jpg?v=2", "assets/letter.jpg?v=2"].forEach((src) => {
+  ["assets/calendar.jpg?v=3", "assets/letter.jpg?v=2"].forEach((src) => {
     const im = new Image();
     im.decoding = "async";
     im.src = src;
