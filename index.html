@@ -24,7 +24,7 @@
   <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=65">
+  <link rel="stylesheet" href="css/invite.css?v=66">
   <link rel="preload" href="assets/cover.jpg?v=3" as="image">
   <link rel="preload" href="assets/calendar.jpg?v=2" as="image">
   <link rel="preload" href="assets/letter.jpg?v=2" as="image">
@@ -66,22 +66,24 @@
     <button type="button" class="seal" id="seal" aria-label="打开请柬">
       <img class="seal-face" id="sealFace" src="assets/cover.jpg?v=3" alt="" decoding="async">
     </button>
+    <p class="gate-tap" id="gateTap">轻触打开</p>
     <p class="gate-hint" id="gateHint" hidden>信笺未至，请用本地服务打开</p>
   </div>
 
   <main id="letter" class="letter" hidden>
     <article class="letter-inner">
-      <p class="address" id="address">恭请光临</p>
+      <p class="address reveal" id="address">恭请光临</p>
 
-      <header class="names" id="names"></header>
+      <header class="names reveal" id="names"></header>
 
-      <p class="opener" id="opener"></p>
+      <p class="opener reveal" id="opener"></p>
 
       <div class="bless" id="bless" hidden aria-hidden="true">
         <div class="bless-lane" id="blessLane"></div>
       </div>
 
-      <section class="when" aria-label="婚期">
+      <section class="when reveal" aria-label="婚期">
+        <div class="label">良辰吉日</div>
         <p class="when-text" id="whenText"></p>
         <div class="cal-wrap">
           <div class="cal-card">
@@ -97,23 +99,23 @@
         <p class="when-past" id="whenPast" hidden>良辰已至</p>
       </section>
 
-      <section class="itinerary" id="itinerary" aria-label="婚礼仪程" hidden></section>
+      <section class="itinerary reveal" id="itinerary" aria-label="婚礼仪程" hidden></section>
 
       <section class="scrolls-wrap" id="scrollsWrap" aria-label="照片" hidden>
         <div class="scrolls" id="scrolls"></div>
       </section>
 
-      <section class="venues" id="venues"></section>
+      <section class="venues reveal" id="venues"></section>
 
       <section class="rsvp" id="rsvp"></section>
 
       <section class="wall" id="wall" hidden></section>
       <p class="wall-soon" id="wallSoon" hidden>签名墙 · 即将开启</p>
 
-      <footer class="colophon" id="colophon"></footer>
+      <footer class="colophon reveal" id="colophon"></footer>
     </article>
   </main>
 
-  <script src="js/invite.js?v=70"></script>
+  <script src="js/invite.js?v=71"></script>
 </body>
 </html>

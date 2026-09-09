@@ -1249,6 +1249,17 @@ function renderWall(cfg, guest) {
   });
 }
 
+function paintWhen(text) {
+  const el = $("whenText");
+  if (!el) return;
+  const bits = String(text || "").split(/\s+/).filter(Boolean);
+  if (bits.length >= 2) {
+    el.innerHTML = `<span class="when-solar">${bits[0]}</span><span class="when-lunar">${bits.slice(1).join(" · ")}</span>`;
+    return;
+  }
+  el.textContent = text || "";
+}
+
 function startClepsydra(iso) {
   const then = Date.parse(iso);
   const paint = () => {
@@ -1386,6 +1397,8 @@ function openLetter(cfg) {
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;
+    void letter.offsetWidth;
+    letter.classList.add("is-in");
     startBless(cfg);
   }, wait);
 }
@@ -1812,14 +1825,14 @@ async function main() {
   $("address").textContent = guest ? `恭请 ${guest}` : "恭请光临";
   renderNames(cfg);
   paintOpener(cfg.opener);
-  $("whenText").textContent = cfg.datetimeText || "";
+  paintWhen(cfg.datetimeText);
   startClepsydra(cfg.datetime);
   renderItinerary(cfg.itinerary);
   renderScrolls(cfg.photos);
   renderVenues(cfg.venues);
   renderRsvp(cfg, guest);
   renderWall(cfg, guest);
-  $("colophon").innerHTML = `${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
+  $("colophon").innerHTML = `<span class="label">谨此奉邀</span>${coupleLine(cfg.groom, cfg.bride)}<br>${(cfg.datetimeText || "").split(/\s+/)[0] || ""}`;
   bindBgm();
   bindGate(cfg);
   bindTapXi();
@@ -1828,6 +1841,8 @@ async function main() {
 
 main().catch(() => {
   const hint = $("gateHint");
+  const tap = $("gateTap");
+  if (tap) tap.hidden = true;
   if (hint) {
     hint.hidden = false;
     hint.textContent = "信笺未至，请用本地服务打开";
