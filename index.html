@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#F6EFE4">
+  <meta name="theme-color" content="#B01418">
   <meta name="format-detection" content="telephone=no">
   <title>李某 与 王某 婚礼请柬</title>
   <meta name="description" content="锦书遥寄，待君亲启。">
@@ -24,7 +24,7 @@
   <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=59">
+  <link rel="stylesheet" href="css/invite.css?v=60">
   <link rel="preload" href="assets/fonts/xing.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
@@ -40,24 +40,11 @@
   </button>
 
   <div id="gate" class="gate">
-    <p class="gate-hint">锦书遥寄，待君亲启。</p>
-    <div class="envelope-stage">
-      <div class="envelope" id="envelope">
-        <div class="envelope-back"></div>
-        <div class="letter-peek"></div>
-        <div class="envelope-body"></div>
-        <div class="envelope-flap"></div>
-        <button type="button" class="seal" id="seal" aria-label="拆开请柬">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="72" height="72" aria-hidden="true">
-            <rect x="4" y="4" width="112" height="112" rx="4" fill="#C23B32"/>
-            <rect x="10" y="10" width="100" height="100" rx="2" fill="none" stroke="#E4C36A" stroke-width="2.2"/>
-            <rect x="16" y="16" width="88" height="88" fill="none" stroke="#E4C36A" stroke-width="1"/>
-            <text x="60" y="86" text-anchor="middle" fill="#F7E7C6"
-              font-family="Songti SC, STSong, SimSun, serif" font-size="64">囍</text>
-          </svg>
-        </button>
-      </div>
+    <div class="cover">
+      <img class="cover-img" src="assets/cover.jpg" width="682" height="1024" alt="苏超凡 与 杨雨洁 婚礼请柬">
+      <button type="button" class="seal" id="seal" aria-label="打开请柬"></button>
     </div>
+    <p class="gate-hint" id="gateHint" hidden>信笺未至，请用本地服务打开</p>
   </div>
 
   <main id="letter" class="letter" hidden>
@@ -105,6 +92,6 @@
     </article>
   </main>
 
-  <script src="js/invite.js?v=64"></script>
+  <script src="js/invite.js?v=65"></script>
 </body>
 </html>

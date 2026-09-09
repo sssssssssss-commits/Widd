@@ -1294,18 +1294,18 @@ function startBless(cfg) {
 
 function openLetter(cfg) {
   const gate = $("gate");
-  const env = $("envelope");
   const seal = $("seal");
   const letter = $("letter");
-
-  seal.classList.add("is-bloom");
-  env.classList.add("is-open");
+  if (seal) {
+    seal.disabled = true;
+    seal.classList.add("is-bloom");
+  }
   bgmPlay();
   setTimeout(() => {
     gate.classList.add("is-gone");
     letter.hidden = false;
     startBless(cfg);
-  }, 900);
+  }, 420);
 }
 
 let foilStarted = false;
@@ -1702,11 +1702,12 @@ function bindTapXi() {
 
 function bindGate(cfg) {
   const go = () => {
-    $("seal").disabled = true;
+    const seal = $("seal");
+    if (seal) seal.disabled = true;
     openLetter(cfg);
   };
   $("seal").addEventListener("click", go);
-  // ponytail: ?open=1 skips the seal for content preview; remove once guests only get the share link
+  // ponytail: ?open=1 skips the cover for content preview
   if (new URLSearchParams(location.search).has("open")) go();
 }
 
@@ -1732,5 +1733,9 @@ async function main() {
 }
 
 main().catch(() => {
-  $("gate").querySelector(".gate-hint").textContent = "信笺未至，请用本地服务打开";
+  const hint = $("gateHint");
+  if (hint) {
+    hint.hidden = false;
+    hint.textContent = "信笺未至，请用本地服务打开";
+  }
 });
