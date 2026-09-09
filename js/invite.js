@@ -252,130 +252,6 @@ function renderNames(cfg) {
     cell(cfg.groom, "新郎") + '<div class="amp" aria-hidden="true">囍</div>' + cell(cfg.bride, "新娘");
 }
 
-function buildIcsCalendar({
-  title = "婚礼",
-  startIso = "2026-10-06T11:18:00+08:00",
-  endIso = "2026-10-06T14:30:00+08:00",
-  location = "",
-  description = "",
-  url = "",
-}) {
-  const toIcsUtc = (iso) => {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "20261006T031800Z";
-    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  };
-
-  const dtstart = toIcsUtc(startIso);
-  const dtend = toIcsUtc(endIso);
-  const fullDesc = [description, location ? `地点：${location}` : "", url ? `请柬：${url}` : ""]
-    .filter(Boolean)
-    .join("\\n");
-
-  return [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Widd//Wedding Invite//CN",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
-    `X-WR-CALNAME:${title}`,
-    "BEGIN:VEVENT",
-    `UID:wedding-${dtstart}-widd@sumuyang.asia`,
-    `DTSTAMP:${toIcsUtc(new Date().toISOString())}`,
-    `DTSTART:${dtstart}`,
-    `DTEND:${dtend}`,
-    `SUMMARY:${title}`,
-    `DESCRIPTION:${fullDesc}`,
-    `LOCATION:${location}`,
-    "STATUS:CONFIRMED",
-    "BEGIN:VALARM",
-    "TRIGGER:-PT2H",
-    "ACTION:DISPLAY",
-    `DESCRIPTION:【提醒】今日 ${title}`,
-    "END:VALARM",
-    "BEGIN:VALARM",
-    "TRIGGER:-P1D",
-    "ACTION:DISPLAY",
-    `DESCRIPTION:【提醒】明日 ${title}`,
-    "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
-}
-
-function calendarOpeners({
-  icsUrl = "https://sumuyang.asia/wedding.ics",
-  title = "婚礼",
-  startIso = "2026-10-06T11:18:00+08:00",
-  endIso = "2026-10-06T14:30:00+08:00",
-  location = "",
-  description = "",
-} = {}) {
-  const startMs = Date.parse(startIso);
-  const endMs = Date.parse(endIso);
-  const webcal = String(icsUrl).replace(/^https:/i, "webcal:").replace(/^http:/i, "webcal:");
-  const intent = [
-    "intent://vnd.android.cursor.dir/event#Intent",
-    "action=android.intent.action.INSERT",
-    "type=vnd.android.cursor.item/event",
-    `S.title=${encodeURIComponent(title)}`,
-    `l.beginTime=${Number.isFinite(startMs) ? startMs : 0}`,
-    `l.endTime=${Number.isFinite(endMs) ? endMs : 0}`,
-    `S.eventLocation=${encodeURIComponent(location)}`,
-    `S.description=${encodeURIComponent(description)}`,
-    `S.browser_fallback_url=${encodeURIComponent(icsUrl)}`,
-    "end",
-  ].join(";");
-  return { icsUrl, webcal, intent };
-}
-
-function bindCalendarButton(cfg) {
-  const btn = $("calBtn");
-  if (!btn) return;
-  const ua = navigator.userAgent || "";
-  const isWx = /micromessenger/i.test(ua);
-  const isIOS = /iPhone|iPad|iPod/i.test(ua);
-  const isAndroid = /Android/i.test(ua);
-  const couple = coupleLine(cfg.groom, cfg.bride) || "婚礼";
-  const title = `${couple} 婚礼`;
-  const venue = cfg.venues?.[0] || {};
-  const loc = `${venue.address || ""}${venue.name ? " (" + venue.name + ")" : ""}`.trim();
-  const icsUrl = new URL("wedding.ics", location.href).href;
-  const links = calendarOpeners({
-    icsUrl,
-    title,
-    startIso: cfg.datetime || "2026-10-06T11:18:00+08:00",
-    endIso: "2026-10-06T14:30:00+08:00",
-    location: loc,
-    description: "良辰吉时，敬请光临！",
-  });
-
-  // ponytail: WeChat blocks script/blob .ics; a real tap on webcal/intent is what the OS calendar accepts
-  if (isIOS && isWx) btn.href = links.webcal;
-  else if (isIOS) btn.href = links.icsUrl;
-  else if (isAndroid) btn.href = links.intent;
-  else {
-    btn.href = links.icsUrl;
-    btn.setAttribute("download", "wedding.ics");
-  }
-
-  const hint = $("calWxHint");
-  if (hint && isWx) hint.hidden = false;
-
-  btn.addEventListener("click", (e) => {
-    const txt = $("calBtnText");
-    const orig = txt ? txt.textContent : "";
-    if (txt) txt.textContent = "正在唤起日历…";
-    if (isWx) {
-      e.preventDefault();
-      window.location.href = isAndroid ? links.intent : links.webcal;
-    }
-    setTimeout(() => {
-      if (txt) txt.textContent = orig;
-    }, 3000);
-  });
-}
-
 function renderItinerary(items) {
   const sec = $("itinerary");
   if (!sec) return;
@@ -1842,7 +1718,6 @@ async function main() {
   renderNames(cfg);
   $("opener").textContent = cfg.opener || "";
   $("whenText").textContent = cfg.datetimeText || "";
-  bindCalendarButton(cfg);
   startClepsydra(cfg.datetime);
   renderItinerary(cfg.itinerary);
   renderScrolls(cfg.photos);
