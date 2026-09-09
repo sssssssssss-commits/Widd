@@ -246,35 +246,11 @@ function applyShare(cfg) {
 }
 
 function renderNames(cfg) {
-  const cell = (who, label) =>
-    `<div class="person"><small>${label}</small><span class="name">${who.family}${who.name}</span></div>`;
+  const g = `${cfg.groom.family}${cfg.groom.name}`;
+  const b = `${cfg.bride.family}${cfg.bride.name}`;
   $("names").innerHTML =
-    cell(cfg.groom, "新 郎") + '<div class="amp" aria-hidden="true">囍</div>' + cell(cfg.bride, "新 娘");
-}
-
-// ponytail: invite.js is not a module; keep in sync with js/lib.js monthGrid
-function monthGrid(iso) {
-  const [y, m, highlight] = String(iso || "").slice(0, 10).split("-").map(Number);
-  if (!y || !m || !highlight) return null;
-  const firstDow = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
-  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
-  const cells = Array(firstDow).fill(0).concat(Array.from({ length: days }, (_, i) => i + 1));
-  while (cells.length % 7) cells.push(0);
-  return { y, m, highlight, cells };
-}
-
-function renderCalendar(iso) {
-  const el = $("calCard");
-  const g = monthGrid(iso);
-  if (!el || !g) return;
-  const week = [..."日一二三四五六"].map((c) => `<span>${c}</span>`).join("");
-  const days = g.cells
-    .map((n) => {
-      if (!n) return "<span></span>";
-      return n === g.highlight ? `<span class="is-day">${n}</span>` : `<span>${n}</span>`;
-    })
-    .join("");
-  el.innerHTML = `<div class="cal-head"><em>${g.y}</em><strong>${g.m}月</strong></div><div class="cal-week">${week}</div><div class="cal-grid">${days}</div>`;
+    `<small>新 郎</small><i></i><small>新 娘</small>` +
+    `<span class="name">${g}</span><div class="amp" aria-hidden="true">囍</div><span class="name">${b}</span>`;
 }
 
 function renderItinerary(items) {
@@ -1281,63 +1257,7 @@ function startBless(cfg) {
   blessOn = true;
   root.hidden = false;
   root.removeAttribute("aria-hidden");
-  const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  if (still) root.classList.add("is-still");
-  const kind = ["is-edge", "is-near", "is-now", "is-near", "is-edge"];
-  lane.innerHTML = kind
-    .map((k) => `<p class="bless-line ${k}">&nbsp;</p>`)
-    .join("");
-  const slots = lane.children;
-  let cur = 0;
-  let watch = 0;
-  let lock = 0;
-  const holdMs = (text) => (still ? 2800 : Math.round(3600 + String(text).length * 140));
-  const paint = (i) => {
-    for (let s = 0; s < 5; s++) {
-      const idx = i + s - 2;
-      const t = idx >= 0 && idx < lines.length ? lines[idx] : "";
-      slots[s].textContent = t || "\u00a0";
-      slots[s].className = "bless-line " + kind[s];
-    }
-  };
-  const step = () => {
-    paint(cur);
-    clearTimeout(watch);
-    const mine = ++lock;
-    watch = setTimeout(() => {
-      if (mine === lock) advance();
-    }, holdMs(lines[cur]));
-  };
-  const rest = () => {
-    lock += 1;
-    clearTimeout(watch);
-    watch = setTimeout(() => {
-      cur = 0;
-      step();
-    }, 3000);
-  };
-  const advance = () => {
-    lock += 1;
-    clearTimeout(watch);
-    cur += 1;
-    if (cur < lines.length) step();
-    else rest();
-  };
-  let kicked = 0;
-  const kick = () => {
-    if (kicked) return;
-    kicked = 1;
-    paint(0);
-    void lane.offsetWidth;
-    step();
-  };
-  setTimeout(kick, 700);
-  try {
-    if (document.fonts && document.fonts.load) document.fonts.load('400 2.2rem "WiddJin"').then(kick, kick);
-    else kick();
-  } catch (err) {
-    kick();
-  }
+  lane.innerHTML = lines.map((t) => `<p class="bless-line">${t}</p>`).join("");
 }
 
 function coverBox(elW, elH, imgW, imgH) {
@@ -1806,7 +1726,7 @@ function bindGate(cfg) {
 }
 
 async function main() {
-  ["assets/letter.jpg?v=2"].forEach((src) => {
+  ["assets/calendar.jpg?v=2", "assets/letter.jpg?v=2"].forEach((src) => {
     const im = new Image();
     im.decoding = "async";
     im.src = src;
@@ -1816,7 +1736,6 @@ async function main() {
   applyShare(cfg);
   renderNames(cfg);
   paintWhen(cfg.datetimeText);
-  renderCalendar(cfg.datetime);
   startClepsydra(cfg.datetime);
   renderItinerary(cfg.itinerary);
   renderScrolls(cfg.photos);
