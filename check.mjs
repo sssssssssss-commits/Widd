@@ -214,10 +214,14 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(html, /cal-img[^>]+fetchpriority="high"/);
   assert.doesNotMatch(html, /cal-img[^>]+loading="lazy"/);
   assert.match(css, /\.bless-line\.is-now[\s\S]{0,280}font-family:\s*"WiddJin"/);
+  assert.match(css, /\.opener[\s\S]{0,240}font-family:\s*"WiddQing"/);
+  assert.match(css, /\.opener[\s\S]{0,160}white-space:\s*nowrap/);
   assert.match(js, /COVER_W = 682/);
   assert.match(js, /COVER_H = 1024/);
+  assert.match(js, /openerForQing/);
+  assert.match(js, /归: "歸"/);
   assert.ok(readFileSync(new URL("./assets/fonts/jin.woff2", import.meta.url)).byteLength > 1000);
-  assert.ok(readFileSync(new URL("./assets/fonts/jin.woff", import.meta.url)).byteLength > 1000);
+  assert.ok(readFileSync(new URL("./assets/fonts/qing.woff2", import.meta.url)).byteLength > 1000);
 }
 
 console.log("ok");

@@ -14,14 +14,14 @@
 
 * { box-sizing: border-box; }
 
-/* Zhi Mang Xing, SIL OFL 1.1 — assets/fonts/LICENSE */
+/* 青柳隷書しも subset — owner-supplied aoyagireisyosimo2 */
 @font-face {
-  font-family: "WiddXing";
-  src: url("../assets/fonts/xing.woff2") format("woff2"),
-       url("../assets/fonts/xing.woff") format("woff");
+  font-family: "WiddQing";
+  src: url("../assets/fonts/qing.woff2?v=1") format("woff2"),
+       url("../assets/fonts/qing.woff?v=1") format("woff");
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 /* 汉仪瑞鹤 subset — owner-supplied HYRuiHe W */
@@ -315,10 +315,15 @@ body.is-signing .bgm-tog {
 
 .opener {
   margin: 0;
-  text-align: justify;
-  line-height: 2;
-  letter-spacing: .08em;
-  font-size: .92rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  line-height: 1.55;
+  letter-spacing: .04em;
+  font-size: .88rem;
+  font-family: "WiddQing", serif;
+  font-weight: 400;
+  font-synthesis: none;
   color: var(--ink);
 }
 
