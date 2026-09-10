@@ -522,8 +522,8 @@ body.is-signing .bgm-tog {
   color: #1a0c08;
   text-align: center;
   min-width: 0;
-  -webkit-transform: scaleY(1.08);
-  transform: scaleY(1.08);
+  -webkit-transform: scaleY(1.14);
+  transform: scaleY(1.14);
 }
 
 .names .amp {
