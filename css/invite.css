@@ -27,8 +27,8 @@
 /* 汉仪瑞鹤 subset — owner-supplied HYRuiHe W */
 @font-face {
   font-family: "WiddJin";
-  src: url("../assets/fonts/jin.woff2?v=5") format("woff2"),
-       url("../assets/fonts/jin.woff?v=5") format("woff");
+  src: url("../assets/fonts/jin.woff2?v=6") format("woff2"),
+       url("../assets/fonts/jin.woff?v=6") format("woff");
   font-weight: 400;
   font-style: normal;
   font-display: block;
@@ -315,29 +315,24 @@ body.is-signing .bgm-tog {
 .gate-tap {
   position: absolute;
   z-index: 7;
-  left: auto;
-  right: .28rem;
-  top: calc(var(--seal-y, 53%) + var(--seal-r, 40px) + 8px);
+  left: calc(var(--seal-x, 91%) - var(--seal-r, 40px) - 8px);
+  top: var(--seal-y, 53%);
+  right: auto;
   bottom: auto;
   width: max-content;
   margin: 0;
-  text-align: right;
-  letter-spacing: .2em;
+  text-align: center;
+  letter-spacing: .22em;
   font-size: .82rem;
   color: #F4DC8A;
   text-shadow: 0 0 8px rgba(228, 195, 106, 0.55);
   pointer-events: none;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  -webkit-writing-mode: vertical-rl;
+  writing-mode: vertical-rl;
+  -webkit-transform: translate(-100%, -50%);
+  transform: translate(-100%, -50%);
   -webkit-animation: tap-hint 1.8s ease-in-out infinite;
   animation: tap-hint 1.8s ease-in-out infinite;
-}
-
-.gate-tap::before,
-.gate-tap::after {
-  content: "·";
-  margin: 0 .35em;
-  opacity: .55;
 }
 
 .gate.is-burst .gate-tap,
@@ -456,36 +451,18 @@ body.is-signing .bgm-tog {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: .22rem;
+  padding-top: calc(1.84rem + .22rem);
   width: calc(100% + .5rem);
   margin-left: -.25rem;
   margin-right: -.25rem;
 }
 
-.names-roles,
 .names-row {
   display: grid;
   grid-template-columns: 1fr var(--xi) 1fr;
   align-items: center;
   column-gap: .12rem;
-}
-
-.names-row {
   min-height: var(--xi);
-}
-
-.names small {
-  font-family: "WiddWall", serif;
-  font-size: 1.84rem;
-  font-weight: 400;
-  font-synthesis: none;
-  letter-spacing: .22em;
-  color: #C23B32;
-  text-align: center;
-}
-
-.names-roles i {
-  width: var(--xi);
 }
 
 .names .name {

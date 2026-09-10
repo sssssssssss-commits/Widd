@@ -213,7 +213,7 @@ const INK_EDGE = "#1A120C";
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=27", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=28", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -249,7 +249,6 @@ function renderNames(cfg) {
   const g = `${cfg.groom.family}${cfg.groom.name}`;
   const b = `${cfg.bride.family}${cfg.bride.name}`;
   $("names").innerHTML =
-    `<div class="names-roles"><small>新 郎</small><i></i><small>新 娘</small></div>` +
     `<div class="names-row"><span class="name">${g}</span><div class="amp" aria-hidden="true">囍</div><span class="name">${b}</span></div>`;
 }
 
@@ -1305,7 +1304,11 @@ function layoutCover() {
   gate.style.setProperty("--seal-y", `${cy}px`);
   gate.style.setProperty("--seal-r", `${size / 2}px`);
   const tap = $("gateTap");
-  if (tap) tap.style.top = `${cy + size / 2 + 8}px`;
+  if (tap) {
+    tap.style.left = `${cx - size / 2 - 8}px`;
+    tap.style.top = `${cy}px`;
+    tap.style.right = "auto";
+  }
 }
 
 function openLetter(cfg) {
