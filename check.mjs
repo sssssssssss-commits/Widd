@@ -8,6 +8,7 @@ import {
   escAttr,
   guestFromSearch,
   isWallHost,
+  isWallMany,
   mapLinks,
   pad2,
   remaining,
@@ -72,6 +73,10 @@ assert.equal(isWallHost("?open=1&host=xi8k2m", "xi8k2m"), true);
 assert.equal(isWallHost("?host=no", "xi8k2m"), false);
 assert.equal(isWallHost("", "xi8k2m"), false);
 assert.equal(isWallHost("?host=xi8k2m", ""), false);
+assert.equal(isWallMany("?many=xi8k2m", "xi8k2m"), true);
+assert.equal(isWallMany("?open=1&many=xi8k2m", "xi8k2m"), true);
+assert.equal(isWallMany("?many=1", "xi8k2m"), false);
+assert.equal(isWallMany("?host=xi8k2m", "xi8k2m"), false);
 assert.equal(
   wallHitUrl("https://example.test/get/ns/key"),
   "https://example.test/hit/ns/key",
@@ -313,6 +318,8 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(js, /id="wallYards"/);
   assert.match(js, /WALL_PAGE = 15/);
   assert.match(js, /setInterval\(refresh, 4000\)/);
+  assert.match(js, /isWallMany/);
+  assert.match(js, /q\.get\("many"\)/);
   assert.match(js, /visibilitychange/);
   assert.match(js, /lastShared/);
   assert.match(css, /\.wall-yards/);

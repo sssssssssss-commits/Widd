@@ -95,6 +95,14 @@ export function isWallHost(search, key) {
   return q.get("host") === k;
 }
 
+export function isWallMany(search, key) {
+  const k = String(key || "");
+  if (!k) return false;
+  const raw = String(search || "");
+  const q = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
+  return q.get("many") === k;
+}
+
 export function wallHitUrl(getUrl) {
   return String(getUrl || "").replace("/get/", "/hit/");
 }
