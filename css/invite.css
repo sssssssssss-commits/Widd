@@ -44,16 +44,6 @@
   font-display: swap;
 }
 
-/* 平方仿毛体草书 subset — owner-supplied PingFangFangMaoTiCaoShu */
-@font-face {
-  font-family: "WiddCao";
-  src: url("../assets/fonts/cao.woff2?v=1") format("woff2"),
-       url("../assets/fonts/cao.woff?v=1") format("woff");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
 html, body {
   margin: 0;
   height: 100%;
@@ -825,22 +815,17 @@ body.is-signing .bgm-tog {
 
 .venue h2 {
   margin: 0 0 .35rem;
-  font-family: "WiddCao", serif;
-  font-size: 3.1rem;
-  font-weight: 300;
-  font-synthesis: none;
-  letter-spacing: .06em;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: .16em;
 }
 
 .venue address {
-  font-family: "WiddCao", serif;
   font-style: normal;
-  font-size: 2.16rem;
-  font-weight: 300;
-  font-synthesis: none;
-  letter-spacing: .04em;
+  font-size: .82rem;
+  letter-spacing: .08em;
   line-height: 1.7;
-  color: var(--ink);
+  color: var(--ink-soft);
   margin-bottom: 1rem;
 }
 
