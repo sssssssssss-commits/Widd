@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import {
   clipText,
   coupleLine,
@@ -27,7 +27,6 @@ import {
   buildIcsCalendar,
   calendarOpeners,
   coverBox,
-  monthGrid,
 } from "./js/lib.js";
 
 assert.equal(guestFromSearch("?to=张三"), "张三");
@@ -251,14 +250,6 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(css, /\.bless-line[\s\S]{0,200}font-size:\s*1\.3rem/);
   assert.match(css, /\.wall-box h2[\s\S]{0,200}font-size:\s*2\.2rem/);
   assert.match(css, /\.cal-img/);
-  {
-    const oct = monthGrid("2026-10-06T11:18:00+08:00");
-    assert.equal(oct.y, 2026);
-    assert.equal(oct.m, 10);
-    assert.equal(oct.highlight, 6);
-    assert.equal(oct.cells[4], 1);
-    assert.equal(oct.cells[9], 6);
-  }
   assert.match(css, /--seal-y/);
   assert.match(js, /COVER_W = 625/);
   assert.match(js, /COVER_H = 1024/);
@@ -273,6 +264,9 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.ok(readFileSync(new URL("./assets/fonts/jin.woff2", import.meta.url)).byteLength > 1000);
   assert.ok(readFileSync(new URL("./assets/fonts/name.woff2", import.meta.url)).byteLength > 1000);
   assert.ok(readFileSync(new URL("./assets/fonts/wall.woff2", import.meta.url)).byteLength > 1000);
+  assert.equal(existsSync(new URL("./assets/calendar.png", import.meta.url)), false);
+  assert.equal(existsSync(new URL("./assets/fonts/qing.woff2", import.meta.url)), false);
+  assert.equal(existsSync(new URL("./assets/fonts/xing.woff2", import.meta.url)), false);
 }
 
 console.log("ok");
