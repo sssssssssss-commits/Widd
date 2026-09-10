@@ -278,6 +278,7 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.doesNotMatch(html, /id="address"/);
   assert.doesNotMatch(html, /id="opener"/);
   assert.match(css, /\.names \.name[\s\S]{0,160}font-family:\s*"WiddName"/);
+  assert.match(css, /--name:\s*clamp\(2\.6rem, 11vw, 4\.9rem\)/);
   assert.match(css, /\.names \.name[\s\S]{0,360}scaleY\(1\.14\)/);
   assert.match(css, /\.names-row/);
   assert.match(css, /WiddWall/);

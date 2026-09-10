@@ -489,7 +489,7 @@ body.is-signing .bgm-tog {
 }
 
 .names {
-  --name: clamp(2.5rem, 10.5vw, 4.8rem);
+  --name: clamp(2.6rem, 11vw, 4.9rem);
   --xi: var(--name);
   display: flex;
   flex-direction: column;
