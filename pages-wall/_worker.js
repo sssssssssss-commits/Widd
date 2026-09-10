@@ -49,7 +49,10 @@ async function listWall(env) {
     ids = listed.keys.map((k) => k.name.replace(/^sig:/, ""));
   }
   const rows = (await Promise.all(ids.map((id) => env.RSVP.get(`sig:${id}`, "json")))).filter(Boolean);
-  rows.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+  rows.sort((a, b) => {
+    const c = String(a.at || "").localeCompare(String(b.at || ""));
+    return c || String(a.id || "").localeCompare(String(b.id || ""));
+  });
   return rows.slice(-80).map(({ id, name, img, at, by, epoch }) => ({ id, name, img, at, by, epoch }));
 }
 
@@ -128,7 +131,7 @@ async function wipeWall(env, body, host) {
 }
 
 async function shareJpg(request) {
-  const src = await fetch("https://sssssssssss-commits.github.io/Widd/assets/share.jpg");
+  const src = await fetch("https://sumuyang.asia/share.jpg");
   if (!src.ok) return json({ ok: false }, 502);
   const headers = {
     "content-type": "image/jpeg",

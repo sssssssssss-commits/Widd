@@ -1814,8 +1814,6 @@ function bindGate(cfg) {
     openLetter(cfg);
   };
   $("seal").addEventListener("click", go);
-  // ponytail: ?open=1 skips the cover for content preview
-  if (new URLSearchParams(location.search).has("open")) go();
 }
 
 async function main() {

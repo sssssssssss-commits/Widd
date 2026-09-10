@@ -1,7 +1,6 @@
 # 夜色墨金婚礼请柬
 
-微信转发（保证有金色囍缩略图）：**https://sssssssssss-commits.github.io/Widd/?wx=6**  
-自定义域名（好看，点一次继续访问）：**https://sumuyang.asia/**  
+宾客只发这一个地址：**https://sumuyang.asia/**
 
 手机竖信，微信里打开。点朱印拆开，金箔慢落。改 [data/wedding.json](data/wedding.json) 即可换姓名、日期、地点和照片。
 
@@ -15,7 +14,7 @@
 npx --yes serve .
 ```
 
-浏览器打开提示的地址。加 `?to=张三` 可看称谓；加 `&open=1` 可跳过拆信直接看正文（改文案时用）。
+浏览器打开提示的地址。
 
 自检：`node check.mjs`
 
@@ -41,7 +40,7 @@ npx --yes serve .
 
 ## 发到网上（微信要能开）
 
-宾客发 **https://sumuyang.asia/**，不要发 github.io。微信仍可能先出「继续访问」，点一次即可。
+宾客只发 **https://sumuyang.asia/**。微信仍可能先出「继续访问」，点一次即可。
 
 重新部署请柬：把 `index.html`、`css/`、`js/`、`data/`、`assets/` 拷进 `dist/`（不要带上 `tmp/`、`node_modules/`），然后：
 
@@ -51,7 +50,7 @@ npx wrangler pages deploy dist --project-name widd --commit-dirty=true
 
 自定义域已绑 `sumuyang.asia`。JSON 里的 `share.origin` 要跟宾客链接一致。有备案再迁腾讯云，微信里更稳。
 
-微信抓封面：会拦 github.io 图床。请柬里的预览图走 jsDelivr（`cdn.jsdelivr.net/gh/.../share.jpg`），第一张 `<img>` 必须是至少 300×300 的 JPG 绝对地址。发到微信后若仍是旧卡，把链接先发给「文件传输助手」，或等几分钟再转。
+微信抓封面：第一张 `<img>` 必须是至少 300×300 的 JPG 绝对地址。发到微信后若仍是旧卡，把链接先发给「文件传输助手」，或等几分钟再转。
 
 ## 回执
 
@@ -75,7 +74,6 @@ npx wrangler deploy
 用手机微信打开 **https://sumuyang.asia/**（不要只在电脑 Chrome 里看完就算）：
 
 - 拆印、抽信、金箔
-- `?to=名字` 称谓
 - 倒计时
 - 立轴能横滑
 - 「高德出发 / 腾讯地图」能跳出
