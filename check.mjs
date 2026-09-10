@@ -102,14 +102,16 @@ const thin = strokeWidthFromTouch({ speed: 0.8 }, 4, 8);
 assert.ok(thick / thin > 1.4 && thick / thin < 2.6);
 
 const first = wallSpreadSlot(0, 1);
-assert.ok(Math.abs(first.w - 50) < 1.2);
-assert.ok(Math.abs(first.h - 50) < 1.2);
+assert.ok(Math.abs(first.w - 62) < 1.2);
+assert.ok(Math.abs(first.h - 62) < 1.2);
 assert.ok(Math.abs(first.left + first.w / 2 - 50) < 1.2);
 assert.ok(Math.abs(first.top + first.h / 2 - 50) < 1.2);
 assert.ok(first.w * first.h >= 2300);
 assert.ok(wallSpreadSlot(0, 4).w < first.w);
 assert.ok(wallSpreadSlot(0, 9).w < wallSpreadSlot(0, 4).w);
 assert.ok(wallSpreadSlot(0, 16).w < wallSpreadSlot(0, 9).w);
+assert.ok(wallSpreadSlot(0, 9).w > 16);
+assert.ok(wallSpreadSlot(0, 15).w > 12);
 assert.equal(wallPageCount(0), 1);
 assert.equal(wallPageCount(15), 1);
 assert.equal(wallPageCount(16), 2);
@@ -124,8 +126,8 @@ assert.equal(wallPageCount(31), 3);
   assert.equal(b.page, 1);
   assert.equal(b.onPage, 1);
   assert.ok(Math.abs(a.w - wallSpreadSlot(0, 15).w) < 0.01);
-  assert.ok(Math.abs(b.w - 50) < 1.2);
-  assert.ok(a.w > 7.9);
+  assert.ok(Math.abs(b.w - 62) < 1.2);
+  assert.ok(a.w > 12);
   assert.ok(a.w > wallSpreadSlot(0, 16).w);
 }
 {
@@ -153,27 +155,14 @@ assert.equal(wallPageCount(31), 3);
   assert.ok(xs.size >= 6);
 }
 
-function rotBox(s, deg) {
-  const r = (deg * Math.PI) / 180;
-  const c = Math.abs(Math.cos(r));
-  const si = Math.abs(Math.sin(r));
-  const aw = s.w * c + s.h * si;
-  const ah = s.w * si + s.h * c;
-  const cx = s.left + s.w / 2;
-  const cy = s.top + s.h / 2;
-  return { left: cx - aw / 2, top: cy - ah / 2, w: aw, h: ah };
-}
-
 for (const n of [1, 2, 3, 4, 5, 9, 16, 30]) {
   const slots = Array.from({ length: n }, (_, i) => wallSpreadSlot(i, n));
-  const sized = slots.map((s) => rotBox(s, 10));
   for (let i = 0; i < n; i++) {
     const s = slots[i];
     assert.ok(s.left >= -0.2 && s.left + s.w <= 100.2, `n=${n} i=${i} x`);
     assert.ok(s.top >= -0.2 && s.top + s.h <= 100.2, `n=${n} i=${i} y`);
     for (let j = i + 1; j < n; j++) {
-      assert.equal(wallBoxesOverlap(s, slots[j], 0.2), false, `n=${n} ${i}/${j}`);
-      assert.equal(wallBoxesOverlap(sized[i], sized[j], 0.05), false, `rot n=${n} ${i}/${j}`);
+      assert.equal(wallBoxesOverlap(s, slots[j], s.w * 0.37), false, `n=${n} ${i}/${j}`);
     }
   }
 }
@@ -185,7 +174,7 @@ for (const n of [16, 30, 31]) {
     const slots = Array.from({ length: onPage }, (_, i) => wallSpreadSlot(i, onPage));
     for (let i = 0; i < onPage; i++) {
       for (let j = i + 1; j < onPage; j++) {
-        assert.equal(wallBoxesOverlap(slots[i], slots[j], 0.2), false, `page n=${n} p=${p} ${i}/${j}`);
+        assert.equal(wallBoxesOverlap(slots[i], slots[j], slots[i].w * 0.37), false, `page n=${n} p=${p} ${i}/${j}`);
       }
     }
   }
@@ -327,6 +316,7 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(js, /visibilitychange/);
   assert.match(js, /lastShared/);
   assert.match(css, /\.wall-yards/);
+  assert.match(css, /\.wall-card img[\s\S]{0,200}scale\(1\.12\)/);
   assert.match(js, /names-row/);
   assert.match(js, /is-burst/);
   assert.match(js, /is-open/);

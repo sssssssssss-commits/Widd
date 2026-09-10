@@ -1006,6 +1006,7 @@ body.is-signing .bgm-tog {
   height: var(--h, 50%);
   margin: 0;
   padding: 0;
+  overflow: visible;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -1033,6 +1034,8 @@ body.is-signing .bgm-tog {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  -webkit-transform: scale(1.12);
+  transform: scale(1.12);
   background: none;
   -webkit-filter:
     drop-shadow(1px 0 0 #1A120C)

@@ -113,13 +113,12 @@ function wallMineCount(items, by) {
 function wallSpreadSlot(i, n) {
   const count = Math.max(1, Number(n) || 1);
   const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
-  const cap = 50;
+  const cap = 62;
   if (count === 1) {
-    return { left: 25, top: 25, w: cap, h: cap };
+    const o = (100 - cap) / 2;
+    return { left: o, top: o, w: cap, h: cap };
   }
   const golden = Math.PI * (3 - Math.sqrt(5));
-  const rot = Math.abs(Math.cos(Math.PI / 18)) + Math.abs(Math.sin(Math.PI / 18));
-  const pad = 0.28;
   const pts = [];
   for (let k = 0; k < count; k++) {
     const h = wallHash(String(k));
@@ -129,28 +128,57 @@ function wallSpreadSlot(i, n) {
     const r = Math.sqrt(k) * stretch;
     pts.push({ x: r * Math.cos(th), y: r * Math.sin(th) });
   }
-  let minCheb = Infinity;
   let maxAbs = 0;
   for (let a = 0; a < count; a++) {
     maxAbs = Math.max(maxAbs, Math.abs(pts[a].x), Math.abs(pts[a].y));
-    for (let b = a + 1; b < count; b++) {
-      const cheb = Math.max(Math.abs(pts[a].x - pts[b].x), Math.abs(pts[a].y - pts[b].y));
-      if (cheb < minCheb) minCheb = cheb;
+  }
+  if (!(maxAbs > 0)) {
+    const o = (100 - cap) / 2;
+    return { left: o, top: o, w: cap, h: cap };
+  }
+  // ponytail: equal squares, allow ~36% overlap because PNG ink rarely fills the box
+  const slackRatio = 0.36;
+  const edge = 0.35;
+  const layout = (size) => {
+    const half = size / 2;
+    const u = (50 - half - edge) / maxAbs;
+    const out = [];
+    for (let k = 0; k < count; k++) {
+      const cx = 50 + u * pts[k].x;
+      const cy = 50 + u * pts[k].y;
+      out.push({
+        left: Math.max(0, Math.min(100 - size, cx - half)),
+        top: Math.max(0, Math.min(100 - size, cy - half)),
+        w: size,
+        h: size,
+      });
     }
-  }
-  if (!(minCheb > 0) || !(maxAbs > 0)) {
-    return { left: 25, top: 25, w: cap, h: cap };
-  }
-  const t = maxAbs / minCheb;
-  const size = Math.min(cap, Math.max(4, (50 - pad * t) / (rot * t + 0.5)));
-  const u = (rot * size + pad) / minCheb;
-  const p = pts[idx];
-  return {
-    left: Math.max(0, Math.min(100 - size, 50 + u * p.x - size / 2)),
-    top: Math.max(0, Math.min(100 - size, 50 + u * p.y - size / 2)),
-    w: size,
-    h: size,
+    return out;
   };
+  const fits = (size) => {
+    if (size > cap || 50 - size / 2 - edge < 0) return false;
+    const slots = layout(size);
+    const slack = size * slackRatio;
+    for (let a = 0; a < count; a++) {
+      const s = slots[a];
+      if (s.left < -0.05 || s.left + s.w > 100.05 || s.top < -0.05 || s.top + s.h > 100.05) return false;
+      for (let b = a + 1; b < count; b++) {
+        const o = slots[b];
+        if (s.left < o.left + o.w - slack && s.left + s.w - slack > o.left && s.top < o.top + o.h - slack && s.top + s.h - slack > o.top) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+  let lo = 4;
+  let hi = cap;
+  for (let k = 0; k < 20; k++) {
+    const mid = (lo + hi) / 2;
+    if (fits(mid)) lo = mid;
+    else hi = mid;
+  }
+  return layout(lo)[idx];
 }
 
 const WALL_PAGE = 15;
@@ -659,7 +687,8 @@ async function snapshotWall(items) {
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate((wallRot(slice[i].id || String(p * WALL_PAGE + i)) * Math.PI) / 180);
-      drawKeepContained(ctx, im, -cw / 2, -ch / 2, cw, ch);
+      const s = 1.12;
+      drawKeepContained(ctx, im, (-cw * s) / 2, (-ch * s) / 2, cw * s, ch * s);
       ctx.restore();
     }
   }
@@ -772,7 +801,7 @@ function paintGoldInk(ctx, pts, w, h) {
 function exportWallPad(pts) {
   const box = ptsBounds(pts);
   if (!box) return "";
-  const gap = 8;
+  const gap = 4;
   const width = box.maxX - box.minX + gap * 2;
   const height = box.maxY - box.minY + gap * 2;
   if (width < 4 || height < 4) return "";
