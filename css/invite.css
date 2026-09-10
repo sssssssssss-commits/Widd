@@ -344,11 +344,24 @@ body.is-signing .bgm-tog {
   letter-spacing: .22em;
 }
 
+.gate-tap i,
 .gate-tap b {
+  font-style: normal;
   font-weight: 400;
-  font-size: 1.12em;
   line-height: 1;
-  color: #F4DC8A;
+  letter-spacing: 0;
+  -webkit-writing-mode: horizontal-tb;
+  writing-mode: horizontal-tb;
+}
+
+.gate-tap i {
+  font-size: .62em;
+  opacity: .88;
+}
+
+.gate-tap b {
+  font-size: .78em;
+  opacity: .9;
 }
 
 .gate.is-burst .gate-tap,
@@ -924,7 +937,14 @@ body.is-signing .bgm-tog {
   font-weight: 400;
   font-synthesis: none;
   letter-spacing: .28em;
-  color: var(--ink);
+  color: #C23B32;
+  -webkit-text-stroke: .04em #E4C36A;
+  paint-order: stroke fill;
+  text-shadow:
+    -1px 0 0 #C9A24A,
+    1px 0 0 #C9A24A,
+    0 -1px 0 #C9A24A,
+    0 1px 0 #C9A24A;
 }
 
 .wall {
@@ -1123,20 +1143,35 @@ body.is-signing .bgm-tog {
 .wall-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: .7rem;
-  margin-top: 1.1rem;
+  justify-content: center;
+  gap: .4rem;
+  margin-top: .75rem;
 }
 
 .wall-actions button {
-  flex: 1;
-  width: auto;
-  margin-top: 0;
-  background: transparent;
-  color: var(--ink);
-  border: 1px solid var(--gold);
-  padding: .7rem;
+  flex: 0 0 auto;
+  min-width: 0;
+  margin: 0;
+  padding: .3rem .86rem .3rem .98rem;
   font: inherit;
-  letter-spacing: .22em;
+  font-size: .74rem;
+  line-height: 1.35;
+  letter-spacing: .18em;
+  white-space: nowrap;
+  color: #b4332a;
+  background: #fff8ec;
+  border: 1px solid #c9a24a;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 0 1px #f3e2b0,
+    0 1px 2px rgba(90, 40, 20, 0.08);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wall-actions button:active {
+  -webkit-transform: scale(.97);
+  transform: scale(.97);
 }
 
 .wall-hint {
@@ -1197,7 +1232,14 @@ body.is-signing .bgm-tog {
   font-size: 2.7rem;
   font-weight: 400;
   font-synthesis: none;
-  color: var(--ink-soft);
+  color: #C23B32;
+  -webkit-text-stroke: .04em #E4C36A;
+  paint-order: stroke fill;
+  text-shadow:
+    -1px 0 0 #C9A24A,
+    1px 0 0 #C9A24A,
+    0 -1px 0 #C9A24A,
+    0 1px 0 #C9A24A;
   opacity: .9;
 }
 

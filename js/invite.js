@@ -942,8 +942,8 @@ function renderWall(cfg, guest) {
         </div>
       </div>
       <div class="wall-actions">
-        <button type="button" id="wallOpen">签字</button>
-        <button type="button" id="wallMine">撤下我的</button>
+        <button type="button" id="wallOpen">祝福</button>
+        <button type="button" id="wallMine">撤下</button>
         ${host ? `<button type="button" id="wallSave">保存祝福墙</button>` : ""}
         ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
       </div>
