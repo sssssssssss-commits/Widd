@@ -153,6 +153,24 @@ function wallSpreadSlot(i, n) {
   };
 }
 
+const WALL_PAGE = 15;
+
+function wallPageCount(n) {
+  const c = Math.max(0, Number(n) || 0);
+  return Math.max(1, Math.ceil(c / WALL_PAGE));
+}
+
+function wallSlotOnWall(i, n) {
+  const count = Math.max(0, Number(n) || 0);
+  if (count <= 0) return { page: 0, pages: 1, local: 0, onPage: 1, ...wallSpreadSlot(0, 1) };
+  const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
+  const pages = Math.ceil(count / WALL_PAGE);
+  const page = Math.floor(idx / WALL_PAGE);
+  const local = idx % WALL_PAGE;
+  const onPage = page === pages - 1 ? count - page * WALL_PAGE : WALL_PAGE;
+  return { page, pages, local, onPage, ...wallSpreadSlot(local, onPage) };
+}
+
 function strokeWidthFromTouch(input, minW, maxW) {
   const lo = Number(minW) || 2.2;
   const hi = Number(maxW) || 11;
@@ -507,9 +525,8 @@ function wallPaintRows(items) {
     .filter((row) => dataImageOk(row && row.img))
     .slice()
     .sort((a, b) => {
-      const ta = String(a.at || "");
-      const tb = String(b.at || "");
-      if (ta && tb && ta !== tb) return ta.localeCompare(tb);
+      const c = String(a.at || "").localeCompare(String(b.at || ""));
+      if (c) return c;
       return String(a.id || "").localeCompare(String(b.id || ""));
     });
 }
@@ -526,13 +543,25 @@ function wallCard(item, i, fly, slot) {
 }
 
 function paintWallBoard(items, flyId) {
-  const board = $("wallBoard");
-  if (!board) return;
+  const host = $("wallYards");
+  if (!host) return;
   const rows = wallPaintRows(items);
   const n = rows.length;
-  board.innerHTML = rows
-    .map((row, i) => wallCard(row, i, row.id === flyId, wallSpreadSlot(i, n)))
-    .join("");
+  const pages = wallPageCount(n);
+  const key = `${pages}\n${rows.map((r) => r.id || r.img).join("\n")}\n${flyId || ""}`;
+  if (key === paintWallBoard.key) return;
+  paintWallBoard.key = key;
+  const parts = [];
+  for (let p = 0; p < pages; p++) {
+    const start = p * WALL_PAGE;
+    const slice = rows.slice(start, start + WALL_PAGE);
+    const onPage = Math.max(1, slice.length);
+    const cards = slice
+      .map((row, i) => wallCard(row, start + i, row.id === flyId, wallSpreadSlot(i, onPage)))
+      .join("");
+    parts.push(`<div class="wall-yard"><div class="wall-frame"><div class="wall-board">${cards}</div></div></div>`);
+  }
+  host.innerHTML = parts.join("");
 }
 
 function loadKeepImg(src) {
@@ -579,8 +608,12 @@ function drawKeepContained(ctx, im, dx, dy, dw, dh) {
 async function snapshotWall(items) {
   const yard = document.querySelector(".wall-yard");
   const cssW = (yard && yard.clientWidth) || 360;
+  const rows = wallPaintRows(items);
+  const n = rows.length;
+  const pages = wallPageCount(n);
   const W = Math.min(1200, Math.max(720, Math.round(cssW * 2.4)));
-  const H = Math.round((W * 1005) / 738);
+  const pageH = Math.round((W * 1005) / 738);
+  const H = pageH * pages;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -588,44 +621,47 @@ async function snapshotWall(items) {
   ctx.fillStyle = "#F6F1E6";
   ctx.fillRect(0, 0, W, H);
   const paper = await loadKeepImg("assets/wall.jpg?v=1");
-  if (paper) {
-    const ir = (paper.width || 1) / (paper.height || 1);
-    const br = W / H;
-    let dw = W;
-    let dh = H;
-    let dx = 0;
-    let dy = 0;
-    if (ir > br) {
-      dh = W / ir;
-      dy = (H - dh) / 2;
-    } else {
-      dw = H * ir;
-      dx = (W - dw) / 2;
-    }
-    ctx.save();
-    ctx.globalAlpha = 0.6;
-    ctx.drawImage(paper, dx, dy, dw, dh);
-    ctx.restore();
-  }
   const bx = W * 0.075;
-  const by = H * 0.075;
+  const by = pageH * 0.075;
   const bw = W * 0.85;
-  const bh = H * 0.85;
-  const rows = wallPaintRows(items);
-  const n = rows.length;
-  for (let i = 0; i < n; i++) {
-    const im = await loadKeepImg(rows[i].img);
-    if (!im) continue;
-    const slot = wallSpreadSlot(i, n);
-    const cw = (bw * slot.w) / 100;
-    const ch = (bh * slot.h) / 100;
-    const cx = bx + (bw * slot.left) / 100 + cw / 2;
-    const cy = by + (bh * slot.top) / 100 + ch / 2;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate((wallRot(rows[i].id || String(i)) * Math.PI) / 180);
-    drawKeepContained(ctx, im, -cw / 2, -ch / 2, cw, ch);
-    ctx.restore();
+  const bh = pageH * 0.85;
+  for (let p = 0; p < pages; p++) {
+    const y0 = p * pageH;
+    if (paper) {
+      const ir = (paper.width || 1) / (paper.height || 1);
+      const br = W / pageH;
+      let dw = W;
+      let dh = pageH;
+      let dx = 0;
+      let dy = y0;
+      if (ir > br) {
+        dh = W / ir;
+        dy = y0 + (pageH - dh) / 2;
+      } else {
+        dw = pageH * ir;
+        dx = (W - dw) / 2;
+      }
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      ctx.drawImage(paper, dx, dy, dw, dh);
+      ctx.restore();
+    }
+    const slice = rows.slice(p * WALL_PAGE, p * WALL_PAGE + WALL_PAGE);
+    const onPage = Math.max(1, slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      const im = await loadKeepImg(slice[i].img);
+      if (!im) continue;
+      const slot = wallSpreadSlot(i, onPage);
+      const cw = (bw * slot.w) / 100;
+      const ch = (bh * slot.h) / 100;
+      const cx = bx + (bw * slot.left) / 100 + cw / 2;
+      const cy = y0 + by + (bh * slot.top) / 100 + ch / 2;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate((wallRot(slice[i].id || String(p * WALL_PAGE + i)) * Math.PI) / 180);
+      drawKeepContained(ctx, im, -cw / 2, -ch / 2, cw, ch);
+      ctx.restore();
+    }
   }
   const png = canvas.toDataURL("image/png");
   if (!png || png.length < 80) throw new Error("empty");
@@ -936,11 +972,7 @@ function renderWall(cfg, guest) {
   const epochUrl = cfg.wallEpoch || "";
   wall.innerHTML = `<div class="wall-box">
       <h2>祝福墙</h2>
-      <div class="wall-yard">
-        <div class="wall-frame">
-          <div class="wall-board" id="wallBoard"></div>
-        </div>
-      </div>
+      <div class="wall-yards" id="wallYards"></div>
       <div class="wall-actions">
         <button type="button" id="wallOpen">祝福</button>
         <button type="button" id="wallMine">撤下</button>
@@ -1054,13 +1086,21 @@ function renderWall(cfg, guest) {
     if (window.visualViewport) visualViewport.addEventListener("resize", refitPad, { passive: true });
   } catch {}
 
+  let lastShared = null;
   const refresh = async (flyId) => {
     const gotP = loadWallItems(urls);
     const epochP = epochUrl ? fetchWallEpoch(epochUrl) : Promise.resolve(0);
     const got = await gotP;
     epochCache = await epochP;
-    let items = got.ok ? got.items : wallAfterWipe(got.items, epochCache);
-    items = mergePending(items);
+    let items;
+    if (got.ok) {
+      lastShared = got.items;
+      items = mergePending(got.items);
+    } else if (lastShared) {
+      items = mergePending(lastShared);
+    } else {
+      items = mergePending(wallAfterWipe(got.items, epochCache));
+    }
     writeLocalWall(items);
     paintWallBoard(items, flyId);
     return items;
@@ -1080,7 +1120,10 @@ function renderWall(cfg, guest) {
   });
 
   refresh();
-  setInterval(refresh, 8000);
+  setInterval(refresh, 4000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refresh();
+  });
 
   $("wallMine").addEventListener("click", () => {
     if (!window.confirm("确定撤下你留下的签名？")) return;

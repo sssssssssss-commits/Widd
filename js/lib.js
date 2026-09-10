@@ -169,6 +169,35 @@ export function wallSpreadSlot(i, n) {
   };
 }
 
+export const WALL_PAGE = 15;
+
+export function wallPageCount(n) {
+  const c = Math.max(0, Number(n) || 0);
+  return Math.max(1, Math.ceil(c / WALL_PAGE));
+}
+
+export function wallSlotOnWall(i, n) {
+  const count = Math.max(0, Number(n) || 0);
+  if (count <= 0) return { page: 0, pages: 1, local: 0, onPage: 1, ...wallSpreadSlot(0, 1) };
+  const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
+  const pages = Math.ceil(count / WALL_PAGE);
+  const page = Math.floor(idx / WALL_PAGE);
+  const local = idx % WALL_PAGE;
+  const onPage = page === pages - 1 ? count - page * WALL_PAGE : WALL_PAGE;
+  return { page, pages, local, onPage, ...wallSpreadSlot(local, onPage) };
+}
+
+export function wallPaintRows(items) {
+  return (items || [])
+    .filter((row) => dataImageOk(row && row.img))
+    .slice()
+    .sort((a, b) => {
+      const c = String(a.at || "").localeCompare(String(b.at || ""));
+      if (c) return c;
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    });
+}
+
 export function wallBoxesOverlap(a, b, pad = 0.5) {
   return (
     a.left < b.left + b.w - pad &&

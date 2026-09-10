@@ -962,6 +962,10 @@ body.is-signing .bgm-tog {
   box-sizing: border-box;
 }
 
+.wall-yards {
+  width: 100%;
+}
+
 .wall-yard {
   position: relative;
   width: 100%;

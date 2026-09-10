@@ -14,6 +14,10 @@ import {
   wallAfterWipe,
   wallBoxesOverlap,
   wallSpreadSlot,
+  wallPageCount,
+  wallSlotOnWall,
+  wallPaintRows,
+  WALL_PAGE,
   wallHitUrl,
   wallMineCount,
   wallRot,
@@ -106,6 +110,36 @@ assert.ok(first.w * first.h >= 2300);
 assert.ok(wallSpreadSlot(0, 4).w < first.w);
 assert.ok(wallSpreadSlot(0, 9).w < wallSpreadSlot(0, 4).w);
 assert.ok(wallSpreadSlot(0, 16).w < wallSpreadSlot(0, 9).w);
+assert.equal(wallPageCount(0), 1);
+assert.equal(wallPageCount(15), 1);
+assert.equal(wallPageCount(16), 2);
+assert.equal(wallPageCount(30), 2);
+assert.equal(wallPageCount(31), 3);
+{
+  const a = wallSlotOnWall(0, 16);
+  const b = wallSlotOnWall(15, 16);
+  assert.equal(a.page, 0);
+  assert.equal(a.pages, 2);
+  assert.equal(a.onPage, 15);
+  assert.equal(b.page, 1);
+  assert.equal(b.onPage, 1);
+  assert.ok(Math.abs(a.w - wallSpreadSlot(0, 15).w) < 0.01);
+  assert.ok(Math.abs(b.w - 50) < 1.2);
+  assert.ok(a.w > 7.9);
+  assert.ok(a.w > wallSpreadSlot(0, 16).w);
+}
+{
+  const png = "data:image/png;base64,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  const mixed = [
+    { id: "b", at: "2026-01-02T00:00:00.000Z", img: png },
+    { id: "a", at: "2026-01-01T00:00:00.000Z", img: png },
+    { id: "c", at: "2026-01-02T00:00:00.000Z", img: png },
+  ];
+  const once = wallPaintRows(mixed).map((r) => r.id).join(",");
+  const twice = wallPaintRows(mixed.slice().reverse()).map((r) => r.id).join(",");
+  assert.equal(once, "a,b,c");
+  assert.equal(twice, once);
+}
 {
   const near = wallSpreadSlot(0, 9);
   const far = wallSpreadSlot(8, 9);
@@ -140,6 +174,19 @@ for (const n of [1, 2, 3, 4, 5, 9, 16, 30]) {
     for (let j = i + 1; j < n; j++) {
       assert.equal(wallBoxesOverlap(s, slots[j], 0.2), false, `n=${n} ${i}/${j}`);
       assert.equal(wallBoxesOverlap(sized[i], sized[j], 0.05), false, `rot n=${n} ${i}/${j}`);
+    }
+  }
+}
+
+for (const n of [16, 30, 31]) {
+  const pages = wallPageCount(n);
+  for (let p = 0; p < pages; p++) {
+    const onPage = p === pages - 1 ? n - p * WALL_PAGE : WALL_PAGE;
+    const slots = Array.from({ length: onPage }, (_, i) => wallSpreadSlot(i, onPage));
+    for (let i = 0; i < onPage; i++) {
+      for (let j = i + 1; j < onPage; j++) {
+        assert.equal(wallBoxesOverlap(slots[i], slots[j], 0.2), false, `page n=${n} p=${p} ${i}/${j}`);
+      }
     }
   }
 }
@@ -274,6 +321,12 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(js, /is-burst[\s\S]{0,180}is-open/);
   assert.doesNotMatch(js, /prefers-reduced-motion/);
   assert.doesNotMatch(js, /}, 220\)/);
+  assert.match(js, /id="wallYards"/);
+  assert.match(js, /WALL_PAGE = 15/);
+  assert.match(js, /setInterval\(refresh, 4000\)/);
+  assert.match(js, /visibilitychange/);
+  assert.match(js, /lastShared/);
+  assert.match(css, /\.wall-yards/);
   assert.match(js, /names-row/);
   assert.match(js, /is-burst/);
   assert.match(js, /is-open/);
