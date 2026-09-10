@@ -716,7 +716,7 @@ body.is-signing .bgm-tog {
 .timeline {
   position: relative;
   margin: 1.4rem auto 0;
-  max-width: 320px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -727,8 +727,9 @@ body.is-signing .bgm-tog {
   position: absolute;
   top: 10px;
   bottom: 12px;
-  left: 68px; /* 58px time-col + 10px half spine-col */
+  left: 50%;
   width: 1px;
+  transform: translateX(-50%);
   background: repeating-linear-gradient(
     to bottom,
     var(--gold) 0 3px,
@@ -738,15 +739,14 @@ body.is-signing .bgm-tog {
 }
 
 .timeline-item {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr 20px 1fr;
+  align-items: start;
   position: relative;
   z-index: 1;
 }
 
 .time-col {
-  width: 58px;
-  flex-shrink: 0;
   text-align: right;
   padding-right: 12px;
 }
@@ -781,7 +781,6 @@ body.is-signing .bgm-tog {
 }
 
 .content-col {
-  flex: 1;
   text-align: left;
   padding-left: 10px;
   min-width: 0;

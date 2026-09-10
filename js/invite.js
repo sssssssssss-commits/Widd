@@ -219,14 +219,6 @@ function isWallHost(search, key) {
   return q.get("host") === k;
 }
 
-function isWallMany(search, key) {
-  const k = String(key || "");
-  if (!k) return false;
-  const raw = String(search || "");
-  const q = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
-  return q.get("many") === k;
-}
-
 function wallHitUrl(getUrl) {
   return String(getUrl || "").replace("/get/", "/hit/");
 }
@@ -1005,7 +997,6 @@ function renderWall(cfg, guest) {
   const urls = wallEndpoints(cfg);
   const url = urls[0] || "";
   const host = isWallHost(location.search, cfg.wallHost);
-  const many = isWallMany(location.search, cfg.wallHost);
   const by = wallBy();
   const epochUrl = cfg.wallEpoch || "";
   wall.innerHTML = `<div class="wall-box">
@@ -1145,7 +1136,7 @@ function renderWall(cfg, guest) {
   };
 
   $("wallOpen").addEventListener("click", () => {
-    if (!many && wallMineCount(readLocalWall(), by) >= 3) {
+    if (wallMineCount(readLocalWall(), by) >= 3) {
       $("wallHint").textContent = "每人最多留下三幅";
       return;
     }
@@ -1238,17 +1229,16 @@ function renderWall(cfg, guest) {
       sheetHint.textContent = "签名未能保存，请再写一次";
       return;
     }
-    if (!many && wallMineCount(readLocalWall(), by) >= 3) {
+    if (wallMineCount(readLocalWall(), by) >= 3) {
       sheetHint.textContent = "每人最多留下三幅";
       return;
     }
-    const who = many ? `${by}-${Date.now().toString(36)}` : by;
     const item = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       name,
       img,
       at: new Date().toISOString(),
-      by: who,
+      by,
       epoch: epochCache,
     };
     const g = writeGen;
