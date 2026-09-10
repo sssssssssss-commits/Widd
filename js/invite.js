@@ -1338,7 +1338,7 @@ function openLetter(cfg) {
   setTimeout(() => {
     gate.classList.add("is-gone");
     startBless(cfg);
-  }, 1180);
+  }, 1680);
 }
 
 let foilStarted = false;
