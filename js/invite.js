@@ -1252,13 +1252,13 @@ function renderWall(cfg, guest) {
       hint.textContent = "已上墙";
       return;
     }
-    postWall(urls, { kind: "wall", name, img, by: who, epoch: item.epoch })
+    postWall(urls, { kind: "wall", name, img, by, epoch: item.epoch })
       .then(async (sent) => {
         if (g !== writeGen) {
           if (sent.ok) {
             const data = await sent.res.json().catch(() => ({}));
             const extra = data.id ? [data.id] : [];
-            postWall(urls, { kind: "wall-mine", by: who, ids: [item.id].concat(extra) });
+            postWall(urls, { kind: "wall-mine", by, ids: [item.id].concat(extra) });
           }
           return;
         }
