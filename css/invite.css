@@ -44,6 +44,16 @@
   font-display: swap;
 }
 
+/* 平方仿毛体草书 subset — owner-supplied PingFangFangMaoTiCaoShu */
+@font-face {
+  font-family: "WiddCao";
+  src: url("../assets/fonts/cao.woff2?v=1") format("woff2"),
+       url("../assets/fonts/cao.woff?v=1") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   margin: 0;
   height: 100%;
@@ -155,8 +165,6 @@ body.is-signing .bgm-tog {
   background: #551110;
   padding: 0;
   overflow: hidden;
-  -webkit-perspective: 1600px;
-  perspective: 1600px;
   -webkit-transition: opacity .4s ease, visibility .4s ease, background .2s ease;
   transition: opacity .4s ease, visibility .4s ease, background .2s ease;
 }
@@ -175,15 +183,28 @@ body.is-signing .bgm-tog {
   height: 100%;
   z-index: 2;
   pointer-events: none;
+  -webkit-perspective: 1400px;
+  perspective: 1400px;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
 }
 
 .flap {
   position: absolute;
   inset: 0;
+  z-index: 4;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
   -webkit-transform-origin: 91.36% 52.83%;
   transform-origin: 91.36% 52.83%;
   -webkit-transition: -webkit-transform 1.4s ease-in, opacity 1.22s ease-in;
   transition: transform 1.4s ease-in, opacity 1.22s ease-in;
+}
+
+.flap-cut {
+  position: absolute;
+  inset: 0;
+  display: block;
 }
 
 .cover-img {
@@ -202,23 +223,28 @@ body.is-signing .bgm-tog {
   object-position: center;
 }
 
-.flaps.is-laid .flap-top {
+.flaps.is-laid .flap-top .flap-cut {
   -webkit-clip-path: polygon(0 0, 100.2% 0, 100.2% 52.9%);
   clip-path: polygon(0 0, 100.2% 0, 100.2% 52.9%);
 }
 
-.flaps.is-laid .flap-bot {
+.flaps.is-laid .flap-bot .flap-cut {
   -webkit-clip-path: polygon(0 100%, 100.2% 100%, 100.2% 52.7%);
   clip-path: polygon(0 100%, 100.2% 100%, 100.2% 52.7%);
 }
 
-.flaps.is-laid .flap-mid {
+.flaps.is-laid .flap-mid .flap-cut {
   -webkit-clip-path: polygon(-1% -1%, 101% 52.83%, -1% 101%);
   clip-path: polygon(-1% -1%, 101% 52.83%, -1% 101%);
 }
 
 .gate.is-open {
   background: transparent;
+  overflow: visible;
+}
+
+.gate.is-open .flap {
+  z-index: 7;
 }
 
 .gate.is-open .flap-top {
@@ -234,8 +260,8 @@ body.is-signing .bgm-tog {
 }
 
 .gate.is-open .flap-mid {
-  -webkit-transform: rotateY(-78deg);
-  transform: rotateY(-78deg);
+  -webkit-transform: translate3d(-32%, 0, 0) rotateY(-72deg);
+  transform: translate3d(-32%, 0, 0) rotateY(-72deg);
   opacity: 0;
   -webkit-transition-delay: .1s;
   transition-delay: .1s;
@@ -801,17 +827,22 @@ body.is-signing .bgm-tog {
 
 .venue h2 {
   margin: 0 0 .35rem;
-  font-size: 1.05rem;
-  font-weight: 400;
-  letter-spacing: .16em;
+  font-family: "WiddCao", serif;
+  font-size: 1.55rem;
+  font-weight: 300;
+  font-synthesis: none;
+  letter-spacing: .06em;
 }
 
 .venue address {
+  font-family: "WiddCao", serif;
   font-style: normal;
-  font-size: .82rem;
-  letter-spacing: .08em;
+  font-size: 1.08rem;
+  font-weight: 300;
+  font-synthesis: none;
+  letter-spacing: .04em;
   line-height: 1.7;
-  color: var(--ink-soft);
+  color: var(--ink);
   margin-bottom: 1rem;
 }
 
@@ -938,13 +969,6 @@ body.is-signing .bgm-tog {
   font-synthesis: none;
   letter-spacing: .28em;
   color: #C23B32;
-  -webkit-text-stroke: .04em #E4C36A;
-  paint-order: stroke fill;
-  text-shadow:
-    -1px 0 0 #C9A24A,
-    1px 0 0 #C9A24A,
-    0 -1px 0 #C9A24A,
-    0 1px 0 #C9A24A;
 }
 
 .wall {
@@ -1152,9 +1176,9 @@ body.is-signing .bgm-tog {
   flex: 0 0 auto;
   min-width: 0;
   margin: 0;
-  padding: .3rem .86rem .3rem .98rem;
+  padding: .6rem 1.72rem .6rem 1.96rem;
   font: inherit;
-  font-size: .74rem;
+  font-size: 1.48rem;
   line-height: 1.35;
   letter-spacing: .18em;
   white-space: nowrap;
@@ -1233,13 +1257,6 @@ body.is-signing .bgm-tog {
   font-weight: 400;
   font-synthesis: none;
   color: #C23B32;
-  -webkit-text-stroke: .04em #E4C36A;
-  paint-order: stroke fill;
-  text-shadow:
-    -1px 0 0 #C9A24A,
-    1px 0 0 #C9A24A,
-    0 -1px 0 #C9A24A,
-    0 1px 0 #C9A24A;
   opacity: .9;
 }
 
@@ -1299,10 +1316,6 @@ body.is-signing .bless {
   .letter.is-in .letter-inner > .reveal {
     -webkit-animation: none;
     animation: none;
-  }
-  .flap {
-    -webkit-transition: none;
-    transition: none;
   }
   .letter-inner > .reveal {
     opacity: 1;

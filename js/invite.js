@@ -1282,8 +1282,10 @@ function layoutCover() {
   const gate = $("gate");
   const seal = $("seal");
   if (!gate || !seal || gate.classList.contains("is-gone")) return;
-  const { x, y, w, h } = coverBox(gate.clientWidth, gate.clientHeight, COVER_W, COVER_H, 1);
   const flaps = $("flaps");
+  // ponytail: rewriting flap geometry mid-open cancels WebKit transform transitions
+  if (flaps && flaps.classList.contains("is-laid") && (gate.classList.contains("is-burst") || gate.classList.contains("is-open"))) return;
+  const { x, y, w, h } = coverBox(gate.clientWidth, gate.clientHeight, COVER_W, COVER_H, 1);
   if (flaps) {
     flaps.style.left = `${x}px`;
     flaps.style.top = `${y}px`;
@@ -1322,15 +1324,9 @@ function openLetter(cfg) {
   if (gate) gate.classList.add("is-burst");
   bgmPlay();
   letter.hidden = false;
-  const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  if (still) {
-    gate.classList.add("is-gone");
-    void letter.offsetWidth;
-    letter.classList.add("is-in");
-    startBless(cfg);
-    return;
-  }
   setTimeout(() => {
+    if (!gate) return;
+    void gate.offsetWidth;
     gate.classList.add("is-open");
     void letter.offsetWidth;
     letter.classList.add("is-in");

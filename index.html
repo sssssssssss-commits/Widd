@@ -24,12 +24,13 @@
   <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=78">
+  <link rel="stylesheet" href="css/invite.css?v=79">
   <link rel="preload" href="assets/cover.jpg?v=4" as="image">
   <link rel="preload" href="assets/calendar.jpg?v=3" as="image">
   <link rel="preload" href="assets/letter.jpg?v=2" as="image">
   <link rel="preload" href="assets/fonts/jin.woff2?v=6" as="font" type="font/woff2">
   <link rel="preload" href="assets/fonts/name.woff2?v=1" as="font" type="font/woff2">
+  <link rel="preload" href="assets/fonts/cao.woff2?v=1" as="font" type="font/woff2">
   <style>
     @font-face {
       font-family: "WiddJin";
@@ -55,6 +56,14 @@
       font-style: normal;
       font-display: swap;
     }
+    @font-face {
+      font-family: "WiddCao";
+      src: url("assets/fonts/cao.woff2?v=1") format("woff2"),
+           url("assets/fonts/cao.woff?v=1") format("woff");
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
+    }
   </style>
 </head>
 <body>
@@ -71,9 +80,9 @@
 
   <div id="gate" class="gate">
     <div class="flaps" id="flaps" aria-hidden="true">
-      <div class="flap flap-top"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div>
-      <div class="flap flap-mid"><img class="cover-img" id="coverImg" src="assets/cover.jpg?v=4" width="625" height="1024" alt="苏超凡 与 杨雨洁 婚礼请柬" fetchpriority="high" decoding="async"></div>
-      <div class="flap flap-bot"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div>
+      <div class="flap flap-top"><div class="flap-cut"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div></div>
+      <div class="flap flap-mid"><div class="flap-cut"><img class="cover-img" id="coverImg" src="assets/cover.jpg?v=4" width="625" height="1024" alt="苏超凡 与 杨雨洁 婚礼请柬" fetchpriority="high" decoding="async"></div></div>
+      <div class="flap flap-bot"><div class="flap-cut"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div></div>
     </div>
     <button type="button" class="seal" id="seal" aria-label="打开请柬"></button>
     <p class="gate-tap" id="gateTap" aria-label="轻触开启"><b>—</b><i>·</i><span>轻触开启</span><i>·</i><b>—</b></p>
@@ -122,6 +131,6 @@
     </article>
   </main>
 
-  <script src="js/invite.js?v=82"></script>
+  <script src="js/invite.js?v=83"></script>
 </body>
 </html>
