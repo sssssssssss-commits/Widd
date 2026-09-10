@@ -286,7 +286,7 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.doesNotMatch(js, /names-roles/);
   const bless = JSON.parse(readFileSync(new URL("./data/wedding.json", import.meta.url), "utf8")).blessing;
   assert.equal(bless[1], "很开心这一天您专为我们而来");
-  assert.equal(bless[3], "在时间的长河和空间的无限想象里");
+  assert.equal(bless[3], "在时间的长河和空间的维度里");
   assert.equal(bless[5], "我觉得很幸运很幸福");
   assert.match(css, /\.bless-line[\s\S]{0,200}font-size:\s*1\.4rem/);
   assert.match(css, /\.wall-box h2[\s\S]{0,200}font-size:\s*2\.8rem/);

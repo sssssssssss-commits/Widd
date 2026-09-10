@@ -259,7 +259,7 @@ const INK_EDGE = "#1A120C";
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=30", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=31", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
