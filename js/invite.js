@@ -1321,16 +1321,15 @@ function openLetter(cfg) {
     seal.disabled = true;
     seal.classList.add("is-burst");
   }
-  if (gate) gate.classList.add("is-burst");
-  bgmPlay();
-  letter.hidden = false;
-  setTimeout(() => {
-    if (!gate) return;
+  if (gate) {
+    gate.classList.add("is-burst");
     void gate.offsetWidth;
     gate.classList.add("is-open");
-    void letter.offsetWidth;
-    letter.classList.add("is-in");
-  }, 220);
+  }
+  bgmPlay();
+  letter.hidden = false;
+  void letter.offsetWidth;
+  letter.classList.add("is-in");
   setTimeout(() => {
     gate.classList.add("is-gone");
     startBless(cfg);
