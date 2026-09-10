@@ -587,7 +587,7 @@ function paintWallBoard(items, flyId) {
     const cards = slice
       .map((row, i) => wallCard(row, start + i, row.id === flyId, wallSpreadSlot(i, onPage)))
       .join("");
-    parts.push(`<div class="wall-yard"><div class="wall-frame"><div class="wall-board">${cards}</div></div></div>`);
+    parts.push(`<div class="wall-yard"><img class="wall-paper" src="assets/wall.jpg?v=1" alt="" decoding="async"><div class="wall-frame"><div class="wall-board">${cards}</div></div></div>`);
   }
   host.innerHTML = parts.join("");
 }

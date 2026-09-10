@@ -975,14 +975,17 @@ body.is-signing .bgm-tog {
   background: #F6F1E6;
 }
 
-.wall-yard::before {
-  content: "";
+.wall-paper {
   position: absolute;
   inset: 0;
   z-index: 0;
-  pointer-events: none;
-  background: url("../assets/wall.jpg?v=1") center / contain no-repeat;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
   opacity: .6;
+  pointer-events: none;
 }
 
 .wall-frame {
