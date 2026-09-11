@@ -20,6 +20,7 @@ import {
   WALL_PAGE,
   wallHitUrl,
   wallMineCount,
+  wallLastMine,
   wallRot,
   wallWithoutMine,
   wallExceptHidden,
@@ -66,6 +67,20 @@ assert.equal(wallRot("abc"), wallRot("abc"));
 assert.ok(Math.abs(wallRot("sig-1")) <= 10);
 assert.equal(wallMineCount([{ by: "a" }, { by: "a" }, { by: "a" }, { by: "b" }], "a"), 3);
 assert.equal(wallMineCount([], "a"), 0);
+assert.equal(
+  wallLastMine(
+    [
+      { by: "a", at: "1", id: "1" },
+      { by: "a", at: "3", id: "3" },
+      { by: "a", at: "2", id: "2" },
+      { by: "b", at: "9", id: "9" },
+    ],
+    "a",
+  ).id,
+  "3",
+);
+assert.equal(wallLastMine([], "a"), null);
+assert.equal(wallLastMine([{ by: "b", id: "1" }], "a"), null);
 
 assert.equal(isWallHost("?host=xi8k2m", "xi8k2m"), true);
 assert.equal(isWallHost("?open=1&host=xi8k2m", "xi8k2m"), true);
@@ -251,7 +266,7 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(html, /assets\/cover\.jpg\?v=4/);
   assert.match(html, /width="625"/);
   assert.match(html, /id="flaps"/);
-  assert.match(html, /祝福墙 · 即将开启/);
+  assert.match(html, /手写祝福墙 · 即将开启/);
   assert.doesNotMatch(html, /seal-face/);
   assert.doesNotMatch(html, /签名墙/);
   assert.match(html, /calendar\.jpg\?v=3/);
@@ -291,17 +306,22 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.equal(bless[3], "在时间的长河和空间的维度里");
   assert.equal(bless[5], "我觉得很幸运很幸福");
   assert.match(css, /\.bless-line[\s\S]{0,200}font-size:\s*1\.4rem/);
-  assert.match(css, /\.wall-box h2[\s\S]{0,200}font-size:\s*2\.8rem/);
+  assert.match(css, /\.wall-box h2[\s\S]{0,200}font-size:\s*2\.4rem/);
   assert.match(css, /\.cal-img/);
   assert.match(css, /--seal-y/);
   assert.match(js, /COVER_W = 625/);
   assert.match(js, /COVER_H = 1024/);
   assert.match(js, /SEAL_PX = 0\.9136/);
-  assert.match(js, /<h2>祝福墙<\/h2>/);
-  assert.match(js, /id="wallOpen">祝福</);
-  assert.match(js, /id="wallMine">撤下</);
+  assert.match(js, /<h2>手写祝福墙<\/h2>/);
+  assert.match(js, /id="wallOpen">点此可为新人手写祝福</);
+  assert.match(js, /id="wallMine">撤下本次</);
   assert.doesNotMatch(js, /撤下我的/);
+  assert.doesNotMatch(js, /id="wallOpen">祝福</);
   assert.doesNotMatch(js, /id="wallOpen">签字</);
+  assert.match(js, /wallLastMine/);
+  assert.match(js, /kind: "wall-mine", ids/);
+  assert.doesNotMatch(js, /kind: "wall-mine", by/);
+  assert.match(css, /\.wall-actions[\s\S]{0,160}flex-direction:\s*column/);
   assert.match(css, /\.wall-box h2[\s\S]{0,280}color:\s*#C23B32/);
   assert.doesNotMatch(css, /\.wall-box h2[\s\S]{0,360}-webkit-text-stroke/);
   assert.match(css, /\.wall-actions button[\s\S]{0,700}border-radius:\s*999px/);

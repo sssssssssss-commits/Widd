@@ -49,7 +49,10 @@ async function listWall(env) {
     ids = listed.keys.map((k) => k.name.replace(/^sig:/, ""));
   }
   const rows = (await Promise.all(ids.map((id) => env.RSVP.get(`sig:${id}`, "json")))).filter(Boolean);
-  rows.sort((a, b) => String(a.at).localeCompare(String(b.at)));
+  rows.sort((a, b) => {
+    const c = String(a.at || "").localeCompare(String(b.at || ""));
+    return c || String(a.id || "").localeCompare(String(b.id || ""));
+  });
   return rows.slice(-80).map(({ id, name, img, at, by, epoch }) => ({ id, name, img, at, by, epoch }));
 }
 
@@ -89,25 +92,12 @@ async function saveWall(env, body) {
 }
 
 async function clearMine(env, body) {
-  const by = clip(body.by, 80);
   const ids = (Array.isArray(body.ids) ? body.ids : [])
     .map((id) => clip(id, 80))
     .filter(Boolean)
     .slice(0, 20);
-  if (!by && !ids.length) return json({ ok: false }, 400);
+  if (!ids.length) return json({ ok: false }, 400);
   await Promise.all(ids.map((id) => env.RSVP.delete(`sig:${id}`)));
-  if (by) {
-    const listed = await env.RSVP.list({ prefix: "sig:" });
-    await Promise.all(
-      listed.keys.map(async (k) => {
-        const row = await env.RSVP.get(k.name, "json");
-        if (row && String(row.by || "") === by) {
-          await env.RSVP.delete(k.name);
-          ids.push(k.name.replace(/^sig:/, ""));
-        }
-      }),
-    );
-  }
   const index = await readIndex(env);
   if (index) {
     const drop = new Set(ids);

@@ -110,6 +110,18 @@ function wallMineCount(items, by) {
   return (Array.isArray(items) ? items : []).filter((row) => String(row?.by || "") === id).length;
 }
 
+function wallLastMine(items, by) {
+  const id = String(by || "");
+  const mine = (Array.isArray(items) ? items : []).filter((row) => String(row?.by || "") === id);
+  if (!mine.length) return null;
+  mine.sort((a, b) => {
+    const c = String(a.at || "").localeCompare(String(b.at || ""));
+    if (c) return c;
+    return String(a.id || "").localeCompare(String(b.id || ""));
+  });
+  return mine[mine.length - 1];
+}
+
 function wallSpreadSlot(i, n) {
   const count = Math.max(1, Number(n) || 1);
   const idx = Math.max(0, Math.min(Number(i) || 0, count - 1));
@@ -1000,11 +1012,11 @@ function renderWall(cfg, guest) {
   const by = wallBy();
   const epochUrl = cfg.wallEpoch || "";
   wall.innerHTML = `<div class="wall-box">
-      <h2>祝福墙</h2>
+      <h2>手写祝福墙</h2>
       <div class="wall-yards" id="wallYards"></div>
       <div class="wall-actions">
-        <button type="button" id="wallOpen">祝福</button>
-        <button type="button" id="wallMine">撤下</button>
+        <button type="button" id="wallOpen">点此可为新人手写祝福</button>
+        <button type="button" id="wallMine">撤下本次</button>
         ${host ? `<button type="button" id="wallSave">保存祝福墙</button>` : ""}
         ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
       </div>
@@ -1039,7 +1051,7 @@ function renderWall(cfg, guest) {
     keep.className = "wall-keep";
     keep.hidden = true;
     keep.innerHTML = `<p class="wall-keep-hint">长按图片保存到相册</p>
-      <img id="wallKeepImg" alt="祝福墙">
+      <img id="wallKeepImg" alt="手写祝福墙">
       <button type="button" id="wallKeepClose">关闭</button>`;
     document.body.appendChild(keep);
     $("wallKeepClose").addEventListener("click", () => {
@@ -1155,21 +1167,23 @@ function renderWall(cfg, guest) {
   });
 
   $("wallMine").addEventListener("click", () => {
-    if (!window.confirm("确定撤下你留下的签名？")) return;
-    writeGen += 1;
-    const mine = readLocalWall().filter((row) => String(row.by || "") === by || !row.by);
-    for (let i = 0; i < pending.length; i++) {
-      const p = pending[i];
-      if (!mine.some((row) => row.id === p.id || row.img === p.img)) mine.push(p);
+    const last = wallLastMine(readLocalWall().concat(pending), by);
+    if (!last) {
+      $("wallHint").textContent = "没有可撤下的祝福";
+      return;
     }
-    hideRows(mine);
-    pending.length = 0;
-    const next = wallExceptHidden(wallWithoutMine(readLocalWall(), by, true), hidden);
+    if (!window.confirm("确定撤下最近一次手写祝福？")) return;
+    writeGen += 1;
+    hideRows([last]);
+    for (let i = pending.length - 1; i >= 0; i--) {
+      if (pending[i].id === last.id || pending[i].img === last.img) pending.splice(i, 1);
+    }
+    const next = wallExceptHidden(readLocalWall(), hidden);
     writeLocalWall(next);
     paintWallBoard(next);
-    $("wallHint").textContent = "已撤下你的签名";
-    const ids = mine.map((row) => row.id).filter(Boolean);
-    postWall(urls, { kind: "wall-mine", by, ids });
+    $("wallHint").textContent = "已撤下最近一次祝福";
+    const ids = [last.id].filter(Boolean);
+    postWall(urls, { kind: "wall-mine", ids });
   });
 
   const saveBtn = $("wallSave");
@@ -1258,7 +1272,7 @@ function renderWall(cfg, guest) {
           if (sent.ok) {
             const data = await sent.res.json().catch(() => ({}));
             const extra = data.id ? [data.id] : [];
-            postWall(urls, { kind: "wall-mine", by, ids: [item.id].concat(extra) });
+            postWall(urls, { kind: "wall-mine", ids: [item.id].concat(extra) });
           }
           return;
         }

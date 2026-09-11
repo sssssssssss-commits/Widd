@@ -87,6 +87,18 @@ export function wallMineCount(items, by) {
   return (Array.isArray(items) ? items : []).filter((row) => String(row?.by || "") === id).length;
 }
 
+export function wallLastMine(items, by) {
+  const id = String(by || "");
+  const mine = (Array.isArray(items) ? items : []).filter((row) => String(row?.by || "") === id);
+  if (!mine.length) return null;
+  mine.sort((a, b) => {
+    const c = String(a.at || "").localeCompare(String(b.at || ""));
+    if (c) return c;
+    return String(a.id || "").localeCompare(String(b.id || ""));
+  });
+  return mine[mine.length - 1];
+}
+
 export function isWallHost(search, key) {
   const k = String(key || "");
   if (!k) return false;

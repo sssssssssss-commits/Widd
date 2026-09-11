@@ -37,8 +37,8 @@
 /* 狂派手书 subset — owner-supplied AaKuangPaiShouShu */
 @font-face {
   font-family: "WiddWall";
-  src: url("../assets/fonts/wall.woff2?v=2") format("woff2"),
-       url("../assets/fonts/wall.woff?v=2") format("woff");
+  src: url("../assets/fonts/wall.woff2?v=3") format("woff2"),
+       url("../assets/fonts/wall.woff?v=3") format("woff");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -950,10 +950,10 @@ body.is-signing .bgm-tog {
   margin: 0 0 .7rem;
   text-align: center;
   font-family: "WiddWall", serif;
-  font-size: 2.8rem;
+  font-size: 2.4rem;
   font-weight: 400;
   font-synthesis: none;
-  letter-spacing: .28em;
+  letter-spacing: .16em;
   color: #C23B32;
 }
 
@@ -1162,22 +1162,25 @@ body.is-signing .bgm-tog {
 
 .wall-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: center;
-  gap: .4rem;
+  gap: .45rem;
   margin-top: .75rem;
 }
 
 .wall-actions button {
   flex: 0 0 auto;
   min-width: 0;
+  max-width: 100%;
   margin: 0;
-  padding: .6rem 1.72rem .6rem 1.96rem;
+  padding: .6rem 1.2rem;
   font-family: "Heiti SC", "STHeiti", "SimHei", "Microsoft YaHei", sans-serif;
   font-size: 1.125rem;
   font-weight: 400;
   line-height: 1.35;
-  letter-spacing: .18em;
+  letter-spacing: .08em;
   white-space: nowrap;
   color: #b4332a;
   background: #fff8ec;
