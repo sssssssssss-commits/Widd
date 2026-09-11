@@ -1031,6 +1031,7 @@ function renderWall(cfg, guest) {
     sheet.hidden = true;
     sheet.innerHTML = `<div class="wall-sheet-stage">
       <div class="wall-sheet-pad">
+        <p class="wall-sheet-bg" aria-hidden="true">横屏书写效果更佳哦</p>
         <canvas id="wallPad" width="800" height="360" aria-label="手写签名"></canvas>
       </div>
       <div class="wall-sheet-side">
