@@ -101,12 +101,8 @@ export function wallLastMine(items, by) {
 
 export function isWallHost(search, key) {
   try {
-    if (typeof window !== "undefined" && window.WIDD_HOST) return true;
-  } catch (e) {}
-  try {
-    if (typeof location !== "undefined") {
-      const path = String(location.pathname || "");
-      if (/manage\.html$/i.test(path)) return true;
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("widd-host") === "1" && String(sessionStorage.getItem("widd-host-key") || "").trim()) {
+      return true;
     }
   } catch (e) {}
   const k = String(key || "");

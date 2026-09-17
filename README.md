@@ -8,7 +8,7 @@
 
 **https://sumuyang.asia/manage.html**
 
-微信里打开即可管理所有人的签名、逐幅撤下，也可清空全部。不要把这支链接发给宾客。
+打开后要输入管理口令，服务器核对通过才能逐幅撤下或清空。光知道这个网址还撤不了。口令不要发给宾客，也不要写进请柬页面。
 
 同一只 `rsvp.endpoint` Worker 负责收回执和签名；没配地址时签名只留在这台手机上，清空全部会通知其他手机丢掉旧签名。
 
@@ -39,7 +39,7 @@ npx --yes serve .
 | `rsvp.endpoint` | Cloudflare Worker 地址，有则显示回执表，签名墙也走这里 |
 | `rsvp.surveyUrl` | 没 Worker 时，按钮跳转腾讯问卷（同窗口，不嵌 iframe） |
 | `signatureWall` | `true` 开启签名墙；`false` 只显示「即将开启」 |
-| `wallHost` | 新人口令，对应链接里的 `?host=`，不要写进宾客链接 |
+| `wallHost` | 可选；管理口令以服务器 `WALL_HOST` 为准，不要写进宾客链接 |
 | `share` | 网页标题，微信会抓 |
 
 照片放到 `assets/photos/`，占位 SVG 可直接换掉。

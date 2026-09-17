@@ -223,15 +223,29 @@ function strokeWidthFromTouch(input, minW, maxW) {
   return lo + (hi - lo) * t;
 }
 
+function isManagePage() {
+  try {
+    return /manage\.html$/i.test(String(location.pathname || ""));
+  } catch (e) {
+    return false;
+  }
+}
+
+function readHostKey() {
+  try {
+    return String(sessionStorage.getItem(HOST_KEY) || "").trim();
+  } catch (e) {
+    return "";
+  }
+}
+
+function wallHostKey(cfg) {
+  return readHostKey() || String((cfg && cfg.wallHost) || "");
+}
+
 function isWallHost(search, key) {
   try {
-    if (typeof window !== "undefined" && window.WIDD_HOST) return true;
-  } catch (e) {}
-  try {
-    if (typeof location !== "undefined") {
-      const path = String(location.pathname || "");
-      if (/manage\.html$/i.test(path)) return true;
-    }
+    if (readHostKey() && sessionStorage.getItem(HOST_FLAG) === "1") return true;
   } catch (e) {}
   const k = String(key || "");
   if (!k) return false;
@@ -289,13 +303,15 @@ function wallExceptHidden(items, hidden) {
 const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
+const HOST_KEY = "widd-host-key";
+const HOST_FLAG = "widd-host";
 const GOLD_INK = "#F6D34A";
 const INK_EDGE = "#1A120C";
 
 const $ = (id) => document.getElementById(id);
 
 async function loadConfig() {
-  const res = await fetch("data/wedding.json?v=31", { cache: "no-store" });
+  const res = await fetch("data/wedding.json?v=32", { cache: "no-store" });
   if (!res.ok) throw new Error("wedding.json");
   return res.json();
 }
@@ -1165,7 +1181,7 @@ function renderWall(cfg, guest) {
     hint.textContent = "正在从网上撤下…";
     let sent = await postWall(
       urls,
-      asHost ? { kind: "wall-drop", host: cfg.wallHost, ids } : { kind: "wall-mine", ids },
+      asHost ? { kind: "wall-drop", host: wallHostKey(cfg), ids } : { kind: "wall-mine", ids },
       8000,
     );
     if (!sent.ok && asHost) sent = await postWall(urls, { kind: "wall-mine", ids }, 8000);
@@ -1181,7 +1197,7 @@ function renderWall(cfg, guest) {
       (lastShared || []).some((item) => item.id === row.id || (row.img && item.img === row.img));
     if (onServer()) {
       await postWall(urls, { kind: "wall-mine", ids }, 8000);
-      if (asHost) await postWall(urls, { kind: "wall-drop", host: cfg.wallHost, ids }, 8000);
+      if (asHost) await postWall(urls, { kind: "wall-drop", host: wallHostKey(cfg), ids }, 8000);
       await refresh();
     }
     if (onServer()) {
@@ -1353,7 +1369,7 @@ function renderWall(cfg, guest) {
         await bumpWallEpoch(epochUrl);
         shared = true;
       } catch {}
-      shared = (await postWall(urls, { kind: "wall-wipe", host: cfg.wallHost })).ok || shared;
+      shared = (await postWall(urls, { kind: "wall-wipe", host: wallHostKey(cfg) })).ok || shared;
       await refresh();
       hint.textContent = shared ? "墙上已清空" : "本机已清，别人手机需能联网才会一起清";
     });
@@ -1943,7 +1959,49 @@ function bindTapXi() {
   );
 }
 
+function showHostGate(cfg) {
+  if ($("hostGate")) return;
+  const box = document.createElement("div");
+  box.id = "hostGate";
+  box.className = "host-gate";
+  box.innerHTML = `<form class="host-gate-card">
+      <p class="host-gate-title">管理口令</p>
+      <input id="hostPass" type="password" maxlength="40" autocomplete="current-password" enterkeyhint="done">
+      <button type="submit">进入</button>
+      <p class="host-gate-hint" id="hostGateHint"></p>
+    </form>`;
+  document.body.appendChild(box);
+  const input = $("hostPass");
+  box.querySelector("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const key = String((input && input.value) || "").trim();
+    const hint = $("hostGateHint");
+    if (!key) {
+      hint.textContent = "请输入口令";
+      return;
+    }
+    hint.textContent = "正在核对…";
+    const sent = await postWall(wallEndpoints(cfg), { kind: "wall-auth", host: key }, 8000);
+    if (!sent.ok) {
+      hint.textContent = "口令不对";
+      return;
+    }
+    try {
+      sessionStorage.setItem(HOST_KEY, key);
+      sessionStorage.setItem(HOST_FLAG, "1");
+    } catch (err) {}
+    location.reload();
+  });
+  setTimeout(() => {
+    if (input) input.focus();
+  }, 200);
+}
+
 function bindGate(cfg) {
+  if (isManagePage() && !isWallHost(location.search, cfg.wallHost)) {
+    showHostGate(cfg);
+    return;
+  }
   if (isWallHost(location.search, cfg.wallHost)) {
     const gate = $("gate");
     const letter = $("letter");

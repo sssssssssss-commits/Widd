@@ -1359,6 +1359,70 @@ body.is-signing .bgm-tog {
   opacity: .9;
 }
 
+.host-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  background: #551110;
+}
+
+.host-gate-card {
+  width: min(100%, 20rem);
+  margin: 0;
+  padding: 1.4rem 1.2rem 1.2rem;
+  background: #fff8ec;
+  border: 1px solid #c9a24a;
+  border-radius: 1rem;
+}
+
+.host-gate-title {
+  margin: 0 0 .8rem;
+  text-align: center;
+  letter-spacing: .28em;
+  color: #b4332a;
+}
+
+.host-gate-card input {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 .7rem;
+  padding: .7rem .8rem;
+  font-size: 16px;
+  letter-spacing: .12em;
+  color: #4a1820;
+  background: #fff;
+  border: 1px solid #e6d3a8;
+  border-radius: .5rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.host-gate-card button {
+  width: 100%;
+  margin: 0;
+  padding: .7rem 1rem;
+  font-size: 1.05rem;
+  letter-spacing: .18em;
+  color: #b4332a;
+  background: #fff8ec;
+  border: 1px solid #c9a24a;
+  border-radius: 999px;
+}
+
+.host-gate-hint {
+  min-height: 1.2em;
+  margin: .55rem 0 0;
+  text-align: center;
+  font-size: .72rem;
+  color: #b4332a;
+}
+
 .colophon {
   text-align: center;
   letter-spacing: .2em;
