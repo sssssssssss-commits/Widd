@@ -304,7 +304,7 @@ const RSVP_KEY = "widd-rsvp";
 const WALL_KEY = "widd-wall";
 const BY_KEY = "widd-by";
 const HOST_KEY = "widd-host-key";
-const HOST_FLAG = "widd-host";
+const HOST_FLAG = "widd-host-v2";
 const GOLD_INK = "#F6D34A";
 const INK_EDGE = "#1A120C";
 
@@ -1184,7 +1184,6 @@ function renderWall(cfg, guest) {
       asHost ? { kind: "wall-drop", host: wallHostKey(cfg), ids } : { kind: "wall-mine", ids },
       8000,
     );
-    if (!sent.ok && asHost) sent = await postWall(urls, { kind: "wall-mine", ids }, 8000);
     if (!sent.ok) {
       unhide(row);
       await refresh();
@@ -1196,8 +1195,8 @@ function renderWall(cfg, guest) {
       lastFetchOk &&
       (lastShared || []).some((item) => item.id === row.id || (row.img && item.img === row.img));
     if (onServer()) {
-      await postWall(urls, { kind: "wall-mine", ids }, 8000);
       if (asHost) await postWall(urls, { kind: "wall-drop", host: wallHostKey(cfg), ids }, 8000);
+      else await postWall(urls, { kind: "wall-mine", ids }, 8000);
       await refresh();
     }
     if (onServer()) {

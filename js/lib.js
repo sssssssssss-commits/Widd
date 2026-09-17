@@ -101,7 +101,7 @@ export function wallLastMine(items, by) {
 
 export function isWallHost(search, key) {
   try {
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("widd-host") === "1" && String(sessionStorage.getItem("widd-host-key") || "").trim()) {
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("widd-host-v2") === "1" && String(sessionStorage.getItem("widd-host-key") || "").trim()) {
       return true;
     }
   } catch (e) {}
