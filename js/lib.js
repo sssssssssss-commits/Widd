@@ -100,11 +100,28 @@ export function wallLastMine(items, by) {
 }
 
 export function isWallHost(search, key) {
+  try {
+    if (typeof window !== "undefined" && window.WIDD_HOST) return true;
+  } catch (e) {}
+  try {
+    if (typeof location !== "undefined") {
+      const path = String(location.pathname || "");
+      if (/manage\.html$/i.test(path)) return true;
+    }
+  } catch (e) {}
   const k = String(key || "");
   if (!k) return false;
   const raw = String(search || "");
   const q = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
-  return q.get("host") === k;
+  if (q.get("host") === k || q.get("k") === k) return true;
+  try {
+    if (typeof location !== "undefined") {
+      const h = String(location.hash || "");
+      const hq = new URLSearchParams(h.startsWith("#") ? h.slice(1) : h);
+      if (hq.get("host") === k || hq.get("k") === k) return true;
+    }
+  } catch (e) {}
+  return false;
 }
 
 export function wallDeskWhen(at) {

@@ -5,39 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#551110">
   <meta name="format-detection" content="telephone=no">
-  <title>苏超凡 与 杨雨洁 婚礼请柬</title>
-  <meta name="description" content="锦书遥寄，待君亲启。">
-  <meta itemprop="name" content="苏超凡 与 杨雨洁 婚礼请柬">
-  <meta itemprop="description" content="锦书遥寄，待君亲启。">
+  <title>手写祝福墙</title>
+  <meta name="description" content="手写祝福墙管理">
+  <meta itemprop="name" content="手写祝福墙">
+  <meta itemprop="description" content="手写祝福墙管理">
   <meta itemprop="image" content="https://sumuyang.asia/share.jpg">
   <meta property="og:type" content="website">
-  <link rel="canonical" href="https://sumuyang.asia/">
-  <meta property="og:url" content="https://sumuyang.asia/">
+  <link rel="canonical" href="https://sumuyang.asia/manage.html">
+  <meta property="og:url" content="https://sumuyang.asia/manage.html">
   <script>
+    window.WIDD_HOST = 1;
     (function () {
       var h = location.hostname;
       if (!h || h === "sumuyang.asia" || h === "localhost" || h === "127.0.0.1") return;
-      location.replace("https://sumuyang.asia" + (location.pathname || "/") + location.search + location.hash);
+      location.replace("https://sumuyang.asia" + (location.pathname || "/manage.html") + location.search + location.hash);
     })();
   </script>
-  <meta property="og:title" content="苏超凡 与 杨雨洁 婚礼请柬">
-  <meta property="og:description" content="锦书遥寄，待君亲启。">
+  <meta property="og:title" content="手写祝福墙">
+  <meta property="og:description" content="手写祝福墙管理">
   <meta property="og:image" content="https://sumuyang.asia/share.jpg">
-  <meta property="og:image:secure_url" content="https://sumuyang.asia/share.jpg">
-  <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:image:width" content="300">
-  <meta property="og:image:height" content="300">
-  <link rel="image_src" href="https://sumuyang.asia/share.jpg">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
-  <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=97">
+  <link rel="stylesheet" href="css/invite.css?v=97wx">
   <link rel="preload" href="assets/cover.jpg?v=4" as="image">
-  <link rel="preload" href="assets/calendar.jpg?v=3" as="image">
   <link rel="preload" href="assets/letter.jpg?v=2" as="image">
-  <link rel="preload" href="assets/fonts/jin.woff2?v=7" as="font" type="font/woff2">
-  <link rel="preload" href="assets/fonts/name.woff2?v=1" as="font" type="font/woff2">
   <style>
     @font-face {
       font-family: "WiddJin";
@@ -66,7 +56,7 @@
   </style>
 </head>
 <body>
-  <img class="share-thumb" src="https://sumuyang.asia/share.jpg" width="300" height="300" alt="苏超凡 与 杨雨洁 婚礼请柬">
+  <img class="share-thumb" src="https://sumuyang.asia/share.jpg" width="300" height="300" alt="手写祝福墙">
   <canvas id="foil" class="foil" aria-hidden="true"></canvas>
   <audio id="bgm" src="assets/bgm.mp3?v=2" loop preload="none" playsinline webkit-playsinline></audio>
   <button type="button" class="bgm-tog" id="bgmTog" aria-label="关闭音乐" aria-pressed="true">
@@ -80,7 +70,7 @@
   <div id="gate" class="gate">
     <div class="flaps" id="flaps" aria-hidden="true">
       <div class="flap flap-top"><div class="flap-cut"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div></div>
-      <div class="flap flap-mid"><div class="flap-cut"><img class="cover-img" id="coverImg" src="assets/cover.jpg?v=4" width="625" height="1024" alt="苏超凡 与 杨雨洁 婚礼请柬" fetchpriority="high" decoding="async"></div></div>
+      <div class="flap flap-mid"><div class="flap-cut"><img class="cover-img" id="coverImg" src="assets/cover.jpg?v=4" width="625" height="1024" alt="手写祝福墙" fetchpriority="high" decoding="async"></div></div>
       <div class="flap flap-bot"><div class="flap-cut"><img class="cover-img" src="assets/cover.jpg?v=4" alt="" decoding="async"></div></div>
     </div>
     <button type="button" class="seal" id="seal" aria-label="打开请柬"></button>
@@ -91,11 +81,9 @@
   <main id="letter" class="letter" hidden>
     <article class="letter-inner">
       <header class="names reveal" id="names"></header>
-
       <div class="bless" id="bless" hidden aria-hidden="true">
         <div class="bless-lane" id="blessLane"></div>
       </div>
-
       <section class="when reveal" aria-label="婚期">
         <div class="label">良辰吉日</div>
         <p class="when-text" id="whenText"></p>
@@ -112,24 +100,19 @@
         </div>
         <p class="when-past" id="whenPast" hidden>良辰已至</p>
       </section>
-
       <section class="itinerary reveal" id="itinerary" aria-label="婚礼仪程" hidden></section>
-
       <section class="scrolls-wrap" id="scrollsWrap" aria-label="照片" hidden>
         <div class="scrolls" id="scrolls"></div>
       </section>
-
       <section class="venues reveal" id="venues"></section>
-
       <section class="rsvp" id="rsvp"></section>
-
       <section class="wall" id="wall" hidden></section>
       <p class="wall-soon" id="wallSoon" hidden>手写祝福墙 · 即将开启</p>
-
       <footer class="colophon reveal" id="colophon"></footer>
     </article>
   </main>
 
-  <script src="js/invite.js?v=97"></script>
+  <script>window.WIDD_HOST = 1;</script>
+  <script src="js/invite.wx.js?v=97"></script>
 </body>
 </html>

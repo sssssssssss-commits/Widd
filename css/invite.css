@@ -1248,6 +1248,8 @@ body.is-signing .bgm-tog {
 }
 
 .wall-desk-item {
+  display: -webkit-box;
+  display: -webkit-flex;
   display: flex;
   align-items: center;
   gap: .55rem;
