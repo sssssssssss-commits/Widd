@@ -791,9 +791,10 @@ async function loadWallItems(urls) {
   return { ok: false, items: local };
 }
 
-async function postWall(urls, body) {
+async function postWall(urls, body, ms) {
   const list = Array.isArray(urls) ? urls : urls ? [urls] : [];
   let conflict = null;
+  const wait = Number(ms) || 4000;
   for (let i = 0; i < list.length; i++) {
     try {
       const res = await fetchTimed(
@@ -803,7 +804,7 @@ async function postWall(urls, body) {
           headers: { "content-type": "text/plain" },
           body: JSON.stringify(body),
         },
-        4000,
+        wait,
       );
       if (res.status === 409) {
         conflict = { ok: false, status: 409, res, url: list[i] };
@@ -1140,8 +1141,13 @@ function renderWall(cfg, guest) {
     paintWallDesk(items);
   };
 
-  const dropOne = (row, doneText) => {
-    if (!row) return;
+  const unhide = (row) => {
+    if (row && row.id) hidden.ids.delete(row.id);
+    if (row && row.img) hidden.imgs.delete(row.img);
+  };
+
+  const dropOne = async (row, doneText, asHost) => {
+    if (!row) return false;
     writeGen += 1;
     hideRows([row]);
     for (let i = pending.length - 1; i >= 0; i--) {
@@ -1150,9 +1156,42 @@ function renderWall(cfg, guest) {
     const next = wallExceptHidden(readLocalWall(), hidden);
     writeLocalWall(next);
     paintWall(next);
-    $("wallHint").textContent = doneText;
+    const hint = $("wallHint");
     const ids = [row.id].filter(Boolean);
-    if (ids.length) postWall(urls, { kind: "wall-mine", ids });
+    if (!ids.length) {
+      hint.textContent = doneText;
+      return true;
+    }
+    hint.textContent = "正在从网上撤下…";
+    let sent = await postWall(
+      urls,
+      asHost ? { kind: "wall-drop", host: cfg.wallHost, ids } : { kind: "wall-mine", ids },
+      8000,
+    );
+    if (!sent.ok && asHost) sent = await postWall(urls, { kind: "wall-mine", ids }, 8000);
+    if (!sent.ok) {
+      unhide(row);
+      await refresh();
+      hint.textContent = "网上未能撤下，别人仍能看见。请再试一次";
+      return false;
+    }
+    await refresh();
+    const onServer = () =>
+      lastFetchOk &&
+      (lastShared || []).some((item) => item.id === row.id || (row.img && item.img === row.img));
+    if (onServer()) {
+      await postWall(urls, { kind: "wall-mine", ids }, 8000);
+      if (asHost) await postWall(urls, { kind: "wall-drop", host: cfg.wallHost, ids }, 8000);
+      await refresh();
+    }
+    if (onServer()) {
+      unhide(row);
+      await refresh();
+      hint.textContent = "网上未能撤下，别人仍能看见。请再试一次";
+      return false;
+    }
+    hint.textContent = doneText;
+    return true;
   };
 
   const mergePending = (items) => {
@@ -1205,11 +1244,13 @@ function renderWall(cfg, guest) {
   } catch {}
 
   let lastShared = null;
+  let lastFetchOk = false;
   const refresh = async (flyId) => {
     const gotP = loadWallItems(urls);
     const epochP = epochUrl ? fetchWallEpoch(epochUrl) : Promise.resolve(0);
     const got = await gotP;
     epochCache = await epochP;
+    lastFetchOk = !!got.ok;
     let items;
     if (got.ok) {
       lastShared = got.items;
@@ -1245,22 +1286,22 @@ function renderWall(cfg, guest) {
 
   const mineBtn = $("wallMine");
   if (mineBtn) {
-    mineBtn.addEventListener("click", () => {
+    mineBtn.addEventListener("click", async () => {
       const last = wallLastMine(readLocalWall().concat(pending), by);
       if (!last) {
         $("wallHint").textContent = "没有可撤下的祝福";
         return;
       }
       if (!window.confirm("确定撤下最近一次手写祝福？")) return;
-      dropOne(last, "已撤下最近一次祝福");
+      await dropOne(last, "已撤下最近一次祝福", false);
     });
   }
 
   const deskList = $("wallDeskList");
   if (deskList) {
-    deskList.addEventListener("click", (e) => {
+    deskList.addEventListener("click", async (e) => {
       const btn = e.target && e.target.closest ? e.target.closest("[data-drop]") : null;
-      if (!btn) return;
+      if (!btn || btn.disabled) return;
       const id = btn.getAttribute("data-drop");
       if (!id) return;
       const row = wallPaintRows(readLocalWall().concat(pending)).find((item) => item.id === id);
@@ -1268,8 +1309,9 @@ function renderWall(cfg, guest) {
         $("wallHint").textContent = "这幅已经不在墙上";
         return;
       }
-      if (!window.confirm("确定撤下这幅祝福？")) return;
-      dropOne(row, "已撤下这幅祝福");
+      if (!window.confirm("确定从所有人的墙上撤下这幅祝福？")) return;
+      btn.disabled = true;
+      await dropOne(row, "已从所有人的墙上撤下", true);
     });
   }
 
