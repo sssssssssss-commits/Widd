@@ -644,6 +644,20 @@ function paintWallBoard(items, flyId) {
   host.innerHTML = parts.join("");
 }
 
+function wallDeskRow(row, attr, label) {
+  const id = escAttr(row.id || "");
+  const name = escAttr(row.name || "来宾");
+  const when = escAttr(wallDeskWhen(row.droppedAt || row.at));
+  return `<article class="wall-desk-item" style="display:-webkit-flex;display:flex;align-items:center;gap:.55rem;margin:0 0 .4rem;padding:.4rem .5rem;background:#fff8ec;border:1px solid #e6d3a8;border-radius:.7rem">
+        <img src="${row.img}" alt="" style="display:block;width:5.6rem;height:2.5rem;flex:0 0 auto;object-fit:contain;background:#f4eee4">
+        <div class="wall-desk-meta" style="flex:1 1 auto;min-width:0">
+          <p style="margin:0;font-size:.72rem">${name}</p>
+          <p style="margin:.12rem 0 0;font-size:.72rem;opacity:.7">${when}</p>
+        </div>
+        <button type="button" ${attr}="${id}" style="flex:0 0 auto;margin:0;padding:.45rem .85rem;min-height:2.6rem;color:#b4332a;background:#fff8ec;border:1px solid #c9a24a;border-radius:999px;font-size:.92rem">${label}</button>
+      </article>`;
+}
+
 function paintWallDesk(items) {
   const list = $("wallDeskList");
   if (!list) return;
@@ -655,21 +669,21 @@ function paintWallDesk(items) {
     list.innerHTML = `<p class="wall-desk-empty">墙上还没有签名</p>`;
     return;
   }
-  list.innerHTML = rows
-    .map((row) => {
-      const id = escAttr(row.id || "");
-      const name = escAttr(row.name || "来宾");
-      const when = escAttr(wallDeskWhen(row.at));
-      return `<article class="wall-desk-item" style="display:-webkit-flex;display:flex;align-items:center;gap:.55rem;margin:0 0 .4rem;padding:.4rem .5rem;background:#fff8ec;border:1px solid #e6d3a8;border-radius:.7rem">
-        <img src="${row.img}" alt="" style="display:block;width:5.6rem;height:2.5rem;flex:0 0 auto;object-fit:contain;background:#f4eee4">
-        <div class="wall-desk-meta" style="flex:1 1 auto;min-width:0">
-          <p style="margin:0;font-size:.72rem">${name}</p>
-          <p style="margin:.12rem 0 0;font-size:.72rem;opacity:.7">${when}</p>
-        </div>
-        <button type="button" data-drop="${id}" style="flex:0 0 auto;margin:0;padding:.45rem .85rem;min-height:2.6rem;color:#b4332a;background:#fff8ec;border:1px solid #c9a24a;border-radius:999px;font-size:.92rem">撤下</button>
-      </article>`;
-    })
-    .join("");
+  list.innerHTML = rows.map((row) => wallDeskRow(row, "data-drop", "撤下")).join("");
+}
+
+function paintWallBin(items) {
+  const list = $("wallBinList");
+  if (!list) return;
+  const rows = (items || []).filter((row) => row && row.img).slice().reverse();
+  const key = rows.map((r) => r.id || r.img).join("\n");
+  if (key === paintWallBin.key) return;
+  paintWallBin.key = key;
+  if (!rows.length) {
+    list.innerHTML = `<p class="wall-desk-empty">回收站是空的</p>`;
+    return;
+  }
+  list.innerHTML = rows.map((row) => wallDeskRow(row, "data-restore", "放回")).join("");
 }
 
 function loadKeepImg(src) {
@@ -1085,13 +1099,17 @@ function renderWall(cfg, guest) {
       ${host ? `<div class="wall-desk" id="wallDesk">
         <p class="wall-desk-title">点对应的撤下，可拿掉任意一幅</p>
         <div id="wallDeskList"></div>
+      </div>
+      <div class="wall-desk wall-bin" id="wallBin">
+        <p class="wall-desk-title">回收站 · 撤下后可放回</p>
+        <div id="wallBinList"></div>
       </div>` : ""}
       <div class="wall-yards" id="wallYards"></div>
       <div class="wall-actions">
         <button type="button" id="wallOpen">点此可为新人手写祝福</button>
         ${host ? "" : `<button type="button" id="wallMine">撤下本次</button>`}
         ${host ? `<button type="button" id="wallSave">保存祝福墙</button>` : ""}
-        ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
+        ${host ? `<button type="button" id="wallBinEmpty">清空回收站</button>` : ""}
       </div>
       <p class="wall-hint" id="wallHint"></p>
     </div>`;
@@ -1162,6 +1180,28 @@ function renderWall(cfg, guest) {
     if (row && row.img) hidden.imgs.delete(row.img);
   };
 
+  const refreshBin = async () => {
+    if (!host) return;
+    const sent = await postWall(urls, { kind: "wall-bin", host: wallHostKey(cfg) }, 8000);
+    if (!sent.ok || !sent.res) {
+      paintWallBin.key = "";
+      const list = $("wallBinList");
+      if (list) list.innerHTML = `<p class="wall-desk-empty">回收站未能打开</p>`;
+      return;
+    }
+    let items = [];
+    try {
+      const data = await sent.res.json();
+      if (Array.isArray(data.items)) items = data.items;
+    } catch {
+      paintWallBin.key = "";
+      const list = $("wallBinList");
+      if (list) list.innerHTML = `<p class="wall-desk-empty">回收站未能打开</p>`;
+      return;
+    }
+    paintWallBin(items);
+  };
+
   const dropOne = async (row, doneText, asHost) => {
     if (!row) return false;
     writeGen += 1;
@@ -1205,6 +1245,7 @@ function renderWall(cfg, guest) {
       hint.textContent = "网上未能撤下，别人仍能看见。请再试一次";
       return false;
     }
+    if (host) await refreshBin();
     hint.textContent = doneText;
     return true;
   };
@@ -1294,9 +1335,13 @@ function renderWall(cfg, guest) {
   });
 
   refresh();
+  if (host) refreshBin();
   setInterval(refresh, 4000);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") refresh();
+    if (document.visibilityState === "visible") {
+      refresh();
+      if (host) refreshBin();
+    }
   });
 
   const mineBtn = $("wallMine");
@@ -1324,9 +1369,35 @@ function renderWall(cfg, guest) {
         $("wallHint").textContent = "这幅已经不在墙上";
         return;
       }
-      if (!window.confirm("确定从所有人的墙上撤下这幅祝福？")) return;
+      if (!window.confirm("确定从所有人的墙上撤下这幅祝福？撤下后可在回收站放回。")) return;
       btn.disabled = true;
-      await dropOne(row, "已从所有人的墙上撤下", true);
+      const ok = await dropOne(row, "已撤下，可在回收站放回", true);
+      if (!ok) btn.disabled = false;
+    });
+  }
+
+  const binList = $("wallBinList");
+  if (binList) {
+    binList.addEventListener("click", async (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest("[data-restore]") : null;
+      if (!btn || btn.disabled) return;
+      const id = btn.getAttribute("data-restore");
+      if (!id) return;
+      if (!window.confirm("确定把这幅放回墙上？")) return;
+      btn.disabled = true;
+      const hint = $("wallHint");
+      hint.textContent = "正在放回…";
+      const sent = await postWall(urls, { kind: "wall-restore", host: wallHostKey(cfg), ids: [id] }, 8000);
+      if (!sent.ok) {
+        btn.disabled = false;
+        hint.textContent = "未能放回，请再试一次";
+        return;
+      }
+      unhide({ id });
+      paintWallBin.key = "";
+      await refresh();
+      await refreshBin();
+      hint.textContent = "已放回墙上";
     });
   }
 
@@ -1356,21 +1427,17 @@ function renderWall(cfg, guest) {
     });
   }
 
-  const wipeBtn = $("wallWipe");
-  if (wipeBtn) {
-    wipeBtn.addEventListener("click", async () => {
-      if (!window.confirm("确定清空所有人的签名？别人手机上的也会一起清掉。")) return;
+  const emptyBtn = $("wallBinEmpty");
+  if (emptyBtn) {
+    emptyBtn.addEventListener("click", async () => {
+      if (!window.confirm("确定彻底清空回收站？清空后不能再放回。")) return;
       const hint = $("wallHint");
-      writeLocalWall([]);
-      paintWall([]);
-      let shared = false;
-      try {
-        await bumpWallEpoch(epochUrl);
-        shared = true;
-      } catch {}
-      shared = (await postWall(urls, { kind: "wall-wipe", host: wallHostKey(cfg) })).ok || shared;
-      await refresh();
-      hint.textContent = shared ? "墙上已清空" : "本机已清，别人手机需能联网才会一起清";
+      emptyBtn.disabled = true;
+      const sent = await postWall(urls, { kind: "wall-bin-empty", host: wallHostKey(cfg) }, 8000);
+      paintWallBin.key = "";
+      await refreshBin();
+      hint.textContent = sent.ok ? "回收站已清空" : "回收站未能清空，请再试一次";
+      emptyBtn.disabled = false;
     });
   }
 

@@ -1305,6 +1305,12 @@ body.is-signing .bgm-tog {
   appearance: none;
 }
 
+.wall-bin {
+  margin-top: .85rem;
+  padding-top: .55rem;
+  border-top: 1px dashed #e6d3a8;
+}
+
 .wall-keep {
   position: fixed;
   inset: 0;
