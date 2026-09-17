@@ -17,7 +17,7 @@
     (function () {
       var h = location.hostname;
       if (!h || h === "sumuyang.asia" || h === "localhost" || h === "127.0.0.1") return;
-      location.replace("https://sumuyang.asia/");
+      location.replace("https://sumuyang.asia/" + location.search + location.hash);
     })();
   </script>
   <meta property="og:title" content="苏超凡 与 杨雨洁 婚礼请柬">
@@ -32,7 +32,7 @@
   <meta name="twitter:image" content="https://sumuyang.asia/share.jpg">
   <link rel="icon" href="https://sumuyang.asia/share.jpg" type="image/jpeg">
   <link rel="apple-touch-icon" href="https://sumuyang.asia/share.jpg">
-  <link rel="stylesheet" href="css/invite.css?v=94">
+  <link rel="stylesheet" href="css/invite.css?v=96">
   <link rel="preload" href="assets/cover.jpg?v=4" as="image">
   <link rel="preload" href="assets/calendar.jpg?v=3" as="image">
   <link rel="preload" href="assets/letter.jpg?v=2" as="image">
@@ -130,6 +130,6 @@
     </article>
   </main>
 
-  <script src="js/invite.js?v=94"></script>
+  <script src="js/invite.js?v=96"></script>
 </body>
 </html>

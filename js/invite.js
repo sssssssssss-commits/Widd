@@ -231,6 +231,13 @@ function isWallHost(search, key) {
   return q.get("host") === k;
 }
 
+function wallDeskWhen(at) {
+  const ms = Date.parse(at);
+  if (!Number.isFinite(ms)) return "";
+  const d = new Date(ms + 288e5);
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())} ${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;
+}
+
 function wallHitUrl(getUrl) {
   return String(getUrl || "").replace("/get/", "/hit/");
 }
@@ -602,6 +609,34 @@ function paintWallBoard(items, flyId) {
     parts.push(`<div class="wall-yard"><img class="wall-paper" src="assets/wall.jpg?v=1" alt="" decoding="async"><div class="wall-frame"><div class="wall-board">${cards}</div></div></div>`);
   }
   host.innerHTML = parts.join("");
+}
+
+function paintWallDesk(items) {
+  const list = $("wallDeskList");
+  if (!list) return;
+  const rows = wallPaintRows(items).slice().reverse();
+  const key = rows.map((r) => r.id || r.img).join("\n");
+  if (key === paintWallDesk.key) return;
+  paintWallDesk.key = key;
+  if (!rows.length) {
+    list.innerHTML = `<p class="wall-desk-empty">墙上还没有签名</p>`;
+    return;
+  }
+  list.innerHTML = rows
+    .map((row) => {
+      const id = escAttr(row.id || "");
+      const name = escAttr(row.name || "来宾");
+      const when = escAttr(wallDeskWhen(row.at));
+      return `<article class="wall-desk-item">
+        <img src="${row.img}" alt="">
+        <div class="wall-desk-meta">
+          <p>${name}</p>
+          <p>${when}</p>
+        </div>
+        <button type="button" data-drop="${id}">撤下</button>
+      </article>`;
+    })
+    .join("");
 }
 
 function loadKeepImg(src) {
@@ -1013,10 +1048,14 @@ function renderWall(cfg, guest) {
   const epochUrl = cfg.wallEpoch || "";
   wall.innerHTML = `<div class="wall-box">
       <h2>手写祝福墙</h2>
+      ${host ? `<div class="wall-desk" id="wallDesk">
+        <p class="wall-desk-title">点对应的撤下，可拿掉任意一幅</p>
+        <div id="wallDeskList"></div>
+      </div>` : ""}
       <div class="wall-yards" id="wallYards"></div>
       <div class="wall-actions">
         <button type="button" id="wallOpen">点此可为新人手写祝福</button>
-        <button type="button" id="wallMine">撤下本次</button>
+        ${host ? "" : `<button type="button" id="wallMine">撤下本次</button>`}
         ${host ? `<button type="button" id="wallSave">保存祝福墙</button>` : ""}
         ${host ? `<button type="button" id="wallWipe">清空全部</button>` : ""}
       </div>
@@ -1077,6 +1116,26 @@ function renderWall(cfg, guest) {
       if (row && row.id) hidden.ids.add(row.id);
       if (row && row.img) hidden.imgs.add(row.img);
     }
+  };
+
+  const paintWall = (items, flyId) => {
+    paintWallBoard(items, flyId);
+    paintWallDesk(items);
+  };
+
+  const dropOne = (row, doneText) => {
+    if (!row) return;
+    writeGen += 1;
+    hideRows([row]);
+    for (let i = pending.length - 1; i >= 0; i--) {
+      if (pending[i].id === row.id || pending[i].img === row.img) pending.splice(i, 1);
+    }
+    const next = wallExceptHidden(readLocalWall(), hidden);
+    writeLocalWall(next);
+    paintWall(next);
+    $("wallHint").textContent = doneText;
+    const ids = [row.id].filter(Boolean);
+    if (ids.length) postWall(urls, { kind: "wall-mine", ids });
   };
 
   const mergePending = (items) => {
@@ -1144,7 +1203,7 @@ function renderWall(cfg, guest) {
       items = mergePending(wallAfterWipe(got.items, epochCache));
     }
     writeLocalWall(items);
-    paintWallBoard(items, flyId);
+    paintWall(items, flyId);
     return items;
   };
 
@@ -1167,25 +1226,35 @@ function renderWall(cfg, guest) {
     if (document.visibilityState === "visible") refresh();
   });
 
-  $("wallMine").addEventListener("click", () => {
-    const last = wallLastMine(readLocalWall().concat(pending), by);
-    if (!last) {
-      $("wallHint").textContent = "没有可撤下的祝福";
-      return;
-    }
-    if (!window.confirm("确定撤下最近一次手写祝福？")) return;
-    writeGen += 1;
-    hideRows([last]);
-    for (let i = pending.length - 1; i >= 0; i--) {
-      if (pending[i].id === last.id || pending[i].img === last.img) pending.splice(i, 1);
-    }
-    const next = wallExceptHidden(readLocalWall(), hidden);
-    writeLocalWall(next);
-    paintWallBoard(next);
-    $("wallHint").textContent = "已撤下最近一次祝福";
-    const ids = [last.id].filter(Boolean);
-    postWall(urls, { kind: "wall-mine", ids });
-  });
+  const mineBtn = $("wallMine");
+  if (mineBtn) {
+    mineBtn.addEventListener("click", () => {
+      const last = wallLastMine(readLocalWall().concat(pending), by);
+      if (!last) {
+        $("wallHint").textContent = "没有可撤下的祝福";
+        return;
+      }
+      if (!window.confirm("确定撤下最近一次手写祝福？")) return;
+      dropOne(last, "已撤下最近一次祝福");
+    });
+  }
+
+  const deskList = $("wallDeskList");
+  if (deskList) {
+    deskList.addEventListener("click", (e) => {
+      const btn = e.target && e.target.closest ? e.target.closest("[data-drop]") : null;
+      if (!btn) return;
+      const id = btn.getAttribute("data-drop");
+      if (!id) return;
+      const row = wallPaintRows(readLocalWall().concat(pending)).find((item) => item.id === id);
+      if (!row) {
+        $("wallHint").textContent = "这幅已经不在墙上";
+        return;
+      }
+      if (!window.confirm("确定撤下这幅祝福？")) return;
+      dropOne(row, "已撤下这幅祝福");
+    });
+  }
 
   const saveBtn = $("wallSave");
   if (saveBtn) {
@@ -1219,7 +1288,7 @@ function renderWall(cfg, guest) {
       if (!window.confirm("确定清空所有人的签名？别人手机上的也会一起清掉。")) return;
       const hint = $("wallHint");
       writeLocalWall([]);
-      paintWallBoard([]);
+      paintWall([]);
       let shared = false;
       try {
         await bumpWallEpoch(epochUrl);
@@ -1259,7 +1328,7 @@ function renderWall(cfg, guest) {
     const g = writeGen;
     pending.push(item);
     writeLocalWall(mergePending(readLocalWall()));
-    paintWallBoard(readLocalWall(), item.id);
+    paintWall(readLocalWall(), item.id);
     pad.dirty = false;
     hint.textContent = "正在同步…";
     closeSheet();
@@ -1283,7 +1352,7 @@ function renderWall(cfg, guest) {
               if (pending[i].id === item.id) pending.splice(i, 1);
             }
             writeLocalWall(readLocalWall().filter((row) => row.id !== item.id && row.img !== img));
-            paintWallBoard(readLocalWall());
+            paintWall(readLocalWall());
             hint.textContent = "每人最多留下三幅";
             return;
           }
@@ -1816,6 +1885,24 @@ function bindTapXi() {
 }
 
 function bindGate(cfg) {
+  if (isWallHost(location.search, cfg.wallHost)) {
+    const gate = $("gate");
+    const letter = $("letter");
+    if (gate) gate.classList.add("is-gone");
+    if (letter) {
+      letter.hidden = false;
+      letter.classList.add("is-in");
+    }
+    startBless(cfg);
+    const jump = () => {
+      const el = $("wall");
+      if (el) el.scrollIntoView();
+    };
+    jump();
+    setTimeout(jump, 80);
+    setTimeout(jump, 360);
+    return;
+  }
   layoutCover();
   const cover = $("coverImg");
   if (cover && !cover.complete) cover.addEventListener("load", layoutCover);

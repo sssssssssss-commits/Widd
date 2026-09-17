@@ -1226,6 +1226,83 @@ body.is-signing .bgm-tog {
   color: var(--ink-soft);
 }
 
+.wall-desk {
+  margin: 0 0 .7rem;
+  padding: 0 .08rem;
+}
+
+.wall-desk-title {
+  margin: 0 0 .45rem;
+  text-align: center;
+  font-size: .78rem;
+  letter-spacing: .16em;
+  color: var(--ink-soft);
+}
+
+.wall-desk-empty {
+  margin: 0;
+  text-align: center;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  color: var(--ink-soft);
+}
+
+.wall-desk-item {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: 0 0 .4rem;
+  padding: .4rem .5rem;
+  background: #fff8ec;
+  border: 1px solid #e6d3a8;
+  border-radius: .7rem;
+}
+
+.wall-desk-item img {
+  display: block;
+  width: 5.6rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+  background: #f4eee4;
+}
+
+.wall-desk-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wall-desk-meta p {
+  margin: 0;
+  font-size: .72rem;
+  letter-spacing: .06em;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wall-desk-meta p + p {
+  margin-top: .12rem;
+  color: var(--ink-soft);
+}
+
+.wall-desk-item button {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: .45rem .85rem;
+  min-height: 2.4rem;
+  font-family: "Heiti SC", "STHeiti", "SimHei", "Microsoft YaHei", sans-serif;
+  font-size: .92rem;
+  letter-spacing: .12em;
+  color: #b4332a;
+  background: #fff8ec;
+  border: 1px solid #c9a24a;
+  border-radius: 999px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .wall-keep {
   position: fixed;
   inset: 0;

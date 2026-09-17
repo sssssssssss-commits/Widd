@@ -107,6 +107,13 @@ export function isWallHost(search, key) {
   return q.get("host") === k;
 }
 
+export function wallDeskWhen(at) {
+  const ms = Date.parse(at);
+  if (!Number.isFinite(ms)) return "";
+  const d = new Date(ms + 288e5);
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())} ${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;
+}
+
 export function wallHitUrl(getUrl) {
   return String(getUrl || "").replace("/get/", "/hit/");
 }

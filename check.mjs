@@ -8,6 +8,7 @@ import {
   escAttr,
   guestFromSearch,
   isWallHost,
+  wallDeskWhen,
   mapLinks,
   pad2,
   remaining,
@@ -87,6 +88,8 @@ assert.equal(isWallHost("?open=1&host=xi8k2m", "xi8k2m"), true);
 assert.equal(isWallHost("?host=no", "xi8k2m"), false);
 assert.equal(isWallHost("", "xi8k2m"), false);
 assert.equal(isWallHost("?host=xi8k2m", ""), false);
+assert.equal(wallDeskWhen("2026-10-06T03:18:00.000Z"), "2026-10-06 11:18");
+assert.equal(wallDeskWhen(""), "");
 assert.equal(
   wallHitUrl("https://example.test/get/ns/key"),
   "https://example.test/hit/ns/key",
@@ -315,6 +318,10 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(js, /<h2>手写祝福墙<\/h2>/);
   assert.match(js, /id="wallOpen">点此可为新人手写祝福</);
   assert.match(js, /id="wallMine">撤下本次</);
+  assert.match(js, /id="wallDesk"/);
+  assert.match(js, /id="wallDeskList"/);
+  assert.match(js, /data-drop/);
+  assert.match(js, /点对应的撤下，可拿掉任意一幅/);
   assert.doesNotMatch(js, /撤下我的/);
   assert.doesNotMatch(js, /id="wallOpen">祝福</);
   assert.doesNotMatch(js, /id="wallOpen">签字</);
@@ -348,6 +355,7 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.match(js, /visibilitychange/);
   assert.match(js, /lastShared/);
   assert.match(css, /\.wall-yards/);
+  assert.match(css, /\.wall-desk-item/);
   assert.match(css, /\.wall-paper/);
   assert.doesNotMatch(css, /\.wall-yard::before/);
   assert.match(js, /class="wall-paper"/);
@@ -363,9 +371,10 @@ assert.match(openers.intent, /browser_fallback_url=/);
   assert.doesNotMatch(js, /github\.io/);
   assert.doesNotMatch(html, /github\.io/);
   assert.match(html, /rel="canonical" href="https:\/\/sumuyang\.asia\/"/);
-  assert.match(html, /location\.replace\("https:\/\/sumuyang\.asia\/"\)/);
+  assert.match(html, /location\.replace\("https:\/\/sumuyang\.asia\/" \+ location\.search \+ location\.hash\)/);
   const readme = readFileSync(new URL("./README.md", import.meta.url), "utf8");
   assert.match(readme, /https:\/\/sumuyang\.asia\//);
+  assert.match(readme, /https:\/\/sumuyang\.asia\/\?host=xi8k2m/);
   assert.doesNotMatch(readme, /github\.io/);
   assert.doesNotMatch(readme, /jsdelivr/);
   assert.doesNotMatch(readme, /\?wx=/);
